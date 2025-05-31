@@ -9,9 +9,8 @@ import { StudentManagement } from "@/components/dashboard/student-management"
 import { useAuth } from "@/lib/auth-context"
 import { getLeaderboard } from "@/lib/actions/leaderboard-actions"
 import { getAllStudents } from "@/lib/actions/user-actions"
-import { isV0Preview, shouldUseDemoMode } from "@/lib/v0-detection"
 
-// Mock data for immediate rendering while data is loading
+// Initial loading placeholders
 const initialLeaderboardData = [
   {
     id: "loading-1",
@@ -48,89 +47,6 @@ const initialStudentsData = [
   },
 ]
 
-// Mock student data for demo mode
-const mockStudentsData = [
-  {
-    id: "demo-student-1",
-    username: "TopStudent",
-    visible_password: "password123",
-    progress: 3,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-2",
-    username: "LogisticsWiz",
-    visible_password: "password123",
-    progress: 3,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-3",
-    username: "SupplyChainMaster",
-    visible_password: "password123",
-    progress: 2,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-4",
-    username: "InventoryPro",
-    visible_password: "password123",
-    progress: 2,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-5",
-    username: "ShippingExpert",
-    visible_password: "password123",
-    progress: 1,
-    lastActive: new Date().toLocaleDateString(),
-  },
-]
-
-// Mock leaderboard data with profit information
-const mockLeaderboardWithProfit = [
-  {
-    id: "demo-student-1",
-    username: "TopStudent",
-    progress: 3,
-    profit: 85000,
-    level: 2,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-2",
-    username: "LogisticsWiz",
-    progress: 3,
-    profit: 72500,
-    level: 2,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-3",
-    username: "SupplyChainMaster",
-    progress: 2,
-    profit: 63000,
-    level: 1,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-4",
-    username: "InventoryPro",
-    progress: 2,
-    profit: 58200,
-    level: 1,
-    lastActive: new Date().toLocaleDateString(),
-  },
-  {
-    id: "demo-student-5",
-    username: "ShippingExpert",
-    progress: 1,
-    profit: 42000,
-    level: 0,
-    lastActive: new Date().toLocaleDateString(),
-  },
-]
-
 export default function TeacherDashboard() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -138,49 +54,26 @@ export default function TeacherDashboard() {
   const [students, setStudents] = useState(initialStudentsData)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [dataFetched, setDataFetched] = useState(false) // Add this to prevent multiple fetches
+  const [dataFetched, setDataFetched] = useState(false)
 
   useEffect(() => {
-    // Only proceed if auth is not loading and we haven't fetched data yet
     if (!loading && !dataFetched) {
       if (!user) {
         router.push("/auth/signin")
       } else if (user.role !== "teacher") {
         router.push("/dashboard/student")
       } else {
-        // Mark data as being fetched to prevent multiple fetches
         setDataFetched(true)
-
-        // Fetch data
         const fetchData = async () => {
           try {
-            // If in demo mode or v0 preview, use mock data
-            if (shouldUseDemoMode() || isV0Preview()) {
-              // Simulate a delay for loading state
-              setTimeout(() => {
-                setLeaderboardData(mockLeaderboardWithProfit)
-                setStudents(mockStudentsData)
-                setIsLoading(false)
-              }, 1000)
-              return
-            }
-
-            // Otherwise, fetch real data
             const [leaderboard, studentsList] = await Promise.all([getLeaderboard(), getAllStudents()])
             setLeaderboardData(leaderboard)
             setStudents(studentsList)
           } catch (error) {
             console.error("Error fetching data:", error)
-            setError("Failed to load data. Using demo data instead.")
-
-            // Fall back to mock data
-            setLeaderboardData(mockLeaderboardWithProfit)
-            setStudents(mockStudentsData)
-
-            // If in v0.dev preview, don't show error
-            if (isV0Preview() || shouldUseDemoMode()) {
-              setError(null)
-            }
+            setError("Failed to load data.")
+            setLeaderboardData(initialLeaderboardData)
+            setStudents(initialStudentsData)
           } finally {
             setIsLoading(false)
           }
@@ -188,22 +81,19 @@ export default function TeacherDashboard() {
         fetchData()
       }
     }
-  }, [user, loading, router, dataFetched]) // Add dataFetched to dependencies
+  }, [user, loading, router, dataFetched])
 
-  // For v0.dev preview, reduce loading time
   useEffect(() => {
-    if ((isV0Preview() || shouldUseDemoMode()) && isLoading) {
+    if (isLoading) {
       const timer = setTimeout(() => {
         setIsLoading(false)
-        setLeaderboardData(mockLeaderboardWithProfit)
-        setStudents(mockStudentsData)
       }, 1000)
       return () => clearTimeout(timer)
     }
-  }, [isLoading]) // Only depend on isLoading
+  }, [isLoading])
 
-  if (loading || (isLoading && !isV0Preview() && !shouldUseDemoMode()) || !user) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+  if (loading || isLoading || !user) {
+    return null
   }
 
   return (

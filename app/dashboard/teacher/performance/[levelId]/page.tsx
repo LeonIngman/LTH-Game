@@ -1,57 +1,65 @@
-import { redirect } from "next/navigation"
-import { getServerSession } from "next-auth/next"
+"use client"
 
+import { useEffect, useState, use } from "react"
+import { useRouter } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import { PerformanceSummary } from "@/components/performance/performance-summary"
 import { StudentSelector } from "@/components/performance/student-selector"
-import { authOptions } from "@/lib/auth-options"
 import { getAllStudents } from "@/lib/actions/user-actions"
 import { getPerformanceData } from "@/lib/actions/performance-actions"
-import { isV0Preview, shouldUseDemoMode } from "@/lib/v0-detection"
 
-// Mock data for immediate rendering
-const mockStudents = [
-  { id: "student-1", username: "TopStudent", progress: 3 },
-  { id: "student-2", username: "LogisticsWiz", progress: 3 },
-  { id: "student-3", username: "SupplyChainMaster", progress: 2 },
-  { id: "student-4", username: "InventoryPro", progress: 2 },
-  { id: "student-5", username: "ShippingExpert", progress: 1 },
-]
+export default function TeacherPerformancePage({ params }: { params: Promise<{ levelId: string }> }) {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [students, setStudents] = useState<any[]>([])
+  const [performanceData, setPerformanceData] = useState<any[]>([])
+  const [isLoading, setIsLoading] = useState(true)
 
-export default async function TeacherPerformancePage({ params }: { params: { levelId: string } }) {
-  const session = await getServerSession(authOptions)
+  // Unwrap params using React.use()
+  const { levelId: levelIdRaw } = use(params)
+  const levelId = Number.parseInt(levelIdRaw)
 
-  // Redirect if not logged in or not a teacher
-  if (!session || !session.user) {
-    redirect("/auth/signin")
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push("/auth/signin")
+      } else if (user.role !== "teacher") {
+        router.push("/dashboard/student")
+      } else if (isNaN(levelId) || levelId < 0 || levelId > 3) {
+        router.push("/dashboard/teacher")
+      } else {
+        // Fetch students and performance data
+        fetchData()
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading, router, levelId])
+
+  // When setting students, map to correct shape:
+  const fetchData = async () => {
+    setIsLoading(true)
+    try {
+      const allStudents = await getAllStudents()
+      setStudents(
+        allStudents.map((student: any) => ({
+          userId: student.id, // <-- ensure this is userId
+          username: student.username,
+          maxScore: student.maxScore ?? 0,     // fallback if missing
+          maxProfit: student.maxProfit ?? 0,   // fallback if missing
+        }))
+      )
+      const perfData = await getPerformanceData(levelId)
+      setPerformanceData(perfData)
+    } catch (error) {
+      // Optionally handle error
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  if (session.user.role !== "teacher") {
-    redirect("/dashboard/student")
+  if (loading || isLoading || !user) {
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
   }
-
-  const levelId = Number.parseInt(params.levelId)
-
-  // Validate level ID
-  if (isNaN(levelId) || levelId < 0 || levelId > 3) {
-    redirect("/dashboard/teacher")
-  }
-
-  // Get all students
-  let students = []
-
-  if (shouldUseDemoMode() || isV0Preview()) {
-    students = mockStudents
-  } else {
-    const allStudents = await getAllStudents()
-    students = allStudents.map((student) => ({
-      id: student.id,
-      username: student.username,
-      progress: student.progress,
-    }))
-  }
-
-  // Get performance data for all students at this level
-  const performanceData = await getPerformanceData(levelId)
 
   return (
     <div className="space-y-6">
@@ -59,9 +67,7 @@ export default async function TeacherPerformancePage({ params }: { params: { lev
         <h1 className="text-2xl font-bold">Level {levelId} Performance</h1>
         <p className="text-gray-500">View and analyze student performance for Level {levelId}.</p>
       </div>
-
-      <StudentSelector students={students} levelId={levelId} />
-
+      <StudentSelector initialStudents={students} selectedStudentId={""} levelId={levelId} />
       <PerformanceSummary performanceData={performanceData} levelId={levelId} />
     </div>
   )

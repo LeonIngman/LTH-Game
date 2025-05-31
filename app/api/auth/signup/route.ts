@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server"
 import bcryptjs from "bcryptjs"
 
 import { sql } from "@/lib/db"
-import { isV0Preview, shouldUseDemoMode } from "@/lib/v0-detection"
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,11 +10,6 @@ export async function POST(request: NextRequest) {
 
     if (!username || !password) {
       return NextResponse.json({ message: "Username and password are required" }, { status: 400 })
-    }
-
-    // If in demo mode or v0 preview, simulate success
-    if (shouldUseDemoMode() || isV0Preview()) {
-      return NextResponse.json({ message: "Account created successfully" }, { status: 201 })
     }
 
     // Check if username already exists

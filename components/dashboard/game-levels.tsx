@@ -3,23 +3,21 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { ArrowRight, BarChart3, CheckCircle, Lock, FileText } from "lucide-react"
-import { isV0Preview } from "@/lib/v0-detection"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { checkExistingPerformance } from "@/lib/actions/game-actions"
 import { ReplayWarningDialog } from "@/components/game/replay-warning-dialog"
+import Link from "next/link"
 
 interface GameLevelsProps {
-  // Support for the old props structure
   currentLevel?: number
   isTeacher?: boolean
-
-  // Support for the new props structure
   levels?: Array<{
     id: number
-    name: string
+    name?: string
+    title?: string
     description: string
     maxScore?: number
   }>
@@ -37,7 +35,6 @@ export function GameLevels({
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
-  const isPreview = isV0Preview()
 
   // For backward compatibility
   const effectiveCurrentLevel = currentLevel ?? userProgress ?? 0
@@ -78,8 +75,7 @@ export function GameLevels({
   const [checkingLevel, setCheckingLevel] = useState<number | null>(null)
 
   const handleLevelClick = async (levelId: number) => {
-    // Allow access to all levels in preview mode or for teachers
-    if (levelId > effectiveCurrentLevel + 1 && !isTeacher && !isPreview) {
+    if (levelId > effectiveCurrentLevel + 1 && !isTeacher) {
       toast({
         title: "Level locked",
         description: "You need to complete previous levels first",
@@ -90,22 +86,18 @@ export function GameLevels({
     setCheckingLevel(levelId)
 
     try {
-      // Check if the user has already played this level
       const result = await checkExistingPerformance(effectiveUserId, levelId)
 
       if (result.exists) {
-        // Show warning dialog
         setSelectedLevel(levelId)
         setExistingScore(result.score)
         setExistingProfit(result.profit)
         setWarningDialogOpen(true)
       } else {
-        // Navigate to the game level
         router.push(`/game/${levelId}`)
       }
     } catch (error) {
       console.error("Error checking performance:", error)
-      // If there's an error, just proceed to the game
       router.push(`/game/${levelId}`)
     } finally {
       setCheckingLevel(null)
@@ -120,8 +112,7 @@ export function GameLevels({
   }
 
   const handleQuizClick = (levelId: number) => {
-    // Allow access to quiz if level is unlocked or for teachers
-    if (levelId > effectiveCurrentLevel + 1 && !isTeacher && !isPreview) {
+    if (levelId > effectiveCurrentLevel + 1 && !isTeacher) {
       toast({
         title: "Quiz locked",
         description: "You need to complete previous levels first",
@@ -147,9 +138,7 @@ export function GameLevels({
           {effectiveLevels.map((level) => {
             const levelId = level.id
             const isCompleted = effectiveCurrentLevel > levelId
-            // Consider a level unlocked if in preview mode or if it's accessible based on current progress
-            const isLocked = levelId > effectiveCurrentLevel + 1 && !isTeacher && !isPreview
-            const isCurrent = levelId === effectiveCurrentLevel
+            const isLocked = levelId > effectiveCurrentLevel + 1 && !isTeacher
 
             return (
               <div
@@ -174,7 +163,7 @@ export function GameLevels({
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium">{level.title || `Level ${levelId}`}</h3>
+                  <h3 className="font-medium">{level.title || level.name || `Level ${levelId}`}</h3>
                   <p className="text-sm text-gray-500">{level.description}</p>
                 </div>
                 <div className="flex gap-2">
@@ -228,7 +217,11 @@ export function GameLevels({
           isOpen={warningDialogOpen}
           onClose={() => setWarningDialogOpen(false)}
           onConfirm={handleConfirmReplay}
-          levelName={effectiveLevels.find((l) => l.id === selectedLevel)?.title || `Level ${selectedLevel}`}
+          levelName={
+            effectiveLevels.find((l) => l.id === selectedLevel)?.title ||
+            effectiveLevels.find((l) => l.id === selectedLevel)?.name ||
+            `Level ${selectedLevel}`
+          }
           existingScore={existingScore}
           existingProfit={existingProfit}
         />
@@ -236,6 +229,3 @@ export function GameLevels({
     </>
   )
 }
-
-// Helper component to avoid errors
-import Link from "next/link"

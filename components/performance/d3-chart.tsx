@@ -16,6 +16,27 @@ export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartP
   useEffect(() => {
     if (!data || data.length === 0 || !svgRef.current) return
 
+    // Ensure all numeric fields are numbers (fixes .toFixed errors)
+    const normalizedData = data.map((d) => ({
+      ...d,
+      cash: Number(d.cash ?? 0),
+      profit: Number(d.profit ?? 0),
+      cumulativeProfit: Number(d.cumulativeProfit ?? 0),
+      revenue: Number(d.revenue ?? 0),
+      pattyInventory: Number(d.pattyInventory ?? 0),
+      bunInventory: Number(d.bunInventory ?? 0),
+      cheeseInventory: Number(d.cheeseInventory ?? 0),
+      potatoInventory: Number(d.potatoInventory ?? 0),
+      finishedGoodsInventory: Number(d.finishedGoodsInventory ?? 0),
+      production: Number(d.production ?? 0),
+      sales: Number(d.sales ?? 0),
+      totalCosts: Number(d.totalCosts ?? 0),
+      purchaseCosts: Number(d.purchaseCosts ?? 0),
+      productionCosts: Number(d.productionCosts ?? 0),
+      holdingCosts: Number(d.holdingCosts ?? 0),
+      day: Number(d.day ?? 0),
+    }))
+
     // Clear previous chart
     d3.select(svgRef.current).selectAll("*").remove()
 
@@ -32,13 +53,13 @@ export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartP
     // X scale for days
     const xScale = d3
       .scaleLinear()
-      .domain([0, d3.max(data, (d) => d.day) || 0])
+      .domain([0, d3.max(normalizedData, (d) => d.day) || 0])
       .range([0, innerWidth])
 
     // Create X axis
     const xAxis = d3
       .axisBottom(xScale)
-      .ticks(data.length)
+      .ticks(normalizedData.length)
       .tickFormat((d) => `Day ${d}`)
     svg
       .append("g")
@@ -61,19 +82,19 @@ export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartP
     // Render different chart types
     switch (chartType) {
       case "inventory":
-        renderInventoryChart(svg, data, innerWidth, innerHeight)
+        renderInventoryChart(svg, normalizedData, innerWidth, innerHeight)
         break
       case "financial":
-        renderFinancialChart(svg, data, innerWidth, innerHeight)
+        renderFinancialChart(svg, normalizedData, innerWidth, innerHeight)
         break
       case "production":
-        renderProductionSalesChart(svg, data, innerWidth, innerHeight)
+        renderProductionSalesChart(svg, normalizedData, innerWidth, innerHeight)
         break
       case "costs":
-        renderCostsChart(svg, data, innerWidth, innerHeight)
+        renderCostsChart(svg, normalizedData, innerWidth, innerHeight)
         break
       default:
-        renderInventoryChart(svg, data, innerWidth, innerHeight)
+        renderInventoryChart(svg, normalizedData, innerWidth, innerHeight)
     }
   }, [data, chartType, width, height])
 

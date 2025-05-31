@@ -5,7 +5,25 @@ import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
 import { level3Config } from "@/lib/game/level3"
 import { sql } from "@/lib/db"
-import { shouldUseDemoMode } from "@/lib/v0-detection"
+
+// Helper to ensure a value is a number (not undefined, null, or NaN)
+const safeNumber = (val: any) => (typeof val === "number" && !isNaN(val) ? val : 0)
+
+// Helper to normalize all numeric fields in game state (for API response)
+function normalizeGameState(state: any) {
+  return {
+    ...state,
+    cash: safeNumber(state.cash),
+    inventory: {
+      patty: safeNumber(state.inventory?.patty),
+      cheese: safeNumber(state.inventory?.cheese),
+      bun: safeNumber(state.inventory?.bun),
+      potato: safeNumber(state.inventory?.potato),
+      finishedGoods: safeNumber(state.inventory?.finishedGoods),
+    },
+    // Add more fields if needed
+  }
+}
 
 export async function POST(request: Request) {
   try {
@@ -137,20 +155,10 @@ export async function POST(request: Request) {
       // Check if game is over
       const gameOver = isGameOver(newState, levelConfig)
 
-      // If in demo mode, just return the new state without saving to database
-      if (shouldUseDemoMode()) {
-        return NextResponse.json({
-          success: true,
-          gameState: newState,
-          gameOver,
-        })
-      }
-
       // If game is over, save the final result
       if (gameOver) {
         const gameResult = calculateGameResult(newState, levelConfig, userId)
 
-        // Save game result to database
         await sql`
           INSERT INTO "Performance" (
             "userId", "levelId", "score", "cumulativeProfit", 
@@ -158,9 +166,14 @@ export async function POST(request: Request) {
             "decisions"
           )
           VALUES (
-            ${userId}, ${levelId}, ${gameResult.score}, ${gameResult.cumulativeProfit},
-            ${gameResult.finalCash}, ${gameResult.finalInventory.patty}, 
-            ${gameResult.finalInventory.cheese}, ${gameResult.finalInventory.finishedGoods},
+            ${userId},
+            ${levelId},
+            ${safeNumber(gameResult.score)},
+            ${safeNumber(gameResult.cumulativeProfit)},
+            ${safeNumber(gameResult.finalCash)},
+            ${safeNumber(gameResult.finalInventory?.patty)},
+            ${safeNumber(gameResult.finalInventory?.cheese)},
+            ${safeNumber(gameResult.finalInventory?.finishedGoods)},
             ${JSON.stringify(gameResult.history)}
           )
         `
@@ -168,7 +181,7 @@ export async function POST(request: Request) {
 
       return NextResponse.json({
         success: true,
-        gameState: newState,
+        gameState: normalizeGameState(newState),
         gameOver,
       })
     } catch (processingError) {

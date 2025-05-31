@@ -265,10 +265,10 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
                       {detailedData.map((day: any) => (
                         <tr key={day.day} className="border-b hover:bg-gray-50">
                           <td className="py-2 px-4">Day {day.day}</td>
-                          <td className="py-2 px-4">${day.cash.toFixed(2)}</td>
-                          <td className="py-2 px-4">${day.revenue.toFixed(2)}</td>
-                          <td className="py-2 px-4">${day.profit.toFixed(2)}</td>
-                          <td className="py-2 px-4">${day.cumulativeProfit.toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.cash ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.revenue ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.profit ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.cumulativeProfit ?? 0).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -319,10 +319,10 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
                       {detailedData.map((day: any) => (
                         <tr key={day.day} className="border-b hover:bg-gray-50">
                           <td className="py-2 px-4">Day {day.day}</td>
-                          <td className="py-2 px-4">${day.purchaseCosts.toFixed(2)}</td>
-                          <td className="py-2 px-4">${day.productionCosts.toFixed(2)}</td>
-                          <td className="py-2 px-4">${day.holdingCosts.toFixed(2)}</td>
-                          <td className="py-2 px-4">${day.totalCosts.toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.purchaseCosts ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.productionCosts ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.holdingCosts ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4">${Number(day.totalCosts ?? 0).toFixed(2)}</td>
                         </tr>
                       ))}
                     </tbody>

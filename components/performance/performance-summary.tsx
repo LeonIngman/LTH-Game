@@ -32,7 +32,9 @@ export function PerformanceSummary({ levelName, maxScore, currentScore, profit, 
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
             <div className="text-sm font-medium text-muted-foreground">Total Profit</div>
-            <div className="text-2xl font-bold">${profit.toFixed(2)}</div>
+            <div className="text-2xl font-bold">
+              {typeof profit === "number" && !isNaN(profit) ? `$${profit.toFixed(2)}` : "—"}
+            </div>
           </div>
           <div className="space-y-1">
             <div className="text-sm font-medium text-muted-foreground">Completion</div>

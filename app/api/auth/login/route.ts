@@ -4,7 +4,6 @@ import bcryptjs from "bcryptjs"
 import crypto from "crypto"
 
 import { sql } from "@/lib/db"
-import { getDemoStudentUser, getDemoTeacherUser, isV0Preview, shouldUseDemoMode } from "@/lib/v0-detection"
 
 export async function POST(request: Request) {
   try {
@@ -29,27 +28,7 @@ export async function POST(request: Request) {
       })
     }
 
-    // Demo mode
-    if (shouldUseDemoMode() || isV0Preview()) {
-      const demoUser = username.includes("teacher") ? getDemoTeacherUser() : getDemoStudentUser()
-      try {
-        const cookieStore = await cookies()
-        cookieStore.set("auth_session", "demo-session", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          maxAge: 60 * 60 * 24 * 7,
-          path: "/",
-        })
-      } catch (cookieError) {
-        console.error("Error setting demo cookie:", cookieError)
-      }
-      return new NextResponse(JSON.stringify({ user: demoUser, redirect: demoUser.role === "teacher" ? "/dashboard/teacher" : "/dashboard/student" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      })
-    }
-
-    // Real user login
+    // Real user login only (demo mode removed)
     try {
       const users = await sql`SELECT * FROM "User" WHERE username = ${username}`
       if (!users || users.length === 0) {

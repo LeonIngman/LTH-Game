@@ -1,6 +1,4 @@
-/**
- * Calculate holding cost for inventory
- */
+
 import type { Inventory } from "./inventory"
 import type { LevelConfig } from "./level-config"
 import { HOLDING_COSTS } from "./constants"
