@@ -31,6 +31,7 @@ import { ForecastingDialog } from "./forecasting-dialog"
 import { DailyOrderSummary } from "./ui/daily-order-summary"
 import { DebugPriceInfo } from "./ui/debug-price-info"
 import { QuickActionsWidget } from "./ui/quick-actions-widget"
+import { DebugSupplierRemaining } from "./ui/debug-supplier-remaining"
 
 // Import our custom hooks
 import { useGameState } from "@/hooks/use-game-state"
@@ -389,6 +390,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
             currentDay={gameState.day}
             supplierOrders={supplierOrders}
             pendingOrders={gameState.pendingOrders}
+            gameState={gameState}
           />
         </div>
 
@@ -444,6 +446,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         onResetAllOrders={resetAllOrders}
         isDisabled={isLoading || gameEnded}
       />
+
 
       <div className="grid gap-6 md:grid-cols-12">
         <div className="md:col-span-4">
@@ -523,6 +526,10 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         gameState={gameState}
         levelConfig={levelConfig}
         setGameState={setGameState}
+        onOrderConfirmed={() => {
+          setShowSupplierPopup(false)
+          setSelectedSupplier(null)
+        }}
       />
 
       <ProductionPopup
@@ -553,4 +560,4 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   )
 }
 
-export default GameInterface
+export default GameInterface;

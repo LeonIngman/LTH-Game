@@ -13,7 +13,50 @@ export const level0Config: LevelConfig = {
   daysToComplete: 20,
 
   // Suppliers for Level 0 - with leadTime of 0 (instant delivery)
-  suppliers: createSuppliers([0, 0, 0]),
+  suppliers: [
+    {
+      id: 1,
+      name: "Pink Patty",
+      leadTime: 0,
+      capacityPerGame: { patty: 200, cheese: 100, bun: 150, potato: 0 },
+      capacityPerDay: { patty: 20, cheese: 10, bun: 15, potato: 0 },
+      materials: ["patty", "cheese", "bun", "potato"],
+      shipmentPrices: {
+        patty: { 50: 116, 100: 134, 200: 179 },
+        cheese: { 50: 65, 100: 89, 200: 116 },
+        bun: { 50: 89, 100: 98, 200: 134 },
+      },
+      shipmentPricesIncludeBaseCost: false,
+    },
+    {
+      id: 2,
+      name: "Brown Sauce",
+      leadTime: 0,
+      capacityPerGame: { patty: 150, cheese: 200, bun: 100, potato: 50 },
+      capacityPerDay: { patty: 15, cheese: 20, bun: 10, potato: 5 },
+      materials: ["patty", "cheese", "bun", "potato"],
+      shipmentPrices: {
+        patty: { 50: 120, 100: 140, 200: 185 },
+        cheese: { 50: 70, 100: 95, 200: 120 },
+        bun: { 50: 90, 100: 100, 200: 140 },
+      },
+      shipmentPricesIncludeBaseCost: false,
+    },
+    {
+      id: 3,
+      name: "Firehouse Foods",
+      leadTime: 0,
+      capacityPerGame: { patty: 100, cheese: 100, bun: 200, potato: 100 },
+      capacityPerDay: { patty: 10, cheese: 10, bun: 20, potato: 10 },
+      materials: ["patty", "cheese", "bun", "potato"],
+      shipmentPrices: {
+        patty: { 50: 125, 100: 145, 200: 190 },
+        cheese: { 50: 75, 100: 100, 200: 125 },
+        bun: { 50: 92, 100: 102, 200: 142 },
+      },
+      shipmentPricesIncludeBaseCost: false,
+    },
+  ],
 
   // Delivery options for Level 0 - only instant delivery
   deliveryOptions: [

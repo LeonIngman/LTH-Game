@@ -41,6 +41,7 @@ export function initializeGameState(levelConfig: LevelConfig): GameState {
     pendingOrders: [],
     pendingCustomerOrders: [],
     customerDeliveries: {},
+    supplierDeliveries: {}, // <-- Add this line
     dailyDemand: levelConfig.demandModel(1),
     productionCapacity: 50, // Default value, can be adjusted per level
     cumulativeProfit: 0,
@@ -341,13 +342,10 @@ function processPendingOrders(state: GameState): void {
   const arrivingOrders: PendingOrder[] = []
   const remainingOrders: PendingOrder[] = []
 
-  // Check each pending order
   for (const order of state.pendingOrders) {
     if (order.daysRemaining <= 1) {
-      // Order arrives today
       arrivingOrders.push(order)
     } else {
-      // Order will arrive in the future
       remainingOrders.push({
         ...order,
         daysRemaining: order.daysRemaining - 1,
@@ -355,11 +353,8 @@ function processPendingOrders(state: GameState): void {
     }
   }
 
-  // Update inventory with arriving orders and add transactions
   for (const order of arrivingOrders) {
     state.inventory[order.materialType] += order.quantity
-
-    // Add inventory transaction for tracking
     const unitCost = order.totalCost / order.quantity
     addInventoryTransaction(
       state,
@@ -372,7 +367,6 @@ function processPendingOrders(state: GameState): void {
     )
   }
 
-  // Update pending orders
   state.pendingOrders = remainingOrders
 }
 
@@ -502,8 +496,13 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
         // Deduct cost from cash
         state.cash = Number.parseFloat((state.cash - totalCost).toFixed(2))
 
-        // For level 0 with instant delivery (leadTime = 0), add directly to inventory
+        // Always update deliveredSoFar immediately
+        if (!state.supplierDeliveries[order.supplierId]) state.supplierDeliveries[order.supplierId] = {}
+        state.supplierDeliveries[order.supplierId][material.type] =
+          (state.supplierDeliveries[order.supplierId][material.type] || 0) + material.quantity
+
         if (totalLeadTime === 0) {
+          // For level 0 with instant delivery (leadTime = 0), add directly to inventory
           state.inventory[material.type] += material.quantity
 
           // Add inventory transaction for tracking
@@ -527,7 +526,7 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
             deliveryOptionId: action.deliveryOptionId,
             deliveryName: deliveryName,
             supplierName: supplierName,
-            actualLeadTime: supplierLeadTime, // Store the actual lead time used
+            actualLeadTime: supplierLeadTime,
           })
         }
       }

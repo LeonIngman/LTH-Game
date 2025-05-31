@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
@@ -8,12 +8,15 @@ import { Button } from "@/components/ui/button"
 import { Calculator } from "lucide-react"
 import type { LevelConfig, Supplier, SupplierOrder } from "@/types/game"
 
+const MATERIALS = ["patty", "cheese", "bun", "potato"] as const
+
 interface QuickActionsWidgetProps {
   levelConfig: LevelConfig
   getMaterialPriceForSupplier: (supplierId: number, material: string) => number
   currentDay: number
   supplierOrders: SupplierOrder[]
   pendingOrders: any[]
+  gameState: any
   onEnablePlanningMode?: () => void
   planningMode?: boolean
 }
@@ -24,38 +27,40 @@ export function QuickActionsWidget({
   currentDay,
   supplierOrders,
   pendingOrders,
+  gameState,
   onEnablePlanningMode,
   planningMode = false,
 }: QuickActionsWidgetProps) {
   const [activeTab, setActiveTab] = useState("suppliers")
 
-  // Calculate remaining capacity for a supplier
-  const calculateRemainingCapacity = (supplier: Supplier) => {
-    // Find current order for this supplier
-    const currentOrder = supplierOrders.find((order) => order.supplierId === supplier.id)
-
-    // Calculate total units ordered
-    let totalOrdered = 0
-    if (currentOrder) {
-      if (supplier.material === "patty") totalOrdered += currentOrder.pattyPurchase || 0
-      if (supplier.material === "bun") totalOrdered += currentOrder.bunPurchase || 0
-      if (supplier.material === "cheese") totalOrdered += currentOrder.cheesePurchase || 0
-      if (supplier.material === "potato") totalOrdered += currentOrder.potatoPurchase || 0
+  const getSupplierMaterials = (supplier: Supplier) => {
+    if (Array.isArray(supplier.materials) && supplier.materials.length > 0) {
+      return supplier.materials
     }
+    return MATERIALS
+  }
 
-    // Find pending orders for this supplier
-    const pendingOrdersForSupplier = pendingOrders.filter((order) => order.supplierId === supplier.id)
+  // Defensive: fallback to empty object if undefined
+  const supplierDeliveries = gameState?.supplierDeliveries || {}
 
-    // Add pending orders to total
-    for (const order of pendingOrdersForSupplier) {
-      if (supplier.material === "patty") totalOrdered += order.pattyQuantity || 0
-      if (supplier.material === "bun") totalOrdered += order.bunQuantity || 0
-      if (supplier.material === "cheese") totalOrdered += order.cheeseQuantity || 0
-      if (supplier.material === "potato") totalOrdered += order.potatoQuantity || 0
+  const calculateRemainingCapacity = (supplier: Supplier, material: string) => {
+    const lifetimeCapacity =
+      (supplier.capacityPerGame && supplier.capacityPerGame[material]) ?? 0
+
+    // Defensive: fallback to 0 if undefined
+    const deliveredSoFar = supplierDeliveries[supplier.id]?.[material] || 0
+
+    const stagedOrder =
+      supplierOrders.find((order) => order.supplierId === supplier.id)?.[`${material}Purchase`] || 0
+
+    return Math.max(0, lifetimeCapacity - deliveredSoFar - stagedOrder)
+  }
+
+  const getMaterialCapacity = (supplier: Supplier, material: string) => {
+    if (typeof supplier.capacityPerDay === "object") {
+      return supplier.capacityPerDay[material] || 0
     }
-
-    // Return remaining capacity
-    return Math.max(0, supplier.capacity - totalOrdered)
+    return supplier.capacityPerDay || supplier.capacity || 0
   }
 
   return (
@@ -83,47 +88,49 @@ export function QuickActionsWidget({
               {levelConfig.suppliers.map((supplier) => (
                 <div key={supplier.id} className="border rounded-md p-2">
                   <div className="font-medium text-sm mb-1">{supplier.name}</div>
-                  <div className="grid grid-cols-2 gap-1 text-xs">
-                    <div>Material:</div>
-                    <div className="text-right capitalize">{supplier.material}</div>
-
+                  <div className="grid grid-cols-3 gap-1 text-xs">
+                    <div className="font-semibold">Material</div>
+                    <div className="font-semibold text-right">Remaining</div>
+                    <div className="font-semibold text-right">Price</div>
+                    {getSupplierMaterials(supplier).map((material: string) => {
+                      const remaining = calculateRemainingCapacity(supplier, material)
+                      if (remaining === 0) return null // Hide materials with 0 remaining
+                      return (
+                        <React.Fragment key={material}>
+                          <div className="capitalize">{material}</div>
+                          <div className="text-right">
+                            {remaining} units
+                            {remaining < (getMaterialCapacity(supplier, material) / 4) && (
+                              <Badge variant="destructive" className="ml-1">
+                                Low
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            {getMaterialPriceForSupplier(supplier.id, material).toFixed(2)} kr
+                          </div>
+                        </React.Fragment>
+                      )
+                    })}
+                  </div>
+                  <div className="grid grid-cols-2 gap-1 text-xs mt-2">
                     <div>Lead Time:</div>
                     <div className="text-right">
                       {supplier.leadTime} day{supplier.leadTime !== 1 ? "s" : ""}
                     </div>
-
-                    <div>Capacity:</div>
-                    <div className="text-right">{supplier.capacity} units</div>
-
-                    <div>Remaining:</div>
-                    <div className="text-right">
-                      {calculateRemainingCapacity(supplier)} units
-                      {calculateRemainingCapacity(supplier) < supplier.capacity / 4 && (
-                        <Badge variant="destructive" className="ml-1">
-                          Low
-                        </Badge>
-                      )}
-                    </div>
-
-                    <div>Price:</div>
-                    <div className="text-right">
-                      {getMaterialPriceForSupplier(supplier.id, supplier.material).toFixed(2)} kr
-                    </div>
-
-                    {supplier.transportCost && (
-                      <>
-                        <div>Transport:</div>
-                        <div className="text-right">{supplier.transportCost.toFixed(2)} kr</div>
-                      </>
-                    )}
-
-                    {supplier.shipmentSize && (
-                      <>
-                        <div>Shipment Size:</div>
-                        <div className="text-right">{supplier.shipmentSize} units</div>
-                      </>
-                    )}
                   </div>
+                  {supplier.transportCost && (
+                    <div className="grid grid-cols-2 gap-1 text-xs mt-2">
+                      <div>Transport:</div>
+                      <div className="text-right">{supplier.transportCost.toFixed(2)} kr</div>
+                    </div>
+                  )}
+                  {supplier.shipmentSize && (
+                    <div className="grid grid-cols-2 gap-1 text-xs mt-2">
+                      <div>Shipment Size:</div>
+                      <div className="text-right">{supplier.shipmentSize} units</div>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -177,6 +184,11 @@ export function QuickActionsWidget({
                           <div className="text-right">{customer.orderQuantities.join(", ")} units</div>
                         </>
                       )}
+
+                      <div>Delivered:</div>
+                      <div className="text-right">
+                        {gameState.customerDeliveries?.[customer.id] || 0} units
+                      </div>
                     </div>
                   </div>
                 ))}

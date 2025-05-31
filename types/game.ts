@@ -8,13 +8,12 @@ export interface Inventory {
 export interface Supplier {
   id: number
   name: string
-  material: string
-  basePrice: number
   leadTime: number
-  capacity: number
-  moq: number
-  reliability: number
-  location: { x: number; y: number }
+  capacityPerGame: Record<string, number>
+  capacityPerDay: Record<string, number>
+  materials: string[]
+  shipmentPrices: Record<string, Record<number, number>>
+  shipmentPricesIncludeBaseCost: boolean
 }
 
 export interface DeliveryOption {

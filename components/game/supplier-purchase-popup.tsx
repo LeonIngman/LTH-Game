@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { CheckCircle } from "lucide-react"
 import type { Supplier, SupplierOrder, GameState, LevelConfig } from "@/types/game"
 import { SupplierOrderForm } from "./ui/supplier-order-form"
-import { calculateUnitCost, addImmediateInventory } from "@/lib/game/inventory-management"
 
 interface SupplierPurchasePopupProps {
   isOpen: boolean
@@ -24,7 +23,10 @@ interface SupplierPurchasePopupProps {
   gameState?: GameState
   levelConfig?: LevelConfig
   setGameState?: (state: GameState) => void
+  onOrderConfirmed?: () => void
 }
+
+const MATERIALS = ["patty", "cheese", "bun", "potato"] as const
 
 export function SupplierPurchasePopup({
   isOpen,
@@ -41,8 +43,8 @@ export function SupplierPurchasePopup({
   gameState,
   levelConfig,
   setGameState,
+  onOrderConfirmed,
 }: SupplierPurchasePopupProps) {
-  // Local state for pending orders
   const [pendingOrder, setPendingOrder] = useState<SupplierOrder | null>(null)
   const [hasConfirmedOrder, setHasConfirmedOrder] = useState(false)
 
@@ -57,100 +59,61 @@ export function SupplierPurchasePopup({
         potatoPurchase: 0,
       }
       setPendingOrder(currentOrder)
-
-      // Check if there's already a confirmed order for this supplier
-      const hasExistingOrder =
+      setHasConfirmedOrder(
         currentOrder.pattyPurchase > 0 ||
         currentOrder.cheesePurchase > 0 ||
         currentOrder.bunPurchase > 0 ||
         currentOrder.potatoPurchase > 0
-      setHasConfirmedOrder(hasExistingOrder)
+      )
     }
   }, [supplier, supplierOrders])
 
   if (!supplier || !pendingOrder) return null
 
-  // Handle local order changes
-  const handleLocalOrderChange = (supplierId: number, field: keyof SupplierOrder, value: number) => {
-    setPendingOrder((prev) => (prev ? { ...prev, [field]: value } : null))
-    setHasConfirmedOrder(false) // Reset confirmation when changes are made
+  // --- Capacity and Remaining Calculation ---
+  // Use capacityPerGame for the supplier
+  const getMaterialCapacity = (supplier: Supplier, material: string) => {
+    return (supplier.capacityPerGame && supplier.capacityPerGame[material]) ?? 0
   }
 
-  // Confirm the order
+  const getOrderedToday = (material: string) => {
+    return supplierOrders
+      .filter((order) => order.supplierId === supplier.id)
+      .reduce((sum, order) => sum + (order[`${material}Purchase`] || 0), 0)
+  }
+
+  // Remaining = capacityPerGame - deliveredSoFar - stagedOrder
+  const getRemainingCapacity = (material: string) => {
+    const deliveredSoFar =
+      (gameState?.supplierDeliveries?.[supplier.id]?.[material]) || 0
+    const stagedOrder = getOrderedToday(material)
+    const lifetimeCapacity = getMaterialCapacity(supplier, material)
+    return Math.max(0, lifetimeCapacity - deliveredSoFar - stagedOrder)
+  }
+
+  // --- Order Change Handlers ---
+  const handleLocalOrderChange = (supplierId: number, field: keyof SupplierOrder, value: number) => {
+    setPendingOrder((prev) => (prev ? { ...prev, [field]: value } : null))
+    setHasConfirmedOrder(false)
+  }
+
+  // --- Confirm Order ---
   const handleConfirmOrder = () => {
-    if (pendingOrder && supplier && gameState && levelConfig && setGameState) {
-      // Get delivery option to check lead time
-      const deliveryOption = deliveryOptions.find((d) => d.id === selectedDeliveryOption)
-      const deliveryLeadTime = deliveryOption?.daysToDeliver || 0
-      const supplierLeadTime = supplier.leadTime || 0
-      const totalLeadTime = deliveryLeadTime + supplierLeadTime
-      const deliveryMultiplier = deliveryOption?.costMultiplier || 1.0
-
-      // Create a copy of the game state to modify
-      const newGameState = { ...gameState }
-
-      // If lead time is 0, update inventory immediately
-      if (totalLeadTime === 0) {
-        const materials = [
-          { type: "patty" as const, quantity: pendingOrder.pattyPurchase },
-          { type: "cheese" as const, quantity: pendingOrder.cheesePurchase },
-          { type: "bun" as const, quantity: pendingOrder.bunPurchase },
-          { type: "potato" as const, quantity: pendingOrder.potatoPurchase },
-        ]
-
-        let totalCost = 0
-
-        for (const material of materials) {
-          if (material.quantity > 0) {
-            // Calculate unit cost
-            const unitCost = calculateUnitCost(
-              material.quantity,
-              material.type,
-              supplier,
-              levelConfig,
-              deliveryMultiplier,
-            )
-
-            // Add to inventory immediately
-            addImmediateInventory(
-              newGameState,
-              material.type,
-              material.quantity,
-              unitCost,
-              supplier.id,
-              selectedDeliveryOption,
-            )
-
-            totalCost += material.quantity * unitCost
-          }
-        }
-
-        // Deduct cost from cash
-        newGameState.cash = Number.parseFloat((newGameState.cash - totalCost).toFixed(2))
-
-        // Update the game state
-        setGameState(newGameState)
+    if (pendingOrder && supplier) {
+      // Only update the staged order for today
+      for (const material of MATERIALS) {
+        handleSupplierOrderChange(
+          pendingOrder.supplierId,
+          `${material}Purchase` as keyof SupplierOrder,
+          pendingOrder[`${material}Purchase`] || 0
+        )
       }
-
-      // Apply all changes to the main state (for pending orders or regular processing)
-      handleSupplierOrderChange(pendingOrder.supplierId, "pattyPurchase", pendingOrder.pattyPurchase)
-      handleSupplierOrderChange(pendingOrder.supplierId, "cheesePurchase", pendingOrder.cheesePurchase)
-      handleSupplierOrderChange(pendingOrder.supplierId, "bunPurchase", pendingOrder.bunPurchase)
-      handleSupplierOrderChange(pendingOrder.supplierId, "potatoPurchase", pendingOrder.potatoPurchase)
-
       setHasConfirmedOrder(true)
-    } else {
-      // Fallback to normal order processing if we don't have game state access
-      handleSupplierOrderChange(pendingOrder.supplierId, "pattyPurchase", pendingOrder.pattyPurchase)
-      handleSupplierOrderChange(pendingOrder.supplierId, "cheesePurchase", pendingOrder.cheesePurchase)
-      handleSupplierOrderChange(pendingOrder.supplierId, "bunPurchase", pendingOrder.bunPurchase)
-      handleSupplierOrderChange(pendingOrder.supplierId, "potatoPurchase", pendingOrder.potatoPurchase)
-
-      setHasConfirmedOrder(true)
+      if (onOrderConfirmed) onOrderConfirmed()
     }
   }
 
-  // Check if there are any pending changes
+  // --- UI State ---
   const currentOrder = supplierOrders.find((order) => order.supplierId === supplier.id) || {
     supplierId: supplier.id,
     pattyPurchase: 0,
@@ -161,26 +124,18 @@ export function SupplierPurchasePopup({
 
   const hasPendingChanges =
     pendingOrder &&
-    (pendingOrder.pattyPurchase !== currentOrder.pattyPurchase ||
-      pendingOrder.cheesePurchase !== currentOrder.cheesePurchase ||
-      pendingOrder.bunPurchase !== currentOrder.bunPurchase ||
-      pendingOrder.potatoPurchase !== currentOrder.potatoPurchase)
+    MATERIALS.some((mat) => pendingOrder[`${mat}Purchase`] !== currentOrder[`${mat}Purchase`])
 
   const hasAnyOrder =
     pendingOrder &&
-    (pendingOrder.pattyPurchase > 0 ||
-      pendingOrder.cheesePurchase > 0 ||
-      pendingOrder.bunPurchase > 0 ||
-      pendingOrder.potatoPurchase > 0)
+    MATERIALS.some((mat) => pendingOrder[`${mat}Purchase`] > 0)
 
-  // Get order quantities for this supplier
-  const orderQuantities = getOrderQuantitiesForSupplier(supplier.id)
-
-  // Check if this is immediate delivery
+  // --- Delivery Option ---
   const deliveryOption = deliveryOptions.find((d) => d.id === selectedDeliveryOption)
   const totalLeadTime = (deliveryOption?.daysToDeliver || 0) + (supplier.leadTime || 0)
   const isImmediateDelivery = totalLeadTime === 0
 
+  // --- Render ---
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
@@ -207,9 +162,10 @@ export function SupplierPurchasePopup({
           <SupplierOrderForm
             supplier={supplier}
             supplierOrder={pendingOrder}
-            orderQuantities={orderQuantities}
+            orderQuantities={getOrderQuantitiesForSupplier(supplier.id)}
             onOrderChange={handleLocalOrderChange}
             getMaterialPriceForSupplier={getMaterialPriceForSupplier}
+            getMaterialCapacity={(_supplier, material) => getRemainingCapacity(material)}
             disabled={isDisabled}
           />
         </div>

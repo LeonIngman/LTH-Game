@@ -15,6 +15,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
     }
 
+    console.log("Received action:", JSON.stringify(action))
+
     // Validate gameState has required properties
     if (!gameState.inventory || typeof gameState.inventory !== "object") {
       return NextResponse.json({ error: "Invalid game state: missing or invalid inventory" }, { status: 400 })

@@ -112,12 +112,12 @@ export function SupplyChainMap({
   // Get map image path based on level
   const getMapImagePath = (level: number) => {
     if (level === 0) {
-      return `/images/Level0.png` // Level 0 map
-    } else if (level === 1 || level === 2) {
-      return `/images/Level1-2.png` // Updated Level 1-2 map
+      return `/images/Level0.png`
+    } else if (level === 1 || level === 2 || level === 3) {
+      return `/images/Level1-2.png`
     }
 
-    // For levels 3 and above, fallback to SVG maps
+    // For levels 4 and above, fallback to SVG maps
     return `/images/L${level}map.svg` // Fallback to SVG maps for other levels
   }
 

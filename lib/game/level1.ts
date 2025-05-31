@@ -1,5 +1,4 @@
 import type { LevelConfig, DailyDemand } from "@/types/game"
-import { createSuppliers } from "./suppliers"
 import { baseLevelConfig } from "./level-base"
 
 /**
@@ -10,10 +9,53 @@ export const level1Config: LevelConfig = {
   id: 1,
   name: "Timing is Everything",
   description: "Manage your burger restaurant supply chain with a fixed 2-day delivery time",
-  daysToComplete: 30, // Changed from 20 to 30
+  daysToComplete: 30,
 
   // Suppliers for Level 1 - with leadTime of 2 days
-  suppliers: createSuppliers([2, 2, 2]),
+  suppliers: [
+    {
+      id: 1,
+      name: "Pink Patty",
+      leadTime: 2,
+      capacityPerGame: { patty: 200, cheese: 100, bun: 150, potato: 0 },
+      capacityPerDay: { patty: 20, cheese: 10, bun: 15, potato: 0 },
+      materials: ["patty", "cheese", "bun", "potato"],
+      shipmentPrices: {
+        patty: { 50: 116, 100: 134, 200: 179 },
+        cheese: { 50: 65, 100: 89, 200: 116 },
+        bun: { 50: 89, 100: 98, 200: 134 },
+      },
+      shipmentPricesIncludeBaseCost: false,
+    },
+    {
+      id: 2,
+      name: "Brown Sauce",
+      leadTime: 2,
+      capacityPerGame: { patty: 150, cheese: 200, bun: 100, potato: 50 },
+      capacityPerDay: { patty: 15, cheese: 20, bun: 10, potato: 5 },
+      materials: ["patty", "cheese", "bun", "potato"],
+      shipmentPrices: {
+        patty: { 50: 120, 100: 140, 200: 185 },
+        cheese: { 50: 70, 100: 95, 200: 120 },
+        bun: { 50: 90, 100: 100, 200: 140 },
+      },
+      shipmentPricesIncludeBaseCost: false,
+    },
+    {
+      id: 3,
+      name: "Firehouse Foods",
+      leadTime: 2,
+      capacityPerGame: { patty: 100, cheese: 100, bun: 200, potato: 100 },
+      capacityPerDay: { patty: 10, cheese: 10, bun: 20, potato: 10 },
+      materials: ["patty", "cheese", "bun", "potato"],
+      shipmentPrices: {
+        patty: { 50: 125, 100: 145, 200: 190 },
+        cheese: { 50: 75, 100: 100, 200: 125 },
+        bun: { 50: 92, 100: 102, 200: 142 },
+      },
+      shipmentPricesIncludeBaseCost: false,
+    },
+  ],
 
   // Single delivery option with constant 2-day lead time
   deliveryOptions: [
@@ -32,24 +74,14 @@ export const level1Config: LevelConfig = {
       id: 1,
       name: "Yummy Zone",
       description: "A local restaurant chain with specific delivery requirements.",
-      leadTime: 1, // 1-day lead time for order processing
-      totalRequirement: 80, // Updated total requirement
+      leadTime: 1,
+      totalRequirement: 80,
       deliverySchedule: [
-        {
-          day: 3,
-          requiredAmount: 20,
-        },
-        {
-          day: 30, // Final delivery on the last day
-          requiredAmount: 60, // Remaining amount
-        },
+        { day: 3, requiredAmount: 20 },
+        { day: 30, requiredAmount: 60 },
       ],
       pricePerUnit: 49,
-      transportCosts: {
-        20: 134,
-        40: 179,
-        100: 204,
-      },
+      transportCosts: { 20: 134, 40: 179, 100: 204 },
       allowedShipmentSizes: [20, 40, 100],
       minimumDeliveryAmount: 20,
       active: true,
@@ -58,24 +90,14 @@ export const level1Config: LevelConfig = {
       id: 2,
       name: "Toast-to-go",
       description: "A quick-service restaurant requiring regular deliveries.",
-      leadTime: 1, // 1-day lead time for order processing
-      totalRequirement: 120, // Updated total requirement
+      leadTime: 1,
+      totalRequirement: 120,
       deliverySchedule: [
-        {
-          day: 6,
-          requiredAmount: 40,
-        },
-        {
-          day: 30, // Final delivery on the last day
-          requiredAmount: 80, // Remaining amount
-        },
+        { day: 6, requiredAmount: 40 },
+        { day: 30, requiredAmount: 80 },
       ],
       pricePerUnit: 46,
-      transportCosts: {
-        20: 139,
-        40: 186,
-        100: 213,
-      },
+      transportCosts: { 20: 139, 40: 186, 100: 213 },
       allowedShipmentSizes: [20, 40, 100],
       minimumDeliveryAmount: 20,
       active: true,
@@ -84,24 +106,14 @@ export const level1Config: LevelConfig = {
       id: 3,
       name: "StudyFuel",
       description: "A campus food service catering to university students.",
-      leadTime: 1, // 1-day lead time for order processing
-      totalRequirement: 100, // Updated total requirement
+      leadTime: 1,
+      totalRequirement: 100,
       deliverySchedule: [
-        {
-          day: 8,
-          requiredAmount: 60,
-        },
-        {
-          day: 30, // Final delivery on the last day
-          requiredAmount: 40, // Remaining amount
-        },
+        { day: 8, requiredAmount: 60 },
+        { day: 30, requiredAmount: 40 },
       ],
       pricePerUnit: 47,
-      transportCosts: {
-        20: 145,
-        40: 194,
-        100: 222,
-      },
+      transportCosts: { 20: 145, 40: 194, 100: 222 },
       allowedShipmentSizes: [20, 40, 100],
       minimumDeliveryAmount: 20,
       active: true,
@@ -110,33 +122,20 @@ export const level1Config: LevelConfig = {
 
   // Demand model for Level 1 - more variable demand
   demandModel: (day: number): DailyDemand => {
-    // Base demand between 10-15 units
     const baseDemand = 12
-
-    // Larger random variation (+/- 4 units)
     const variation = Math.floor(Math.random() * 9) - 4
-
-    // Weekly cycle - higher demand on days 1-2, 8-9, 15-16, etc.
     const weeklyBoost = day % 7 === 1 || day % 7 === 2 ? 8 : 0
-
-    // Seasonal trend - increasing demand over time
     const seasonalTrend = Math.floor(day / 10)
-
-    // Calculate final demand
     const quantity = Math.max(0, baseDemand + variation + weeklyBoost + seasonalTrend)
-
-    // Variable price for Level 1 - price fluctuates slightly
     const basePrice = 40
     const priceVariation = Math.floor(Math.random() * 5) - 2
     const pricePerUnit = basePrice + priceVariation
-
     return { quantity, pricePerUnit }
   },
 
-  // Updated production cost per unit from 5 to 4
   productionCostPerUnit: 4,
 
-  // Add map positions
+  // Keep original map positions for Level 1
   mapPositions: {
     1: {
       mainFactory: { x: 210, y: 495 },
@@ -152,10 +151,4 @@ export const level1Config: LevelConfig = {
       ],
     },
   },
-}
-
-// Make sure level1Config doesn't override initialInventory
-// If it does, remove that override to use the baseLevelConfig values
-if (level1Config.initialInventory) {
-  delete level1Config.initialInventory
 }

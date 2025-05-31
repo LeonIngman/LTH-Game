@@ -8,13 +8,13 @@ interface GamePageProps {
   }
 }
 
-export default function GamePage({ params }: GamePageProps) {
-  const levelId = Number.parseInt(params.levelId, 10)
+export default async function GamePage({ params }: GamePageProps) {
+  const parsedLevelId = Number.parseInt(params.levelId, 10)
 
   return (
     <div className="container mx-auto py-6">
       <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
-        <GameInterface levelId={levelId} />
+        <GameInterface levelId={parsedLevelId} />
       </Suspense>
     </div>
   )
