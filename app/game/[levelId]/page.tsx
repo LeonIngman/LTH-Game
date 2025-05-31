@@ -3,13 +3,12 @@ import { GameInterface } from "@/components/game/game-interface"
 import { Skeleton } from "@/components/ui/skeleton"
 
 interface GamePageProps {
-  params: {
-    levelId: string
-  }
+  params: Promise<{ levelId: string }>
 }
 
 export default async function GamePage({ params }: GamePageProps) {
-  const parsedLevelId = Number.parseInt(params.levelId, 10)
+  const { levelId } = await params
+  const parsedLevelId = Number.parseInt(levelId, 10)
 
   return (
     <div className="container mx-auto py-6">

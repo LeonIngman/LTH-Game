@@ -8,9 +8,16 @@ interface D3ChartProps {
   chartType: string
   width?: number
   height?: number
+  overstock?: {
+    patty?: { threshold: number }
+    bun?: { threshold: number }
+    cheese?: { threshold: number }
+    potato?: { threshold: number }
+    finishedGoods?: { threshold: number }
+  }
 }
 
-export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartProps) {
+export function D3Chart({ data, chartType, width = 800, height = 400, overstock }: D3ChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   useEffect(() => {
@@ -36,6 +43,15 @@ export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartP
       holdingCosts: Number(d.holdingCosts ?? 0),
       day: Number(d.day ?? 0),
     }))
+
+    // Use overstock thresholds from props
+    const thresholds = {
+      patty: overstock?.patty?.threshold ?? 200,
+      bun: overstock?.bun?.threshold ?? 300,
+      cheese: overstock?.cheese?.threshold ?? 400,
+      potato: overstock?.potato?.threshold ?? 500,
+      finishedGoods: overstock?.finishedGoods?.threshold ?? 100,
+    }
 
     // Clear previous chart
     d3.select(svgRef.current).selectAll("*").remove()
@@ -82,7 +98,7 @@ export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartP
     // Render different chart types
     switch (chartType) {
       case "inventory":
-        renderInventoryChart(svg, normalizedData, innerWidth, innerHeight)
+        renderInventoryChart(svg, normalizedData, innerWidth, innerHeight, xScale)
         break
       case "financial":
         renderFinancialChart(svg, normalizedData, innerWidth, innerHeight)
@@ -94,9 +110,34 @@ export function D3Chart({ data, chartType, width = 800, height = 400 }: D3ChartP
         renderCostsChart(svg, normalizedData, innerWidth, innerHeight)
         break
       default:
-        renderInventoryChart(svg, normalizedData, innerWidth, innerHeight)
+        renderInventoryChart(svg, normalizedData, innerWidth, innerHeight, xScale)
     }
-  }, [data, chartType, width, height])
+
+    // Add warning circles for overstock using correct thresholds
+    svg.selectAll(".overstock-warning").remove()
+    normalizedData.forEach((d) => {
+      if (
+        d.pattyInventory > thresholds.patty ||
+        d.bunInventory > thresholds.bun ||
+        d.cheeseInventory > thresholds.cheese ||
+        d.potatoInventory > thresholds.potato ||
+        d.finishedGoodsInventory > thresholds.finishedGoods
+      ) {
+        svg
+          .append("circle")
+          .attr("class", "overstock-warning")
+          .attr("cx", xScale(d.day))
+          .attr("cy", 10)
+          .attr("r", 8)
+          .attr("fill", "#ef4444")
+          .attr("opacity", 0.7)
+          .append("title")
+          .text(
+            `Overstock! Patty: ${d.pattyInventory}/${thresholds.patty}, Bun: ${d.bunInventory}/${thresholds.bun}, Cheese: ${d.cheeseInventory}/${thresholds.cheese}, Potato: ${d.potatoInventory}/${thresholds.potato}, Finished: ${d.finishedGoodsInventory}/${thresholds.finishedGoods}`
+          )
+      }
+    })
+  }, [data, chartType, width, height, overstock])
 
   return (
     <div className="relative w-full overflow-x-auto">
@@ -111,6 +152,7 @@ function renderInventoryChart(
   data: any[],
   width: number,
   height: number,
+  xScale: d3.ScaleLinear<number, number>
 ) {
   // Y scale for inventory levels
   const yScale = d3
@@ -233,6 +275,20 @@ function renderInventoryChart(
     .attr("stroke", "#3b82f6")
     .attr("stroke-width", 2)
     .attr("d", finishedGoodsLine)
+
+  // Add warning circles for overstock
+  svg.selectAll(".overstock-warning")
+    .data(data.filter(d => d.overstockPenalty && d.overstockPenalty > 0))
+    .enter()
+    .append("circle")
+    .attr("class", "overstock-warning")
+    .attr("cx", d => xScale(d.day))
+    .attr("cy", 10) // Place at the top of the chart
+    .attr("r", 8)
+    .attr("fill", "#ef4444")
+    .attr("opacity", 0.7)
+    .append("title")
+    .text(d => `Overstock penalty: ${d.overstockPenalty} kr`)
 
   // Add legend
   const legend = svg

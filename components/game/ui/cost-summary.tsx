@@ -3,24 +3,24 @@
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { GameState, LevelConfig, GameAction, SupplierOrder } from "@/types/game"
+import type { LevelConfig } from "@/types/game"
 import { calculateDailyInventoryValuation, calculateInventoryHoldingCosts } from "@/lib/game/inventory-management"
 
-interface CostSummaryProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-  action: GameAction
-  supplierOrders: SupplierOrder[]
+export interface CostSummaryProps {
+  gameState: any
+  levelConfig: any
+  action: any
+  supplierOrders: any[]
   isLoading: boolean
   gameEnded: boolean
-  onProcessDay: () => void
-  onShowChart: () => void
-  onShowTutorial: () => void
+  onProcessDay: () => Promise<void>
   calculateTotalPurchaseCost: () => number
   calculateProductionCost: () => number
-  getHoldingCost: () => number
-  calculateTotalCost: () => number
-  isNextDayButtonDisabled: () => boolean
+  calculateMaterialPurchaseCost: () => number // <-- Add this line
+  calculateTransportationCost: () => number
+  calculateHoldingCost: () => number
+  calculateRevenue: () => number
+  isNextDayButtonDisabled: boolean
   getNextDayDisabledReason: () => string
 }
 
@@ -34,13 +34,15 @@ export function CostSummary({
   onProcessDay,
   calculateTotalPurchaseCost,
   calculateProductionCost,
-  getHoldingCost,
-  calculateTotalCost,
+  calculateMaterialPurchaseCost,
+  calculateTransportationCost,
+  calculateHoldingCost,
+  calculateRevenue,
   isNextDayButtonDisabled,
   getNextDayDisabledReason,
 }: CostSummaryProps) {
   // Calculate individual cost components
-  const purchaseCost = calculateTotalPurchaseCost()
+  const purchaseCost = calculateMaterialPurchaseCost()
   const productionCost = calculateProductionCost()
 
   // Calculate transportation cost as the difference between total purchase cost and base material costs
@@ -54,8 +56,19 @@ export function CostSummary({
   // Calculate revenue from both direct sales and customer orders
   const revenue = calculateRevenue()
 
+  // Find the overstock penalty for the current day
+  const currentDay = gameState.day
+  const overstockPenaltyEntry =
+    Array.isArray(gameState.overstockPenalties)
+      ? gameState.overstockPenalties.find((entry: any) => entry.day === currentDay - 1)
+      : null
+
+  // Always use fallback values
+  const overstockPenalty = Number(overstockPenaltyEntry?.penalty ?? 0)
+  const overstockDetails = overstockPenaltyEntry?.details ?? {}
+
   // Calculate total cost as sum of all components
-  const totalCost = purchaseCost + productionCost + holdingCost
+  const totalCost = purchaseCost + productionCost + holdingCost + overstockPenalty
   const profit = revenue - totalCost
 
   // Check if the player is only attempting sales (no purchases or production)
@@ -70,66 +83,6 @@ export function CostSummary({
 
     const hasCustomerOrders = action.customerOrders && action.customerOrders.some((order) => order.quantity > 0)
     return noOrders && action.production === 0 && (action.salesAttempt > 0 || hasCustomerOrders)
-  }
-
-  // Calculate revenue from both direct sales and customer orders
-  function calculateRevenue(): number {
-    // Revenue from direct sales
-    const directSalesRevenue = action.salesAttempt * gameState.dailyDemand.pricePerUnit
-
-    // Revenue from customer orders
-    let customerOrdersRevenue = 0
-    if (action.customerOrders) {
-      for (const order of action.customerOrders) {
-        const customer = levelConfig.customers?.find((c) => c.id === order.customerId)
-        if (customer && order.quantity > 0) {
-          // Base revenue
-          customerOrdersRevenue += order.quantity * customer.pricePerUnit
-
-          // Subtract transport costs if applicable
-          if (customer.transportCosts && customer.transportCosts[order.quantity]) {
-            customerOrdersRevenue -= customer.transportCosts[order.quantity]
-          }
-        }
-      }
-    }
-
-    return directSalesRevenue + customerOrdersRevenue
-  }
-
-  // Calculate transportation cost as the difference between total purchase cost and base material costs
-  function calculateTransportationCost(): number {
-    let baseMaterialCost = 0
-    let totalPurchaseCost = 0
-
-    // Calculate base material costs
-    for (const order of supplierOrders) {
-      const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-      if (!supplier) continue
-
-      if (order.pattyPurchase > 0) {
-        const basePrice = levelConfig.materialBasePrices.patty || 0
-        baseMaterialCost += order.pattyPurchase * basePrice
-      }
-
-      if (order.cheesePurchase > 0) {
-        const basePrice = levelConfig.materialBasePrices.cheese || 0
-        baseMaterialCost += order.cheesePurchase * basePrice
-      }
-
-      if (order.bunPurchase > 0) {
-        const basePrice = levelConfig.materialBasePrices.bun || 0
-        baseMaterialCost += order.bunPurchase * basePrice
-      }
-
-      if (order.potatoPurchase > 0) {
-        const basePrice = levelConfig.materialBasePrices.potato || 0
-        baseMaterialCost += order.potatoPurchase * basePrice
-      }
-    }
-
-    totalPurchaseCost = calculateTotalPurchaseCost()
-    return Math.max(0, totalPurchaseCost - baseMaterialCost)
   }
 
   // Determine if the Next Day button should be disabled
@@ -156,7 +109,7 @@ export function CostSummary({
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border cost-summary">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 text-center">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Purchase Cost</p>
           <p className="text-xl font-bold">{purchaseCost.toFixed(2)} kr</p>
@@ -180,6 +133,22 @@ export function CostSummary({
           </p>
           <p className="text-xl font-bold">{holdingCost.toFixed(2)} kr</p>
           <p className="text-xs text-muted-foreground mt-1">Total inventory value × 25% annual rate ÷ 365 days</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Overstock Cost</p>
+          <p className="text-xl font-bold text-red-600">{overstockPenalty.toFixed(2)} kr</p>
+          {overstockPenalty > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              {Object.entries(overstockDetails).map(([item, value]) => (
+                <div key={item}>
+                  {item}: {Number(value ?? 0).toFixed(2)} kr
+                </div>
+              ))}
+            </div>
+          )}
+          {overstockPenalty === 0 && (
+            <p className="text-xs text-muted-foreground mt-1">No overstock penalty</p>
+          )}
         </div>
       </div>
       <div className="mt-4 border-t pt-4 flex justify-between items-center">
@@ -207,13 +176,13 @@ export function CostSummary({
                   <Button
                     className="next-day-button"
                     onClick={onProcessDay}
-                    disabled={isNextDayButtonDisabled() || isButtonDisabled()}
+                    disabled={isButtonDisabled()}
                   >
                     {isLoading ? "Processing..." : "Next Day"} <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </span>
               </TooltipTrigger>
-              {(isNextDayButtonDisabled() || isButtonDisabled()) && (
+              {(isNextDayButtonDisabled || isButtonDisabled()) && (
                 <TooltipContent>
                   <p>{getDisabledReason()}</p>
                 </TooltipContent>
@@ -224,4 +193,40 @@ export function CostSummary({
       </div>
     </div>
   )
+}
+
+// Calculate only the base material cost (no transport)
+function calculateMaterialPurchaseCost() {
+  let total = 0
+  for (const order of supplierOrders) {
+    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+    if (!supplier) continue
+    if (order.pattyPurchase > 0) total += order.pattyPurchase * levelConfig.materialBasePrices.patty
+    if (order.cheesePurchase > 0) total += order.cheesePurchase * levelConfig.materialBasePrices.cheese
+    if (order.bunPurchase > 0) total += order.bunPurchase * levelConfig.materialBasePrices.bun
+    if (order.potatoPurchase > 0) total += order.potatoPurchase * levelConfig.materialBasePrices.potato
+  }
+  return total
+}
+
+// Calculate only the transportation cost
+function calculateTransportationCost() {
+  let total = 0
+  for (const order of supplierOrders) {
+    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+    if (!supplier) continue
+    // Add up all shipment/delivery costs for each material
+    // (You may need to adapt this logic to your game's pricing model)
+    // Example:
+    if (order.pattyPurchase > 0 && supplier.shipmentPrices?.patty) {
+      // Find the closest shipment size
+      const shipmentSizes = Object.keys(supplier.shipmentPrices.patty).map(Number)
+      const closest = shipmentSizes.reduce((prev, curr) =>
+        Math.abs(curr - order.pattyPurchase) < Math.abs(prev - order.pattyPurchase) ? curr : prev
+      )
+      total += supplier.shipmentPrices.patty[closest]
+    }
+    // Repeat for cheese, bun, potato...
+  }
+  return total
 }

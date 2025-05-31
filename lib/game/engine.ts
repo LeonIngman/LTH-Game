@@ -302,6 +302,19 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   // 9. Deduct holding costs
   newState.cash = Number.parseFloat((newState.cash - holdingCosts.totalHoldingCost).toFixed(2))
 
+  // --- Add this block for overstock penalty ---
+  const overstockResult = calculateOverstockPenalty(newState, levelConfig)
+  if (!newState.overstockPenalties) newState.overstockPenalties = []
+  newState.overstockPenalties.push({
+    day: newState.day,
+    penalty: typeof overstockResult.total === "number" ? overstockResult.total : 0,
+    details: overstockResult.details ?? {},
+  })
+  if (overstockResult.total > 0) {
+    newState.cash = Number.parseFloat((newState.cash - overstockResult.total).toFixed(2))
+  }
+  // --------------------------------------------
+
   // 10. Calculate daily profit and update cumulative profit
   const dailyProfit = newState.cash - initialCash
   newState.cumulativeProfit += dailyProfit
@@ -310,7 +323,7 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   newState.score = calculateScore(newState, levelConfig)
 
   // 12. Record daily results in history
-  recordDailyResults(newState, action, dailyProfit, levelConfig, dailyValuation, holdingCosts, latenessPenalties)
+  recordDailyResults(newState, action, dailyProfit, levelConfig, dailyValuation, holdingCosts, latenessPenalties, overstockResult) // <-- pass this in
 
   // 13. Check if player is bankrupt (cash <= 0)
   if (newState.cash <= 0 && !canRecoverFromZeroCash(newState)) {
@@ -615,6 +628,7 @@ function recordDailyResults(
   dailyValuation: DailyInventoryValuation,
   holdingCosts: InventoryHoldingCosts,
   latenessPenalties: LatenessPenalty[],
+  overstockResult: { total: number; details: Record<string, number> } // <-- add this
 ): void {
   // Calculate total purchases from all suppliers
   let totalPattyPurchased = 0
@@ -701,7 +715,7 @@ function recordDailyResults(
       purchases: totalPurchaseCost,
       production: totalProductionCost,
       holding: holdingCosts.totalHoldingCost,
-      total: totalPurchaseCost + totalProductionCost + holdingCosts.totalHoldingCost,
+      total: totalPurchaseCost + totalProductionCost + holdingCosts.totalHoldingCost + (typeof overstockResult.total === "number" ? overstockResult.total : 0),
     },
     profit: dailyProfit,
     cumulativeProfit: state.cumulativeProfit,
@@ -709,6 +723,8 @@ function recordDailyResults(
     deliveryOptionId: action.deliveryOptionId,
     customerDeliveries: Object.keys(customerDeliveries).length > 0 ? customerDeliveries : undefined,
     latenessPenalties: latenessPenalties.length > 0 ? latenessPenalties : undefined,
+    overstockPenalty: typeof overstockResult.total === "number" ? overstockResult.total : 0,
+    overstockPenaltyDetails: overstockResult.details ?? {},
   }
 
   state.history.push(dailyResult)
@@ -735,4 +751,26 @@ export function calculateGameResult(state: GameState, levelConfig: LevelConfig, 
     score: state.score,
     history: [...state.history],
   }
+}
+
+/**
+ * Calculate overstock penalty based on current inventory and level configuration
+ */
+function calculateOverstockPenalty(state: GameState, levelConfig: LevelConfig): { total: number, details: Record<string, number> } {
+  if (!levelConfig.overstock) return { total: 0, details: {} }
+  let totalPenalty = 0
+  const details: Record<string, number> = {}
+  for (const key of Object.keys(levelConfig.overstock) as Array<keyof typeof state.inventory>) {
+    const rule = levelConfig.overstock[key]
+    if (!rule) continue
+    const inventoryAmount = state.inventory[key] || 0
+    // Log here, after variables are defined
+    console.log("Overstock check:", key, "inventory:", inventoryAmount, "threshold:", rule.threshold, "penaltyPerUnit:", rule.penaltyPerUnit)
+    if (inventoryAmount > rule.threshold) {
+      const penalty = (inventoryAmount - rule.threshold) * rule.penaltyPerUnit
+      totalPenalty += penalty
+      details[key] = penalty
+    }
+  }
+  return { total: totalPenalty, details }
 }

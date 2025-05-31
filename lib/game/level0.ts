@@ -1,16 +1,37 @@
 import type { LevelConfig, DailyDemand } from "@/types/game"
-import { createSuppliers } from "./suppliers"
-import { baseLevelConfig } from "./level-base"
 
 /**
  * Level 0 configuration - Introduction to basic logistics concepts
+ * All config is now self-contained, no baseLevelConfig import needed.
  */
 export const level0Config: LevelConfig = {
-  ...baseLevelConfig,
   id: 0,
   name: "The First Spark",
   description: "Learn the fundamentals of inventory management and supply chain",
   daysToComplete: 20,
+  initialCash: 2500,
+  initialInventory: {
+    patty: 100,
+    cheese: 250,
+    bun: 150,
+    potato: 300,
+    finishedGoods: 0,
+  },
+  materialBasePrices: {
+    patty: 10,
+    cheese: 5,
+    bun: 3,
+    potato: 2,
+  },
+  holdingCosts: {
+    patty: 1.0,
+    cheese: 0.5,
+    bun: 0.3,
+    potato: 0.2,
+    finishedGoods: 2.0,
+  },
+  productionCostPerUnit: 4,
+  maxScore: 1000,
 
   // Suppliers for Level 0 - with leadTime of 0 (instant delivery)
   suppliers: [
@@ -75,24 +96,14 @@ export const level0Config: LevelConfig = {
       id: 1,
       name: "Yummy Zone",
       description: "A local restaurant chain with specific delivery requirements.",
-      leadTime: 0, // No lead time for order processing
-      totalRequirement: 80, // Total units required
+      leadTime: 0,
+      totalRequirement: 80,
       deliverySchedule: [
-        {
-          day: 3,
-          requiredAmount: 20,
-        },
-        {
-          day: 20, // Final delivery on the last day
-          requiredAmount: 60, // Remaining amount
-        },
+        { day: 3, requiredAmount: 20 },
+        { day: 20, requiredAmount: 60 },
       ],
       pricePerUnit: 49,
-      transportCosts: {
-        20: 134,
-        40: 179,
-        100: 204,
-      },
+      transportCosts: { 20: 134, 40: 179, 100: 204 },
       allowedShipmentSizes: [20, 40, 100],
       minimumDeliveryAmount: 20,
       active: true,
@@ -101,24 +112,14 @@ export const level0Config: LevelConfig = {
       id: 2,
       name: "Toast-to-go",
       description: "A quick-service restaurant requiring regular deliveries.",
-      leadTime: 0, // No lead time for order processing
-      totalRequirement: 120, // Total units required
+      leadTime: 0,
+      totalRequirement: 120,
       deliverySchedule: [
-        {
-          day: 6,
-          requiredAmount: 40,
-        },
-        {
-          day: 20, // Final delivery on the last day
-          requiredAmount: 80, // Remaining amount
-        },
+        { day: 6, requiredAmount: 40 },
+        { day: 20, requiredAmount: 80 },
       ],
       pricePerUnit: 46,
-      transportCosts: {
-        20: 139,
-        40: 186,
-        100: 213,
-      },
+      transportCosts: { 20: 139, 40: 186, 100: 213 },
       allowedShipmentSizes: [20, 40, 100],
       minimumDeliveryAmount: 20,
       active: true,
@@ -127,24 +128,14 @@ export const level0Config: LevelConfig = {
       id: 3,
       name: "StudyFuel",
       description: "A campus food service catering to university students.",
-      leadTime: 0, // No lead time for order processing
-      totalRequirement: 100, // Total units required
+      leadTime: 0,
+      totalRequirement: 100,
       deliverySchedule: [
-        {
-          day: 8,
-          requiredAmount: 60,
-        },
-        {
-          day: 20, // Final delivery on the last day
-          requiredAmount: 40, // Remaining amount
-        },
+        { day: 8, requiredAmount: 60 },
+        { day: 20, requiredAmount: 40 },
       ],
       pricePerUnit: 47,
-      transportCosts: {
-        20: 145,
-        40: 194,
-        100: 222,
-      },
+      transportCosts: { 20: 145, 40: 194, 100: 222 },
       allowedShipmentSizes: [20, 40, 100],
       minimumDeliveryAmount: 20,
       active: true,
@@ -153,28 +144,22 @@ export const level0Config: LevelConfig = {
 
   // Demand model for Level 0 - relatively stable demand
   demandModel: (day: number): DailyDemand => {
-    // Base demand between 8-12 units
     const baseDemand = 10
-
-    // Small random variation (+/- 2 units)
     const variation = Math.floor(Math.random() * 5) - 2
-
-    // Weekly cycle - higher demand on days 1, 8, 15
     const weeklyBoost = day % 7 === 1 ? 5 : 0
-
-    // Calculate final demand
     const quantity = Math.max(0, baseDemand + variation + weeklyBoost)
-
-    // Fixed price for Level 0
     const pricePerUnit = 30
-
     return { quantity, pricePerUnit }
   },
 
-  // Updated production cost per unit from 5 to 4
-  productionCostPerUnit: 4,
+  overstock: {
+    patty: { threshold: 200, penaltyPerUnit: 2 },
+    bun: { threshold: 300, penaltyPerUnit: 1 },
+    cheese: { threshold: 400, penaltyPerUnit: 1 },
+    potato: { threshold: 500, penaltyPerUnit: 0.5 },
+    finishedGoods: { threshold: 100, penaltyPerUnit: 3 },
+  },
 
-  // Updated map positions for Level 0 with exact coordinates provided
   mapPositions: {
     0: {
       mainFactory: { x: 515, y: 432 },

@@ -1,15 +1,37 @@
-import type { LevelConfig, DailyDemand, MapPositions } from "@/types/game"
-import { baseLevelConfig } from "./level-base"
+import type { LevelConfig, DailyDemand } from "@/types/game"
 
 /**
  * Level 3 configuration - Uncertainty Unleashed
+ * All config is now self-contained, no baseLevelConfig import needed.
  */
 export const level3Config: LevelConfig = {
-  ...baseLevelConfig,
   id: 3,
   name: "Uncertainty Unleashed",
   description: "Navigate complex supply chains with variable market conditions.",
   daysToComplete: 30,
+  initialCash: 10000,
+  initialInventory: {
+    patty: 100,
+    cheese: 250,
+    bun: 150,
+    potato: 300,
+    finishedGoods: 0,
+  },
+  materialBasePrices: {
+    patty: 10,
+    cheese: 5,
+    bun: 3,
+    potato: 2,
+  },
+  holdingCosts: {
+    patty: 1.0,
+    cheese: 0.5,
+    bun: 0.3,
+    potato: 0.2,
+    finishedGoods: 2.0,
+  },
+  productionCostPerUnit: 4,
+  maxScore: 1400,
 
   suppliers: [
     {
@@ -131,7 +153,13 @@ export const level3Config: LevelConfig = {
     return { quantity, pricePerUnit }
   },
 
-  productionCostPerUnit: 4,
+  overstock: {
+    patty: { threshold: 200, penaltyPerUnit: 2 },
+    bun: { threshold: 300, penaltyPerUnit: 1 },
+    cheese: { threshold: 400, penaltyPerUnit: 1 },
+    potato: { threshold: 500, penaltyPerUnit: 0.5 },
+    finishedGoods: { threshold: 100, penaltyPerUnit: 3 },
+  },
 
   mapPositions: {
     3: {

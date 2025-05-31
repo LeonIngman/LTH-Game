@@ -15,9 +15,12 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { saveGameResults } from "@/lib/actions/game-actions"
-import type { GameState, LevelConfig } from "@/types/game"
+import type { LevelConfig } from "@/types/game"
+type GameState = any
 import { calculateGameResult } from "@/lib/game/engine"
 import { InfoIcon } from "lucide-react"
+
+const demoMode = false
 
 interface GameOverDialogProps {
   isOpen: boolean
@@ -47,11 +50,11 @@ export function GameOverDialog({
   const gameResult = calculateGameResult(gameState, levelConfig, userId)
   const { score, finalCash, cumulativeProfit } = gameResult
 
-  // Format currency values
+  // Format currency values (Swedish Kronor)
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("sv-SE", {
       style: "currency",
-      currency: "USD",
+      currency: "SEK",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(value)
@@ -64,8 +67,20 @@ export function GameOverDialog({
       setSaveSuccess(null)
       setSaveError(null)
 
+      if (demoMode) {
+        // Simulate successful save in demo mode
+        setTimeout(() => {
+          setSaveSuccess(true)
+          // Wait a moment before redirecting
+          setTimeout(() => {
+            router.push("/dashboard/student")
+          }, 2000)
+        }, 1000)
+        return
+      }
+
       // Save the game results to the database
-      const result = await saveGameResults(userId, levelConfig.id, gameState, levelConfig)
+      const result = await saveGameResults(userId, levelConfig.id, gameState)
 
       if (result.success) {
         setSaveSuccess(true)
@@ -97,6 +112,19 @@ export function GameOverDialog({
         </AlertDialogHeader>
 
         <div className="my-4 space-y-4">
+          {demoMode && (
+            <div className="flex items-start gap-2 rounded-md bg-blue-50 p-4 text-blue-800">
+              <InfoIcon className="h-5 w-5 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="font-medium">Preview Mode Active</p>
+                <p className="text-sm mt-1">
+                  You're currently in preview mode. Data saving is simulated and won't persist to the database. In a
+                  production environment, your game results would be saved to the database.
+                </p>
+              </div>
+            </div>
+          )}
+
           <Card>
             <CardHeader>
               <CardTitle>Final Results</CardTitle>
@@ -149,7 +177,8 @@ export function GameOverDialog({
 
           {saveSuccess === true && (
             <div className="rounded-md bg-green-50 p-4 text-green-800">
-              Game results saved successfully! Redirecting to dashboard...
+              {demoMode ? "Demo mode: Results would be saved in production." : "Game results saved successfully!"}{" "}
+              Redirecting to dashboard...
             </div>
           )}
 
@@ -165,7 +194,7 @@ export function GameOverDialog({
             disabled={isSaving || saveSuccess === true}
             className="bg-green-600 hover:bg-green-700"
           >
-            {isSaving ? "Saving..." : "Save Results"}
+            {isSaving ? "Saving..." : demoMode ? "Simulate Save" : "Save Results"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

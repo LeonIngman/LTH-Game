@@ -105,7 +105,7 @@ export async function POST(request: Request) {
       // Check if this is a zero-cash player who's only trying to sell
       const isOnlySales =
         action.supplierOrders.every(
-          (order) =>
+          (order: any) =>
             order.pattyPurchase === 0 &&
             order.cheesePurchase === 0 &&
             order.bunPurchase === 0 &&
@@ -179,6 +179,9 @@ export async function POST(request: Request) {
         `
       }
 
+
+      console.log("overstockPenalties", newState.overstockPenalties, "currentDay", newState.day)
+
       return NextResponse.json({
         success: true,
         gameState: normalizeGameState(newState),
@@ -186,21 +189,23 @@ export async function POST(request: Request) {
       })
     } catch (processingError) {
       console.error("Error during day processing:", processingError)
+      const err = processingError as Error
       return NextResponse.json(
         {
-          error: processingError.message || "Failed to process game day",
-          stack: processingError.stack, // Include stack trace for debugging
+          error: err.message || "Failed to process game day",
+          stack: (err as any).stack,
         },
         { status: 400 },
       )
     }
   } catch (error) {
     console.error("Error processing game day:", error)
+    const err = error as Error
     return NextResponse.json(
       {
         error: "Failed to process game day",
-        details: error.message,
-        stack: error.stack,
+        details: err.message,
+        stack: (err as any).stack,
       },
       { status: 500 },
     )

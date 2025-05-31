@@ -22,6 +22,8 @@ export interface DeliveryOption {
   costPerUnit: number
   leadTime: number
   capacity: number
+  costMultiplier: number
+  daysToDeliver: number
 }
 
 export interface Customer {
@@ -76,4 +78,23 @@ export interface LevelConfig {
   demandModel: (day: number) => DailyDemand
   maxScore: number
   mapPositions?: Record<number, MapPositions> // Add map positions for each level
+  overstock?: OverstockConfig
+}
+
+export interface OverstockRule {
+  threshold: number
+  penaltyPerUnit: number
+}
+
+export interface OverstockConfig {
+  patty?: OverstockRule
+  bun?: OverstockRule
+  cheese?: OverstockRule
+  potato?: OverstockRule
+  finishedGoods?: OverstockRule
+}
+
+// Add to GameState interface
+export interface GameState {
+  overstockPenalties?: Array<{ day: number; penalty: number; details: Record<string, number> }>
 }

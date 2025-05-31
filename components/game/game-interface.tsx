@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import type { GameAction, Supplier, Customer, LevelConfig } from "@/types/game"
+import type { Supplier, Customer, LevelConfig } from "@/types/game"
+type GameAction = any
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
@@ -31,7 +32,6 @@ import { ForecastingDialog } from "./forecasting-dialog"
 import { DailyOrderSummary } from "./ui/daily-order-summary"
 import { DebugPriceInfo } from "./ui/debug-price-info"
 import { QuickActionsWidget } from "./ui/quick-actions-widget"
-import { DebugSupplierRemaining } from "./ui/debug-supplier-remaining"
 
 // Import our custom hooks
 import { useGameState } from "@/hooks/use-game-state"
@@ -72,7 +72,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   useEffect(() => {
     if (!levelConfig.demandModel) {
       // Use default demand model if not defined
-      levelConfig.demandModel = (day) => ({ quantity: 10, pricePerUnit: 30 })
+      levelConfig.demandModel = (day) => ({ quantity: 10, pricePerUnit: 30, price: 30 })
     }
 
     // Ensure suppliers array exists
@@ -135,7 +135,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
   // Update action when delivery option changes
   useEffect(() => {
-    setAction((prev) => ({
+    setAction((prev: any) => ({
       ...prev,
       deliveryOptionId: selectedDeliveryOption,
     }))
@@ -189,36 +189,47 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     return holdingCosts.totalHoldingCost
   }, [gameState])
 
-  // Calculate transportation cost separately from purchase cost
-  const calculateTransportationCost = useCallback(() => {
-    const totalPurchase = calculateTotalPurchaseCost()
-    let baseMaterialCost = 0
+  // Calculates only the base material purchase cost (no transport)
+  const calculateMaterialPurchaseCost = useCallback(() => {
+    let total = 0
+    for (const order of supplierOrders) {
+      if (order.pattyPurchase > 0) total += order.pattyPurchase * (levelConfig.materialBasePrices?.patty || 0)
+      if (order.cheesePurchase > 0) total += order.cheesePurchase * (levelConfig.materialBasePrices?.cheese || 0)
+      if (order.bunPurchase > 0) total += order.bunPurchase * (levelConfig.materialBasePrices?.bun || 0)
+      if (order.potatoPurchase > 0) total += order.potatoPurchase * (levelConfig.materialBasePrices?.potato || 0)
+    }
+    return total
+  }, [supplierOrders, levelConfig])
 
+  // Calculates only the transportation cost (shipment/delivery)
+  const calculateTransportationCost = useCallback(() => {
+    let total = 0
     for (const order of supplierOrders) {
       const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-      if (!supplier) continue
+      if (!supplier || !supplier.shipmentPrices) continue
 
-      // For suppliers with shipment prices, transportation is included
-      if (supplier.shipmentPrices) {
-        continue
-      } else {
-        // Calculate base material costs without delivery multiplier
-        baseMaterialCost += order.pattyPurchase * (levelConfig.materialBasePrices?.patty || 0)
-        baseMaterialCost += order.cheesePurchase * (levelConfig.materialBasePrices?.cheese || 0)
-        baseMaterialCost += order.bunPurchase * (levelConfig.materialBasePrices?.bun || 0)
-        baseMaterialCost += order.potatoPurchase * (levelConfig.materialBasePrices?.potato || 0)
+      // For each material, find the closest shipment size and add its price
+      for (const material of ["patty", "cheese", "bun", "potato"]) {
+        const amount = order[`${material}Purchase`]
+        if (amount > 0 && supplier.shipmentPrices[material]) {
+          const sizes = Object.keys(supplier.shipmentPrices[material]).map(Number)
+          // Find the closest shipment size (or the largest not exceeding the amount)
+          const closest = sizes.reduce((prev, curr) =>
+            Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev
+          )
+          total += supplier.shipmentPrices[material][closest]
+        }
       }
     }
-
-    return Math.max(0, totalPurchase - baseMaterialCost)
-  }, [calculateTotalPurchaseCost, supplierOrders, levelConfig])
+    return total
+  }, [supplierOrders, levelConfig])
 
   // Calculate revenue from sales and customer orders
   const calculateRevenue = useCallback(() => {
     let totalRevenue = 0
 
     // Revenue from direct sales attempts
-    const salesPrice = levelConfig.salesPrice || levelConfig.sellingPricePerUnit || 25
+    const salesPrice = levelConfig.sellingPricePerUnit || 25
     totalRevenue += action.salesAttempt * salesPrice
 
     // Revenue from customer orders
@@ -226,7 +237,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
       for (const customerOrder of action.customerOrders) {
         const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
         if (customer && customerOrder.quantity > 0) {
-          const pricePerUnit = customer.pricePerUnit || salesPrice
+          const pricePerUnit = (customer as any).pricePerUnit || salesPrice
           totalRevenue += customerOrder.quantity * pricePerUnit
         }
       }
@@ -336,7 +347,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     (value: string) => {
       const production = Number.parseInt(value, 10)
       if (!isNaN(production) && production >= 0) {
-        setAction((prev) => ({
+        setAction((prev: any) => ({
           ...prev,
           production: Math.min(production, gameState.productionCapacity),
         }))
@@ -363,6 +374,11 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     )
   }
 
+  const lastDayPenalty =
+    gameState.overstockPenalties && gameState.overstockPenalties.length > 0
+      ? gameState.overstockPenalties[gameState.overstockPenalties.length - 1]
+      : null
+
   return (
     <div className="space-y-6">
       <GameHeader
@@ -382,11 +398,23 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         </Alert>
       )}
 
+      {lastDayPenalty && Number(lastDayPenalty.penalty ?? 0) > 0 && (
+        <div className="mb-4 rounded bg-red-100 text-red-700 p-3 flex items-center gap-2">
+          <span>
+            ⚠️ Overstock penalty applied: {Number(lastDayPenalty.penalty ?? 0).toFixed(2)} kr
+          </span>
+          {lastDayPenalty.details &&
+            Object.entries(lastDayPenalty.details ?? {}).map(([item, value]) =>
+              <span key={item} className="ml-2 text-xs">{item}: {Number(value ?? 0).toFixed(2)} kr</span>
+            )}
+        </div>
+      )}
+
       <div className="grid gap-6 md:grid-cols-12">
         <div className="md:col-span-3">
           <QuickActionsWidget
             levelConfig={levelConfig}
-            getMaterialPriceForSupplier={getMaterialPriceForSupplier}
+            getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
             currentDay={gameState.day}
             supplierOrders={supplierOrders}
             pendingOrders={gameState.pendingOrders}
@@ -433,7 +461,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
       <DailyOrderSummary
         supplierOrders={supplierOrders}
         suppliers={levelConfig.suppliers || []}
-        getMaterialPriceForSupplier={getMaterialPriceForSupplier}
+        getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
         getDeliveryMultiplier={() => {
           const option = levelConfig.deliveryOptions?.find((d) => d.id === action.deliveryOptionId)
           return option ? option.costMultiplier : 1.0
@@ -450,7 +478,11 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
       <div className="grid gap-6 md:grid-cols-12">
         <div className="md:col-span-4">
-          <InventoryChart data={gameState.history} currentInventory={gameState.inventory} />
+          <InventoryChart
+            data={gameState.history}
+            currentInventory={gameState.inventory}
+            overstock={levelConfig.overstock}
+          />
         </div>
         <div className="md:col-span-8">
           <CashflowChart data={gameState.history} height={300} profitThreshold={1500} />
@@ -467,6 +499,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         onProcessDay={handleProcessDay}
         calculateTotalPurchaseCost={calculateTotalPurchaseCost}
         calculateProductionCost={calculateProductionCost}
+        calculateMaterialPurchaseCost={calculateMaterialPurchaseCost}
         calculateTransportationCost={calculateTransportationCost}
         calculateHoldingCost={calculateHoldingCost}
         calculateRevenue={calculateRevenue}
@@ -476,7 +509,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
       <GameHistory history={gameState.history} />
 
-      <DebugPriceInfo levelConfig={levelConfig} getMaterialPriceForSupplier={getMaterialPriceForSupplier} />
+      <DebugPriceInfo levelConfig={levelConfig} getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number} />
 
       <GameDialogs
         gameState={gameState}
@@ -521,7 +554,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         setSelectedDeliveryOption={setSelectedDeliveryOption}
         handleSupplierOrderChange={handleSupplierOrderChange}
         isDisabled={isLoading || gameEnded}
-        getMaterialPriceForSupplier={getMaterialPriceForSupplier}
+        getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
         getOrderQuantitiesForSupplier={getOrderQuantitiesForSupplier}
         gameState={gameState}
         levelConfig={levelConfig}

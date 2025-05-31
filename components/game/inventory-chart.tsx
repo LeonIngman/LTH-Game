@@ -10,9 +10,16 @@ interface InventoryChartProps {
   width?: number
   height?: number
   currentInventory?: Inventory
+  overstock?: {
+    patty?: { threshold: number }
+    cheese?: { threshold: number }
+    bun?: { threshold: number }
+    potato?: { threshold: number }
+    finishedGoods?: { threshold: number }
+  }
 }
 
-export function InventoryChart({ data, width = 800, height = 300, currentInventory }: InventoryChartProps) {
+export function InventoryChart({ data, width = 800, height = 300, currentInventory, overstock }: InventoryChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   // Define inventory types and colors - moved outside useEffect for reuse
@@ -34,11 +41,11 @@ export function InventoryChart({ data, width = 800, height = 300, currentInvento
 
   // Define overstock thresholds
   const overstockThresholds = {
-    patty: 100,
-    cheese: 250,
-    potato: 300,
-    finishedGoods: 50,
-    // No threshold for buns
+    patty: overstock?.patty?.threshold ?? 200,
+    cheese: overstock?.cheese?.threshold ?? 400,
+    bun: overstock?.bun?.threshold ?? 300,
+    potato: overstock?.potato?.threshold ?? 500,
+    finishedGoods: overstock?.finishedGoods?.threshold ?? 100,
   }
 
   useEffect(() => {

@@ -33,7 +33,14 @@ export function PerformanceSummary({ levelName, maxScore, currentScore, profit, 
           <div className="space-y-1">
             <div className="text-sm font-medium text-muted-foreground">Total Profit</div>
             <div className="text-2xl font-bold">
-              {typeof profit === "number" && !isNaN(profit) ? `$${profit.toFixed(2)}` : "—"}
+              {typeof profit === "number" && !isNaN(profit)
+                ? new Intl.NumberFormat("sv-SE", {
+                    style: "currency",
+                    currency: "SEK",
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2,
+                  }).format(profit)
+                : "—"}
             </div>
           </div>
           <div className="space-y-1">

@@ -1,7 +1,8 @@
 "use server"
 
 import { sql, pgPool } from "@/lib/db"
-import type { GameState, LevelConfig, GameHistoryEntry } from "@/types/game"
+
+type GameState = any;
 
 export async function checkExistingPerformance(userId: string, levelId: number) {
   try {
@@ -130,20 +131,23 @@ export async function saveGameResults(
         entry.revenue || 0,
         entry.purchaseCosts || 0,
         entry.productionCosts || 0,
-        // Fix is here:
-        entry.holdingCosts?.totalHoldingCost || 0,
+        entry.holdingCosts && typeof entry.holdingCosts === "object"
+          ? entry.holdingCosts.totalHoldingCost || 0
+          : entry.holdingCosts || 0,
         entry.totalCosts || 0,
         entry.profit || 0,
         entry.cumulativeProfit || 0,
+        entry.overstockPenalty || 0, // <-- add this
+        JSON.stringify(entry.overstockPenaltyDetails || {}) // <-- and this
       ]);
       const rows = values.length;
       if (rows > 0) {
         const valuePlaceholders = values
           .map(
             (_, rowIdx) =>
-              `(${Array(17)
+              `(${Array(19)
                 .fill(0)
-                .map((__, colIdx) => `$${rowIdx * 17 + colIdx + 1}`)
+                .map((__, colIdx) => `$${rowIdx * 19 + colIdx + 1}`)
                 .join(", ")})`
           )
           .join(", ");
@@ -167,7 +171,9 @@ export async function saveGameResults(
             "holdingCosts",
             "totalCosts",
             "profit",
-            "cumulativeProfit"
+            "cumulativeProfit",
+            "overstockPenalty",           -- new
+            "overstockPenaltyDetails"     -- new
           ) VALUES ${valuePlaceholders}
           `,
           flatValues

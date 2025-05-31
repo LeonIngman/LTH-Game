@@ -1,15 +1,37 @@
 import type { LevelConfig, DailyDemand } from "@/types/game"
-import { baseLevelConfig } from "./level-base"
 
 /**
  * Level 1 configuration - Timing is Everything
+ * All config is now self-contained, no baseLevelConfig import needed.
  */
 export const level1Config: LevelConfig = {
-  ...baseLevelConfig,
   id: 1,
   name: "Timing is Everything",
   description: "Manage your burger restaurant supply chain with a fixed 2-day delivery time",
   daysToComplete: 30,
+  initialCash: 10000,
+  initialInventory: {
+    patty: 100,
+    cheese: 250,
+    bun: 150,
+    potato: 300,
+    finishedGoods: 0,
+  },
+  materialBasePrices: {
+    patty: 10,
+    cheese: 5,
+    bun: 3,
+    potato: 2,
+  },
+  holdingCosts: {
+    patty: 1.0,
+    cheese: 0.5,
+    bun: 0.3,
+    potato: 0.2,
+    finishedGoods: 2.0,
+  },
+  productionCostPerUnit: 4,
+  maxScore: 1200,
 
   // Suppliers for Level 1 - with leadTime of 2 days
   suppliers: [
@@ -133,7 +155,14 @@ export const level1Config: LevelConfig = {
     return { quantity, pricePerUnit }
   },
 
-  productionCostPerUnit: 4,
+  // Add this block:
+  overstock: {
+    patty: { threshold: 200, penaltyPerUnit: 2 },
+    bun: { threshold: 300, penaltyPerUnit: 1 },
+    cheese: { threshold: 400, penaltyPerUnit: 1 },
+    potato: { threshold: 500, penaltyPerUnit: 0.5 },
+    finishedGoods: { threshold: 100, penaltyPerUnit: 3 },
+  },
 
   // Keep original map positions for Level 1
   mapPositions: {

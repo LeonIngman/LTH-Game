@@ -1,8 +1,9 @@
 "use client"
 
+import React from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, BarChart3 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,11 +15,14 @@ import { PerformanceSummary } from "@/components/performance/performance-summary
 import { useAuth } from "@/lib/auth-context"
 import { getDetailedGameData, getGameLevels, getUserPerformance } from "@/lib/actions/performance-actions"
 
-export default function StudentPerformancePage({ params }: { params: { levelId: string } }) {
+export default function StudentPerformancePage() {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [performanceData, setPerformanceData] = useState([])
-  const [detailedData, setDetailedData] = useState([])
+  const params = useParams()
+  const levelId = typeof params === "object" && params && "levelId" in params ? (params as any).levelId : "0"
+
+  const [performanceData, setPerformanceData] = useState<any[]>([])
+  const [detailedData, setDetailedData] = useState<any[]>([])
   const [levels, setLevels] = useState<any[]>([])
   const [levelInfo, setLevelInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -26,10 +30,10 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
   const [chartType, setChartType] = useState("inventory")
 
   // Parse the level ID and validate it
-  const levelId = Number.parseInt(params.levelId)
+  const parsedLevelId = Number.parseInt(levelId)
 
   // Check if levelId is valid (0, 1, 2, or 3)
-  const isValidLevelId = !isNaN(levelId) && levelId >= 0 && levelId <= 3
+  const isValidLevelId = !isNaN(parsedLevelId) && parsedLevelId >= 0 && parsedLevelId <= 3
 
   useEffect(() => {
     if (!loading) {
@@ -52,26 +56,26 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
           setLevels(allLevels)
 
           // Get current level info
-          const currentLevel = allLevels.find((level: any) => level.id === levelId)
+          const currentLevel = allLevels.find((level: any) => level.id === parsedLevelId)
 
           if (!currentLevel) {
             // If level doesn't exist, use a fallback approach
             setLevelInfo({
-              id: levelId,
-              name: `Level ${levelId}`,
+              id: parsedLevelId,
+              name: `Level ${parsedLevelId}`,
               description: "Game level",
-              maxScore: 1000 * (levelId + 1),
+              maxScore: 1000 * (parsedLevelId + 1),
             })
           } else {
             setLevelInfo(currentLevel)
           }
 
           // Get performance data
-          const performance = await getUserPerformance(user.id, levelId)
+          const performance = await getUserPerformance(user.id, parsedLevelId)
           setPerformanceData(performance || [])
 
           // Get detailed game data
-          const detailed = await getDetailedGameData(user.id, levelId)
+          const detailed = await getDetailedGameData(user.id, parsedLevelId)
           setDetailedData(detailed || [])
         } catch (error) {
           console.error("Error fetching performance data:", error)
@@ -83,7 +87,7 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
 
       fetchData()
     }
-  }, [user, loading, router, levelId, isValidLevelId])
+  }, [user, loading, router, parsedLevelId, isValidLevelId])
 
   const handleLevelChange = (newLevelId: string) => {
     router.push(`/dashboard/student/performance/${newLevelId}`)
@@ -127,6 +131,13 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
   // Check if we have detailed data
   const hasDetailedData = detailedData && detailedData.length > 0
 
+  // Define column widths as percentages for even spacing
+  const colWidths = {
+    day: "16%",
+    col: "16%",
+    // For 6 columns: 16% each (16*6=96%, 4% left for borders/padding)
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -143,7 +154,7 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
         </div>
 
         <div className="flex items-center gap-2">
-          <Select value={levelId.toString()} onValueChange={handleLevelChange}>
+          <Select value={parsedLevelId.toString()} onValueChange={handleLevelChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Level" />
             </SelectTrigger>
@@ -190,7 +201,13 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
             </CardHeader>
             <CardContent>
               {hasDetailedData ? (
-                <D3Chart data={detailedData} chartType={chartType} width={800} height={400} />
+                <D3Chart
+                  data={detailedData}
+                  chartType={chartType}
+                  width={800}
+                  height={400}
+                  overstock={levelConfig.overstock}
+                />
               ) : (
                 <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
                   <BarChart3 className="h-10 w-10 text-gray-400" />
@@ -220,28 +237,37 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
                 <TabsTrigger value="costs">Costs</TabsTrigger>
               </TabsList>
 
+              {/* Inventory Table */}
               <TabsContent value="inventory" className="mt-4">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse table-fixed">
+                    <colgroup>
+                      <col style={{ width: colWidths.day }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                    </colgroup>
                     <thead>
                       <tr className="border-b">
-                        <th className="py-2 px-4 text-left">Day</th>
-                        <th className="py-2 px-4 text-left">Patty</th>
-                        <th className="py-2 px-4 text-left">Bun</th>
-                        <th className="py-2 px-4 text-left">Cheese</th>
-                        <th className="py-2 px-4 text-left">Potato</th>
-                        <th className="py-2 px-4 text-left">Finished Goods</th>
+                        <th className="py-2 px-4 text-center">Day</th>
+                        <th className="py-2 px-4 text-right font-mono">Patty</th>
+                        <th className="py-2 px-4 text-right font-mono">Bun</th>
+                        <th className="py-2 px-4 text-right font-mono">Cheese</th>
+                        <th className="py-2 px-4 text-right font-mono">Potato</th>
+                        <th className="py-2 px-4 text-right font-mono">Finished Goods</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailedData.map((day: any) => (
                         <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4">Day {day.day}</td>
-                          <td className="py-2 px-4">{day.pattyInventory}</td>
-                          <td className="py-2 px-4">{day.bunInventory}</td>
-                          <td className="py-2 px-4">{day.cheeseInventory}</td>
-                          <td className="py-2 px-4">{day.potatoInventory}</td>
-                          <td className="py-2 px-4">{day.finishedGoodsInventory}</td>
+                          <td className="py-2 px-4 text-center">Day {day.day}</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.pattyInventory}</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.bunInventory}</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.cheeseInventory}</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.potatoInventory}</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.finishedGoodsInventory}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -249,26 +275,62 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
                 </div>
               </TabsContent>
 
+              {/* Financial Table */}
               <TabsContent value="financial" className="mt-4">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse table-fixed">
+                    <colgroup>
+                      <col style={{ width: colWidths.day }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                    </colgroup>
                     <thead>
                       <tr className="border-b">
-                        <th className="py-2 px-4 text-left">Day</th>
-                        <th className="py-2 px-4 text-left">Cash</th>
-                        <th className="py-2 px-4 text-left">Revenue</th>
-                        <th className="py-2 px-4 text-left">Profit</th>
-                        <th className="py-2 px-4 text-left">Cumulative Profit</th>
+                        <th className="py-2 px-4 text-center">Day</th>
+                        <th className="py-2 px-4 text-right font-mono">Cash</th>
+                        <th className="py-2 px-4 text-right font-mono">Revenue</th>
+                        <th className="py-2 px-4 text-right font-mono">Profit</th>
+                        <th className="py-2 px-4 text-right font-mono">Cumulative Profit</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailedData.map((day: any) => (
                         <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4">Day {day.day}</td>
-                          <td className="py-2 px-4">${Number(day.cash ?? 0).toFixed(2)}</td>
-                          <td className="py-2 px-4">${Number(day.revenue ?? 0).toFixed(2)}</td>
-                          <td className="py-2 px-4">${Number(day.profit ?? 0).toFixed(2)}</td>
-                          <td className="py-2 px-4">${Number(day.cumulativeProfit ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4 text-center">Day {day.day}</td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.cash ?? 0))}
+                          </td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.revenue ?? 0))}
+                          </td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.profit ?? 0))}
+                          </td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.cumulativeProfit ?? 0))}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -276,24 +338,31 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
                 </div>
               </TabsContent>
 
+              {/* Production Table */}
               <TabsContent value="production" className="mt-4">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse table-fixed">
+                    <colgroup>
+                      <col style={{ width: colWidths.day }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                    </colgroup>
                     <thead>
                       <tr className="border-b">
-                        <th className="py-2 px-4 text-left">Day</th>
-                        <th className="py-2 px-4 text-left">Production</th>
-                        <th className="py-2 px-4 text-left">Sales</th>
-                        <th className="py-2 px-4 text-left">Efficiency</th>
+                        <th className="py-2 px-4 text-center">Day</th>
+                        <th className="py-2 px-4 text-right font-mono">Production</th>
+                        <th className="py-2 px-4 text-right font-mono">Sales</th>
+                        <th className="py-2 px-4 text-right font-mono">Efficiency</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailedData.map((day: any) => (
                         <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4">Day {day.day}</td>
-                          <td className="py-2 px-4">{day.production} units</td>
-                          <td className="py-2 px-4">{day.sales} units</td>
-                          <td className="py-2 px-4">
+                          <td className="py-2 px-4 text-center">Day {day.day}</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.production} units</td>
+                          <td className="py-2 px-4 text-right font-mono">{day.sales} units</td>
+                          <td className="py-2 px-4 text-right font-mono">
                             {day.production > 0 ? `${((day.sales / day.production) * 100).toFixed(1)}%` : "N/A"}
                           </td>
                         </tr>
@@ -303,26 +372,62 @@ export default function StudentPerformancePage({ params }: { params: { levelId: 
                 </div>
               </TabsContent>
 
+              {/* Costs Table */}
               <TabsContent value="costs" className="mt-4">
                 <div className="overflow-x-auto">
-                  <table className="w-full border-collapse">
+                  <table className="w-full border-collapse table-fixed">
+                    <colgroup>
+                      <col style={{ width: colWidths.day }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                      <col style={{ width: colWidths.col }} />
+                    </colgroup>
                     <thead>
                       <tr className="border-b">
-                        <th className="py-2 px-4 text-left">Day</th>
-                        <th className="py-2 px-4 text-left">Purchase Costs</th>
-                        <th className="py-2 px-4 text-left">Production Costs</th>
-                        <th className="py-2 px-4 text-left">Holding Costs</th>
-                        <th className="py-2 px-4 text-left">Total Costs</th>
+                        <th className="py-2 px-4 text-center">Day</th>
+                        <th className="py-2 px-4 text-right font-mono">Purchase Costs</th>
+                        <th className="py-2 px-4 text-right font-mono">Production Costs</th>
+                        <th className="py-2 px-4 text-right font-mono">Holding Costs</th>
+                        <th className="py-2 px-4 text-right font-mono">Total Costs</th>
                       </tr>
                     </thead>
                     <tbody>
                       {detailedData.map((day: any) => (
                         <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4">Day {day.day}</td>
-                          <td className="py-2 px-4">${Number(day.purchaseCosts ?? 0).toFixed(2)}</td>
-                          <td className="py-2 px-4">${Number(day.productionCosts ?? 0).toFixed(2)}</td>
-                          <td className="py-2 px-4">${Number(day.holdingCosts ?? 0).toFixed(2)}</td>
-                          <td className="py-2 px-4">${Number(day.totalCosts ?? 0).toFixed(2)}</td>
+                          <td className="py-2 px-4 text-center">Day {day.day}</td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.purchaseCosts ?? 0))}
+                          </td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.productionCosts ?? 0))}
+                          </td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.holdingCosts ?? 0))}
+                          </td>
+                          <td className="py-2 px-4 text-right font-mono">
+                            {new Intl.NumberFormat("sv-SE", {
+                              style: "currency",
+                              currency: "SEK",
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            }).format(Number(day.totalCosts ?? 0))}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

@@ -35,17 +35,16 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, router, levelId])
 
-  // When setting students, map to correct shape:
   const fetchData = async () => {
     setIsLoading(true)
     try {
       const allStudents = await getAllStudents()
       setStudents(
         allStudents.map((student: any) => ({
-          userId: student.id, // <-- ensure this is userId
+          userId: student.id,
           username: student.username,
-          maxScore: student.maxScore ?? 0,     // fallback if missing
-          maxProfit: student.maxProfit ?? 0,   // fallback if missing
+          maxScore: student.maxScore ?? 0,
+          maxProfit: student.maxProfit ?? 0,
         }))
       )
       const perfData = await getPerformanceData(levelId)
@@ -61,6 +60,9 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>
   }
 
+  // Pick a student to show summary for (e.g. the first one with data)
+  const selectedPerformance = performanceData[0] || {}
+
   return (
     <div className="space-y-6">
       <div>
@@ -68,7 +70,13 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
         <p className="text-gray-500">View and analyze student performance for Level {levelId}.</p>
       </div>
       <StudentSelector initialStudents={students} selectedStudentId={""} levelId={levelId} />
-      <PerformanceSummary performanceData={performanceData} levelId={levelId} />
+      <PerformanceSummary
+        levelName={selectedPerformance.levelName ?? `Level ${levelId}`}
+        maxScore={selectedPerformance.maxScore ?? 0}
+        currentScore={selectedPerformance.score ?? 0}
+        profit={selectedPerformance.profit ?? 0}
+        username={selectedPerformance.username}
+      />
     </div>
   )
 }

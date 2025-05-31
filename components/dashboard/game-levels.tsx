@@ -163,7 +163,7 @@ export function GameLevels({
                   )}
                 </div>
                 <div className="flex-1">
-                  <h3 className="font-medium">{level.title || level.name || `Level ${levelId}`}</h3>
+                  <h3 className="font-medium">{level.title ?? (level as any).name ?? `Level ${levelId}`}</h3>
                   <p className="text-sm text-gray-500">{level.description}</p>
                 </div>
                 <div className="flex gap-2">
@@ -218,9 +218,12 @@ export function GameLevels({
           onClose={() => setWarningDialogOpen(false)}
           onConfirm={handleConfirmReplay}
           levelName={
-            effectiveLevels.find((l) => l.id === selectedLevel)?.title ||
-            effectiveLevels.find((l) => l.id === selectedLevel)?.name ||
-            `Level ${selectedLevel}`
+            (() => {
+              const found = effectiveLevels.find((l) => l.id === selectedLevel)
+              return found
+                ? ("name" in found && found.name ? found.name : found.title ?? `Level ${selectedLevel}`)
+                : `Level ${selectedLevel}`
+            })()
           }
           existingScore={existingScore}
           existingProfit={existingProfit}
