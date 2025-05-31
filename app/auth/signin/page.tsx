@@ -20,12 +20,12 @@ export default function SignInPage() {
             <SignInForm />
           </Suspense>
         </div>
-        <div className="text-center text-sm">
+        {/* <div className="text-center text-sm">
           Don&apos;t have an account?{" "}
           <Link href="/auth/signup" className="text-[#0066cc] hover:text-[#003366] underline">
             Sign up
           </Link>
-        </div>
+        </div> */}
         <div className="text-center text-sm">
           <Link href="/" className="text-[#0066cc] hover:text-[#003366] underline">
             Back to home

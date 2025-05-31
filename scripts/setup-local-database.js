@@ -40,7 +40,17 @@ async function setupDatabase() {
     // Read and execute the schema SQL file
     const createTablesSql = fs.readFileSync(path.join(__dirname, "..", "sql", "create-tables.sql"), "utf8")
     await pool.query(createTablesSql)
-    console.log("✅ Tables created successfully!")
+    console.log("✅ Main tables created successfully!")
+
+    // Read and execute the schema SQL file
+    const createGameTablesSql = fs.readFileSync(path.join(__dirname, "..", "sql", "create-game-tables.sql"), "utf8")
+    await pool.query(createGameTablesSql)
+    console.log("✅ Game tables created successfully!")
+
+    // Read and execute the schema SQL file
+    const createQuizTablesSql = fs.readFileSync(path.join(__dirname, "..", "sql", "create-quiz-tables.sql"), "utf8")
+    await pool.query(createQuizTablesSql)
+    console.log("✅ Quiz tables created successfully!")
 
     // Ensure Performance table has required columns
     await pool.query(`
