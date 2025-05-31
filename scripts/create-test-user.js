@@ -1,15 +1,21 @@
 const { Pool } = require("pg")
 const bcrypt = require("bcryptjs") // Use bcryptjs instead of crypto for password hashing
 const readline = require("readline")
+const path = require("path")
+
+// Load environment variables from .env.local
+require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") })
 
 // Configuration - update these values for your local PostgreSQL setup
 const config = {
-  user: "gustav",        // <-- change this to your actual Postgres username
-  password: "",          // <-- your Postgres password, if any
+  user: process.env.DB_USER || "user", 
+  password: process.env.DB_PASSWORD || "",
   host: "localhost",
   port: 5432,
   database: "supply_chain_game",
 }
+
+console.log("DB password type:", typeof process.env.DB_PASSWORD, "value:", process.env.DB_PASSWORD)
 
 const rl = readline.createInterface({
   input: process.stdin,

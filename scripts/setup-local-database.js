@@ -7,7 +7,7 @@ require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") })
 
 // Configuration - use environment variables
 const config = {
-  user: process.env.DB_USER || "gustav", // fallback to your macOS username
+  user: process.env.DB_USER || "user", 
   password: process.env.DB_PASSWORD || "",
   host: "localhost",
   port: 5432,
