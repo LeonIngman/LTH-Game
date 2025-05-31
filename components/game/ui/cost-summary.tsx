@@ -194,39 +194,3 @@ export function CostSummary({
     </div>
   )
 }
-
-// Calculate only the base material cost (no transport)
-function calculateMaterialPurchaseCost() {
-  let total = 0
-  for (const order of supplierOrders) {
-    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-    if (!supplier) continue
-    if (order.pattyPurchase > 0) total += order.pattyPurchase * levelConfig.materialBasePrices.patty
-    if (order.cheesePurchase > 0) total += order.cheesePurchase * levelConfig.materialBasePrices.cheese
-    if (order.bunPurchase > 0) total += order.bunPurchase * levelConfig.materialBasePrices.bun
-    if (order.potatoPurchase > 0) total += order.potatoPurchase * levelConfig.materialBasePrices.potato
-  }
-  return total
-}
-
-// Calculate only the transportation cost
-function calculateTransportationCost() {
-  let total = 0
-  for (const order of supplierOrders) {
-    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-    if (!supplier) continue
-    // Add up all shipment/delivery costs for each material
-    // (You may need to adapt this logic to your game's pricing model)
-    // Example:
-    if (order.pattyPurchase > 0 && supplier.shipmentPrices?.patty) {
-      // Find the closest shipment size
-      const shipmentSizes = Object.keys(supplier.shipmentPrices.patty).map(Number)
-      const closest = shipmentSizes.reduce((prev, curr) =>
-        Math.abs(curr - order.pattyPurchase) < Math.abs(prev - order.pattyPurchase) ? curr : prev
-      )
-      total += supplier.shipmentPrices.patty[closest]
-    }
-    // Repeat for cheese, bun, potato...
-  }
-  return total
-}

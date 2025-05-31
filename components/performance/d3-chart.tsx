@@ -44,15 +44,6 @@ export function D3Chart({ data, chartType, width = 800, height = 400, overstock 
       day: Number(d.day ?? 0),
     }))
 
-    // Use overstock thresholds from props
-    const thresholds = {
-      patty: overstock?.patty?.threshold ?? 200,
-      bun: overstock?.bun?.threshold ?? 300,
-      cheese: overstock?.cheese?.threshold ?? 400,
-      potato: overstock?.potato?.threshold ?? 500,
-      finishedGoods: overstock?.finishedGoods?.threshold ?? 100,
-    }
-
     // Clear previous chart
     d3.select(svgRef.current).selectAll("*").remove()
 
@@ -113,30 +104,8 @@ export function D3Chart({ data, chartType, width = 800, height = 400, overstock 
         renderInventoryChart(svg, normalizedData, innerWidth, innerHeight, xScale)
     }
 
-    // Add warning circles for overstock using correct thresholds
-    svg.selectAll(".overstock-warning").remove()
-    normalizedData.forEach((d) => {
-      if (
-        d.pattyInventory > thresholds.patty ||
-        d.bunInventory > thresholds.bun ||
-        d.cheeseInventory > thresholds.cheese ||
-        d.potatoInventory > thresholds.potato ||
-        d.finishedGoodsInventory > thresholds.finishedGoods
-      ) {
-        svg
-          .append("circle")
-          .attr("class", "overstock-warning")
-          .attr("cx", xScale(d.day))
-          .attr("cy", 10)
-          .attr("r", 8)
-          .attr("fill", "#ef4444")
-          .attr("opacity", 0.7)
-          .append("title")
-          .text(
-            `Overstock! Patty: ${d.pattyInventory}/${thresholds.patty}, Bun: ${d.bunInventory}/${thresholds.bun}, Cheese: ${d.cheeseInventory}/${thresholds.cheese}, Potato: ${d.potatoInventory}/${thresholds.potato}, Finished: ${d.finishedGoodsInventory}/${thresholds.finishedGoods}`
-          )
-      }
-    })
+    // --- Removed overstock warning circles/animations here ---
+
   }, [data, chartType, width, height, overstock])
 
   return (

@@ -14,6 +14,10 @@ import { D3Chart } from "@/components/performance/d3-chart"
 import { PerformanceSummary } from "@/components/performance/performance-summary"
 import { useAuth } from "@/lib/auth-context"
 import { getDetailedGameData, getGameLevels, getUserPerformance } from "@/lib/actions/performance-actions"
+import { level0Config } from "@/lib/game/level0"
+import { level1Config } from "@/lib/game/level1"
+import { level2Config } from "@/lib/game/level2"
+import { level3Config } from "@/lib/game/level3"
 
 export default function StudentPerformancePage() {
   const { user, loading } = useAuth()
@@ -34,6 +38,9 @@ export default function StudentPerformancePage() {
 
   // Check if levelId is valid (0, 1, 2, or 3)
   const isValidLevelId = !isNaN(parsedLevelId) && parsedLevelId >= 0 && parsedLevelId <= 3
+
+  const levelConfigs = [level0Config, level1Config, level2Config, level3Config]
+  const levelConfig = levelConfigs[parsedLevelId]
 
   useEffect(() => {
     if (!loading) {

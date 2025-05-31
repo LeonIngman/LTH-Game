@@ -11,14 +11,14 @@ interface TutorialStep {
   description: string
   targetSelector: string
   position: "top" | "right" | "bottom" | "left" | "center"
-  tabToActivate?: string // New property to indicate which tab should be active
+  tabToActivate?: string
 }
 
 interface TutorialOverlayProps {
   steps: TutorialStep[]
   onComplete: () => void
   isOpen: boolean
-  onTabChange?: (tabId: string) => void // New callback to change tabs
+  onTabChange?: (tabId: string) => void
 }
 
 export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: TutorialOverlayProps) {
@@ -58,8 +58,8 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
       // Position the tooltip
       const rect = targetElement.getBoundingClientRect()
       const step = steps[currentStep]
-      const tooltipWidth = 320 // Approximate width of tooltip
-      const tooltipHeight = 200 // Approximate height of tooltip
+      const tooltipWidth = 320
+      const tooltipHeight = 200
 
       let top = 0
       let left = 0
@@ -99,10 +99,16 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
       setTooltipPosition({ top, left })
 
       // Scroll element into view if needed
-      if (rect.top < 0 || rect.left < 0 || rect.bottom > window.innerHeight || rect.right > window.innerWidth) {
+      if (
+        rect.top < 0 ||
+        rect.left < 0 ||
+        rect.bottom > window.innerHeight ||
+        rect.right > window.innerWidth
+      ) {
         targetElement.scrollIntoView({
           behavior: "smooth",
           block: "center",
+          inline: "center",
         })
       }
     }
@@ -133,7 +139,6 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
 
   // Handle tutorial completion
   const handleComplete = () => {
-    // Remove highlight from the last element
     if (highlightedElement) {
       highlightedElement.classList.remove("tutorial-highlight")
     }
@@ -143,18 +148,28 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
 
   if (!isOpen || !portalContainer) return null
 
-  // Add a global style for the tutorial highlight
+  // Add a global style for the tutorial highlight and overlay
   const tutorialStyle = `
     .tutorial-highlight {
-      position: relative;
-      z-index: 100;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.5), 0 0 0 1000px rgba(0, 0, 0, 0.5);
-      border-radius: 4px;
+      position: relative !important;
+      z-index: 9999 !important;
+      box-shadow: 0 0 0 4px #3b82f6, 0 0 0 1000px rgba(0,0,0,0.5);
+      outline: 3px solid #3b82f6;
+      border-radius: 8px;
+      transition: box-shadow 0.2s, outline 0.2s;
     }
     .tutorial-tooltip {
-      z-index: 1000;
+      z-index: 10000 !important;
       position: absolute;
       width: 320px;
+      pointer-events: auto;
+    }
+    .tutorial-overlay-bg {
+      position: fixed;
+      z-index: 9998;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      pointer-events: none;
     }
   `
 
@@ -162,7 +177,8 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
     <>
       {/* Add global styles */}
       <style>{tutorialStyle}</style>
-
+      {/* Overlay background */}
+      <div className="tutorial-overlay-bg" />
       {/* Tooltip */}
       <div
         className="tutorial-tooltip"
