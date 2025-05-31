@@ -1,0 +1,174 @@
+"use client"
+
+import { useEffect, useState } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import { ArrowLeft, BarChart3 } from "lucide-react"
+
+import { Button } from "@/components/ui/button"
+import { PerformanceCharts } from "@/components/performance/performance-charts"
+import { PerformanceSummary } from "@/components/performance/performance-summary"
+import { StudentSelector } from "@/components/performance/student-selector"
+import { useAuth } from "@/lib/auth-context"
+import { getAllStudentsPerformance, getGameLevels, getUserPerformance } from "@/lib/actions/performance-actions"
+
+export default function TeacherStudentPerformancePage({
+  params,
+}: {
+  params: { levelId: string; studentId: string }
+}) {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [performanceData, setPerformanceData] = useState([])
+  const [levelInfo, setLevelInfo] = useState<any>(null)
+  const [studentsList, setStudentsList] = useState([])
+  const [studentInfo, setStudentInfo] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  // Parse the level ID and validate it
+  const levelId = Number.parseInt(params.levelId)
+  const studentId = params.studentId
+
+  // Check if levelId is valid (0, 1, 2, or 3)
+  const isValidLevelId = !isNaN(levelId) && levelId >= 0 && levelId <= 3
+
+  useEffect(() => {
+    if (!loading) {
+      if (!user) {
+        router.push("/auth/signin")
+        return
+      } else if (user.role !== "teacher") {
+        router.push("/dashboard/student")
+        return
+      }
+
+      // If invalid level ID, show error
+      if (!isValidLevelId) {
+        setError("Invalid level ID. Please select a valid level.")
+        setIsLoading(false)
+        return
+      }
+
+      const fetchData = async () => {
+        try {
+          // Get level info
+          const levels = await getGameLevels()
+          const currentLevel = levels.find((level: any) => level.id === levelId)
+
+          if (!currentLevel) {
+            // If level doesn't exist, use a fallback approach
+            setLevelInfo({
+              id: levelId,
+              name: `Level ${levelId}`,
+              description: "Game level",
+              maxScore: 1000 * (levelId + 1),
+            })
+          } else {
+            setLevelInfo(currentLevel)
+          }
+
+          // Get all students performance
+          const studentsPerformance = await getAllStudentsPerformance(levelId)
+          setStudentsList(studentsPerformance || [])
+
+          // Find current student
+          const currentStudent = studentsPerformance?.find((s: any) => s.userId === studentId)
+          setStudentInfo(currentStudent || null)
+
+          // Get student performance data
+          if (currentStudent) {
+            const performance = await getUserPerformance(studentId, levelId)
+            setPerformanceData(performance || [])
+          }
+        } catch (error) {
+          console.error("Error fetching performance data:", error)
+          setError("Failed to load performance data. Please try again later.")
+        } finally {
+          setIsLoading(false)
+        }
+      }
+
+      fetchData()
+    }
+  }, [user, loading, router, levelId, studentId, isValidLevelId])
+
+  if (loading || (isLoading && !error) || !user) {
+    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+  }
+
+  // If there's an error or invalid level ID, show error message
+  if (error || !isValidLevelId) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href="/dashboard/teacher"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold mt-2">Student Performance Analytics</h1>
+        </div>
+
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <BarChart3 className="h-10 w-10 text-amber-400" />
+          <h3 className="mt-4 text-lg font-semibold text-amber-600">{error || "Invalid level selected"}</h3>
+          <p className="mt-2 text-sm text-gray-500">Please return to the dashboard and select a valid level.</p>
+          <Button onClick={() => router.push("/dashboard/teacher")} className="mt-4">
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  // Calculate current score and profit
+  const currentScore = performanceData.length > 0 ? Math.max(...performanceData.map((p: any) => p.score)) : 0
+  const totalProfit = performanceData.length > 0 ? performanceData[performanceData.length - 1]?.cumulativeProfit : 0
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <Link
+            href="/dashboard/teacher"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold mt-2">Student Performance Analytics</h1>
+          <p className="text-gray-500">Level: {levelInfo?.name}</p>
+        </div>
+
+        <StudentSelector students={studentsList} selectedStudentId={studentId} levelId={levelId} />
+      </div>
+
+      {performanceData.length > 0 ? (
+        <div className="grid gap-6 md:grid-cols-3">
+          <div className="md:col-span-1">
+            <PerformanceSummary
+              levelName={levelInfo?.name}
+              maxScore={levelInfo?.maxScore}
+              currentScore={currentScore}
+              profit={Number(totalProfit)}
+              username={studentInfo?.username}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <PerformanceCharts performanceData={performanceData} levelName={levelInfo?.name} />
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <h3 className="mt-4 text-lg font-semibold">No Performance Data</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            {studentInfo?.username || "This student"} hasn't completed any gameplay for this level yet.
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
