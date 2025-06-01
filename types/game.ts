@@ -218,6 +218,17 @@ export interface OverstockConfig {
   finishedGoods?: OverstockRule
 }
 
+export interface SafetystockRule {
+  threshold: number
+}
+
+export interface SafetystockConfig {
+  patty?: SafetystockRule
+  bun?: SafetystockRule
+  cheese?: SafetystockRule
+  potato?: SafetystockRule
+}
+
 export interface GameState {
   day: number
   cash: number
@@ -238,6 +249,7 @@ export interface GameState {
   gameOver: boolean
   latenessPenalties: LatenessPenalty[]
   overstockPenalties?: Array<{ day: number; penalty: number; details: Record<string, number> }>
+  forecastData?: Record<string, any> | null
 }
 
 export interface LevelConfig {
@@ -266,4 +278,5 @@ export interface LevelConfig {
   maxScore: number
   mapPositions?: Record<number, MapPositions>
   overstock?: OverstockConfig
+  safetystock?: SafetystockConfig
 }

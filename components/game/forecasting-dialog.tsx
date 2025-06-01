@@ -606,21 +606,24 @@ export function ForecastingDialog({ isOpen, onComplete, levelId }: ForecastingDi
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-7 gap-3">
-                  {Array.from({ length: 21 }, (_, i) => (
-                    <div key={i} className="space-y-1">
-                      <Label htmlFor={`day-${i}`} className="text-xs font-medium">
-                        Day {i}
+                  {Array.from({ length: 20 }, (_, i) => {
+                    const day = i + 1 // go from 1 to 20
+                    return (
+                    <div key={day} className="space-y-1">
+                      <Label htmlFor={`day-${day}`} className="text-xs font-medium">
+                        Day {day}
                       </Label>
                       <Input
-                        id={`day-${i}`}
+                        id={`day-${day}`}
                         type="number"
                         min="0"
-                        value={productionRates[i] || 0}
-                        onChange={(e) => handleProductionRateChange(i, e.target.value)}
+                        value={productionRates[day] || 0}
+                        onChange={(e) => handleProductionRateChange(day, e.target.value)}
                         className="text-center text-sm"
                       />
                     </div>
-                  ))}
+                    )
+                  })}
                 </div>
 
                 <div className="mt-4 p-3 bg-gray-50 rounded-lg">

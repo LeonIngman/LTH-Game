@@ -64,7 +64,7 @@ export function QuickActionsWidget({
   }
 
   return (
-    <Card className="h-full">
+    <Card className="h-full" data-tutorial="quick-actions">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <CardTitle>Quick Reference</CardTitle>
@@ -189,6 +189,54 @@ export function QuickActionsWidget({
                       <div className="text-right">
                         {gameState.customerDeliveries?.[customer.id] || 0} units
                       </div>
+                      <div>Lead Time:</div>
+                        <div className="text-right">
+                          {customer.leadTime} day{customer.leadTime !== 1 ? "s" : ""}
+                          {customer.randomLeadTime && customer.leadTimeRange && (
+                            <Badge variant="outline" className="ml-1 text-xs">
+                              Random: {customer.leadTimeRange.join("-")} days
+                            </Badge>
+                          )}
+                        </div>
+                        {customer.allowedShipmentSizes && (
+                          <>
+                            <div>Allowed Shipments:</div>
+                            <div className="text-right">{customer.allowedShipmentSizes.join(", ")} units</div>
+                          </>
+                        )}
+                        {/* Add delivery schedule section if it exists */}
+                        {customer.deliverySchedule && customer.deliverySchedule.length > 0 && (
+                          <div className="mt-2 pt-2 border-t">
+                            <div className="font-medium text-xs mb-1 text-blue-700">Delivery Schedule:</div>
+                            <div className="space-y-1">
+                              {customer.deliverySchedule.map((milestone, index) => {
+                                const isPast = milestone.day < currentDay
+                                const isCurrent = milestone.day === currentDay
+                                const isFuture = milestone.day > currentDay
+
+                                return (
+                                  <div
+                                    key={index}
+                                    className={`flex justify-between items-center text-xs ${
+                                      isPast ? "text-gray-500" : isCurrent ? "text-orange-600 font-medium" : "text-gray-700"
+                                    }`}
+                                  >
+                                    <span>Day {milestone.day}:</span>
+                                    <span>{milestone.requiredAmount} units</span>
+                                    {isCurrent && (
+                                      <Badge
+                                        variant="outline"
+                                        className="ml-1 text-xs bg-orange-50 text-orange-700 border-orange-200"
+                                      >
+                                        Due Today
+                                      </Badge>
+                                    )}
+                                  </div>
+                                )
+                              })}
+                            </div>
+                          </div>
+                        )}
                     </div>
                   </div>
                 ))}

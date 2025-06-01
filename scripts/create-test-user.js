@@ -66,7 +66,7 @@ async function createTestUser() {
         hashedPassword,
         password, // Store visible password for development
         role,
-        0, // Initial progress
+        3, // Initial progress
         new Date(), // lastActive
         new Date(), // createdAt
         new Date(), // updatedAt

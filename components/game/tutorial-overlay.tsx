@@ -1,10 +1,94 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { createPortal } from "react-dom"
+
+function getLevelTutorialSteps(levelId: number): TutorialStep[] {
+  if (levelId !== 0) return []
+
+  return [
+    {
+      title: "Welcome to Level 0!",
+      description:
+        "Let's take a tour of your supply chain management interface. This tutorial will guide you through all the key elements you'll need to succeed.",
+      targetSelector: "[data-tutorial='game-header']",
+      position: "bottom" as const,
+    },
+    {
+      title: "Status Bar",
+      description:
+        "This shows your current day, available cash, and inventory levels. Keep an eye on your cash flow and ingredient supplies!",
+      targetSelector: "[data-tutorial='status-bar']",
+      position: "bottom" as const,
+    },
+    {
+      title: "Supply Chain Map",
+      description:
+        "This is your main workspace! Click on suppliers (left) to purchase ingredients, the factory (center) to set production, and restaurants (right) to fulfill orders.",
+      targetSelector: "[data-tutorial='supply-chain-map']",
+      position: "bottom" as const,
+    },
+    {
+      title: "Quick Actions",
+      description:
+        "This widget shows current material prices and pending orders. Use it to quickly check supplier prices and delivery schedules.",
+      targetSelector: "[data-tutorial='quick-actions']",
+      position: "right" as const,
+    },
+    {
+      title: "Market Information",
+      description:
+        "Here you can see customer requirements, delivery schedules, and pricing information. Plan your production and deliveries accordingly!",
+      targetSelector: "[data-tutorial='market-info']",
+      position: "left" as const,
+    },
+    {
+      title: "Daily Order Summary",
+      description:
+        "This section summarizes all your planned actions for today - purchases, production, and sales. Review everything before proceeding to the next day.",
+      targetSelector: "[data-tutorial='daily-summary']",
+      position: "top" as const,
+    },
+    {
+      title: "Inventory Chart",
+      description:
+        "Track your ingredient levels over time. Make sure you don't run out of materials needed for production!",
+      targetSelector: "[data-tutorial='inventory-chart']",
+      position: "top" as const,
+    },
+    {
+      title: "Cash Flow Chart",
+      description:
+        "Monitor your financial performance. The goal is to maintain positive cash flow and reach the profit target!",
+      targetSelector: "[data-tutorial='cashflow-chart']",
+      position: "top" as const,
+    },
+    {
+      title: "Cost Summary & Next Day",
+      description:
+        "Review your total costs and revenue before advancing. The 'Next Day' button processes all your decisions and moves the game forward.",
+      targetSelector: "[data-tutorial='cost-summary']",
+      position: "top" as const,
+    },
+    {
+      title: "Game History",
+      description:
+        "View detailed results from previous days. Use this data to analyze your performance and improve your strategy.",
+      targetSelector: "[data-tutorial='game-history']",
+      position: "top" as const,
+    },
+    {
+      title: "Ready to Start!",
+      description:
+        "You're now ready to begin! Remember: buy ingredients from suppliers, produce meals at the factory, and deliver to restaurants. Good luck!",
+      targetSelector: "[data-tutorial='supply-chain-map']",
+      position: "center" as const,
+    },
+  ]
+}
 
 interface TutorialStep {
   title: string
@@ -15,17 +99,22 @@ interface TutorialStep {
 }
 
 interface TutorialOverlayProps {
-  steps: TutorialStep[]
+  steps?: TutorialStep[]
   onComplete: () => void
   isOpen: boolean
   onTabChange?: (tabId: string) => void
+  levelId?: number
 }
 
-export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: TutorialOverlayProps) {
+export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange, levelId }: TutorialOverlayProps) {
+  // Use level-specific steps if no steps provided and levelId is available
+  const tutorialSteps = steps || (levelId !== undefined ? getLevelTutorialSteps(levelId) : [])
+
   const [currentStep, setCurrentStep] = useState(0)
   const [tooltipPosition, setTooltipPosition] = useState({ top: 0, left: 0 })
   const [portalContainer, setPortalContainer] = useState<HTMLElement | null>(null)
-  const [highlightedElement, setHighlightedElement] = useState<Element | null>(null)
+  const highlightedElementRef = useRef<Element | null>(null)
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Initialize portal container
   useEffect(() => {
@@ -36,94 +125,135 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
 
   // Function to highlight the current step's element
   useEffect(() => {
-    if (!isOpen || !steps[currentStep]) return
+    if (!isOpen || !tutorialSteps[currentStep]) return
 
-    // Remove highlight from previous element
-    if (highlightedElement) {
-      highlightedElement.classList.remove("tutorial-highlight")
-    }
-
-    // Activate the appropriate tab if specified
-    const currentTabToActivate = steps[currentStep].tabToActivate
-    if (currentTabToActivate && onTabChange) {
-      onTabChange(currentTabToActivate)
-    }
-
-    // Find and highlight the new element
-    const targetElement = document.querySelector(steps[currentStep].targetSelector)
-    if (targetElement) {
-      targetElement.classList.add("tutorial-highlight")
-      setHighlightedElement(targetElement)
-
-      // Position the tooltip
-      const rect = targetElement.getBoundingClientRect()
-      const step = steps[currentStep]
-      const tooltipWidth = 320
-      const tooltipHeight = 200
-
-      let top = 0
-      let left = 0
-
-      switch (step.position) {
-        case "top":
-          top = rect.top - tooltipHeight - 10 + window.scrollY
-          left = rect.left + rect.width / 2 - tooltipWidth / 2 + window.scrollX
-          break
-        case "right":
-          top = rect.top + rect.height / 2 - tooltipHeight / 2 + window.scrollY
-          left = rect.right + 10 + window.scrollX
-          break
-        case "bottom":
-          top = rect.bottom + 10 + window.scrollY
-          left = rect.left + rect.width / 2 - tooltipWidth / 2 + window.scrollX
-          break
-        case "left":
-          top = rect.top + rect.height / 2 - tooltipHeight / 2 + window.scrollY
-          left = rect.left - tooltipWidth - 10 + window.scrollX
-          break
-        case "center":
-          top = rect.top + rect.height / 2 - tooltipHeight / 2 + window.scrollY
-          left = rect.left + rect.width / 2 - tooltipWidth / 2 + window.scrollX
-          break
+    const findAndHighlightElement = (retryCount = 0) => {
+      // Clear any existing timeout
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
       }
 
-      // Ensure tooltip stays within viewport
-      const viewportWidth = window.innerWidth
-      const viewportHeight = window.innerHeight
+      // Remove highlight from previous element only if it's different
+      const targetSelector = tutorialSteps[currentStep].targetSelector
+      const targetElement = document.querySelector(targetSelector)
 
-      if (left < 20) left = 20
-      if (left + tooltipWidth > viewportWidth - 20) left = viewportWidth - tooltipWidth - 20
-      if (top < 20) top = 20
-      if (top + tooltipHeight > viewportHeight - 20) top = viewportHeight - tooltipHeight - 20
+      if (highlightedElementRef.current && highlightedElementRef.current !== targetElement) {
+        highlightedElementRef.current.classList.remove("tutorial-highlight")
+        highlightedElementRef.current = null
+      }
 
-      setTooltipPosition({ top, left })
+      // Activate the appropriate tab if specified
+      const currentTabToActivate = tutorialSteps[currentStep].tabToActivate
+      if (currentTabToActivate && onTabChange) {
+        onTabChange(currentTabToActivate)
+      }
 
-      // Scroll element into view if needed
-      if (
-        rect.top < 0 ||
-        rect.left < 0 ||
-        rect.bottom > window.innerHeight ||
-        rect.right > window.innerWidth
-      ) {
-        targetElement.scrollIntoView({
-          behavior: "smooth",
-          block: "center",
-          inline: "center",
+      console.log(`Attempt ${retryCount + 1}: Looking for element: ${targetSelector}`, targetElement)
+
+      if (targetElement) {
+        // Only add highlight if not already highlighted
+        if (!targetElement.classList.contains("tutorial-highlight")) {
+          targetElement.classList.add("tutorial-highlight")
+          highlightedElementRef.current = targetElement
+        }
+
+        // Position the tooltip
+        const rect = targetElement.getBoundingClientRect()
+        const step = tutorialSteps[currentStep]
+        const tooltipWidth = 320
+        const tooltipHeight = 200
+
+        let top = 0
+        let left = 0
+
+        switch (step.position) {
+          case "top":
+            top = rect.top - tooltipHeight - 20 + window.scrollY
+            left = rect.left + rect.width / 2 - tooltipWidth / 2 + window.scrollX
+            break
+          case "right":
+            top = rect.top + rect.height / 2 - tooltipHeight / 2 + window.scrollY
+            left = rect.right + 20 + window.scrollX
+            break
+          case "bottom":
+            top = rect.bottom + 20 + window.scrollY
+            left = rect.left + rect.width / 2 - tooltipWidth / 2 + window.scrollX
+            break
+          case "left":
+            top = rect.top + rect.height / 2 - tooltipHeight / 2 + window.scrollY
+            left = rect.left - tooltipWidth - 20 + window.scrollX
+            break
+          case "center":
+            top = window.innerHeight / 2 - tooltipHeight / 2 + window.scrollY
+            left = window.innerWidth / 2 - tooltipWidth / 2 + window.scrollX
+            break
+        }
+
+        // Ensure tooltip stays within viewport
+        const viewportWidth = window.innerWidth
+        const viewportHeight = window.innerHeight
+
+        if (left < 20) left = 20
+        if (left + tooltipWidth > viewportWidth - 20) left = viewportWidth - tooltipWidth - 20
+        if (top < 20) top = 20
+        if (top + tooltipHeight > viewportHeight - 20) top = viewportHeight - tooltipHeight - 20
+
+        console.log(`Positioning tooltip at: top=${top}, left=${left}`)
+        setTooltipPosition({ top, left })
+
+        // Scroll element into view if needed
+        if (rect.top < 100 || rect.bottom > window.innerHeight - 100) {
+          targetElement.scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+            inline: "nearest",
+          })
+        }
+      } else if (retryCount < 10) {
+        // Retry after a short delay if element not found (up to 10 times)
+        console.log(`Element not found, retrying in ${100 * (retryCount + 1)}ms...`)
+        timeoutRef.current = setTimeout(() => findAndHighlightElement(retryCount + 1), 100 * (retryCount + 1))
+      } else {
+        console.warn(`Tutorial target element not found after 10 attempts: ${targetSelector}`)
+        // Fallback to center position if element not found
+        setTooltipPosition({
+          top: window.innerHeight / 2 - 100 + window.scrollY,
+          left: window.innerWidth / 2 - 160 + window.scrollX,
         })
       }
     }
 
-    // Cleanup function
+    // Start the search with a small initial delay
+    timeoutRef.current = setTimeout(() => findAndHighlightElement(), 200)
+
+    // Cleanup function - only clear timeout, don't remove highlight here
     return () => {
-      if (highlightedElement) {
-        highlightedElement.classList.remove("tutorial-highlight")
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
       }
     }
-  }, [currentStep, isOpen, steps, highlightedElement, onTabChange])
+  }, [currentStep, isOpen, tutorialSteps, onTabChange])
+
+  // Cleanup effect for when tutorial closes
+  useEffect(() => {
+    return () => {
+      // Clean up when component unmounts or tutorial closes
+      if (highlightedElementRef.current) {
+        highlightedElementRef.current.classList.remove("tutorial-highlight")
+        highlightedElementRef.current = null
+      }
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+        timeoutRef.current = null
+      }
+    }
+  }, [isOpen])
 
   // Handle next step
   const handleNext = () => {
-    if (currentStep < steps.length - 1) {
+    if (currentStep < tutorialSteps.length - 1) {
       setCurrentStep(currentStep + 1)
     } else {
       handleComplete()
@@ -139,37 +269,46 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
 
   // Handle tutorial completion
   const handleComplete = () => {
-    if (highlightedElement) {
-      highlightedElement.classList.remove("tutorial-highlight")
+    // Remove highlight from the last element
+    if (highlightedElementRef.current) {
+      highlightedElementRef.current.classList.remove("tutorial-highlight")
+      highlightedElementRef.current = null
+    }
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+      timeoutRef.current = null
     }
     setCurrentStep(0)
     onComplete()
   }
 
-  if (!isOpen || !portalContainer) return null
+  if (!isOpen || !portalContainer || tutorialSteps.length === 0) return null
 
-  // Add a global style for the tutorial highlight and overlay
+  // Add a global style for the tutorial highlight
   const tutorialStyle = `
     .tutorial-highlight {
       position: relative !important;
-      z-index: 9999 !important;
-      box-shadow: 0 0 0 4px #3b82f6, 0 0 0 1000px rgba(0,0,0,0.5);
-      outline: 3px solid #3b82f6;
-      border-radius: 8px;
-      transition: box-shadow 0.2s, outline 0.2s;
+      z-index: 999 !important;
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.8) !important;
+      border-radius: 8px !important;
+      background-color: rgba(59, 130, 246, 0.1) !important;
+      transition: none !important;
     }
     .tutorial-tooltip {
-      z-index: 10000 !important;
-      position: absolute;
+      z-index: 1000 !important;
+      position: fixed !important;
       width: 320px;
-      pointer-events: auto;
+      pointer-events: auto !important;
     }
-    .tutorial-overlay-bg {
-      position: fixed;
-      z-index: 9998;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.4);
-      pointer-events: none;
+    .tutorial-backdrop {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      background-color: rgba(0, 0, 0, 0.5) !important;
+      z-index: 998 !important;
+      pointer-events: none !important;
     }
   `
 
@@ -177,8 +316,10 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
     <>
       {/* Add global styles */}
       <style>{tutorialStyle}</style>
-      {/* Overlay background */}
-      <div className="tutorial-overlay-bg" />
+
+      {/* Backdrop */}
+      <div className="tutorial-backdrop" />
+
       {/* Tooltip */}
       <div
         className="tutorial-tooltip"
@@ -187,18 +328,18 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
           left: `${tooltipPosition.left}px`,
         }}
       >
-        <Card className="p-4 shadow-lg border-blue-200 bg-white">
+        <Card className="p-4 shadow-xl border-blue-300 bg-white">
           <div className="flex justify-between items-start mb-2">
-            <h3 className="font-bold text-lg">{steps[currentStep]?.title}</h3>
+            <h3 className="font-bold text-lg text-gray-900">{tutorialSteps[currentStep]?.title}</h3>
             <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleComplete}>
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </Button>
           </div>
-          <p className="text-sm mb-4">{steps[currentStep]?.description}</p>
+          <p className="text-sm mb-4 text-gray-700">{tutorialSteps[currentStep]?.description}</p>
           <div className="flex justify-between items-center">
             <div className="text-xs text-muted-foreground">
-              Step {currentStep + 1} of {steps.length}
+              Step {currentStep + 1} of {tutorialSteps.length}
             </div>
             <div className="flex gap-2">
               {currentStep > 0 && (
@@ -207,7 +348,7 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange }: Tuto
                 </Button>
               )}
               <Button size="sm" onClick={handleNext}>
-                {currentStep < steps.length - 1 ? "Next" : "Finish"}
+                {currentStep < tutorialSteps.length - 1 ? "Next" : "Finish"}
               </Button>
             </div>
           </div>

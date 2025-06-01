@@ -15,7 +15,7 @@ export function MarketInfo({ levelConfig, pendingOrders, pendingCustomerOrders =
   const customerMap = new Map((levelConfig.customers || []).map((customer) => [customer.id, customer.name]))
 
   return (
-    <Card className="market-info h-full overflow-auto">
+    <Card className="market-info h-full overflow-auto" data-tutorial="market-info">
       <CardHeader className="pb-2">
         <CardTitle>Current Orders</CardTitle>
         <CardDescription>All pending transactions</CardDescription>

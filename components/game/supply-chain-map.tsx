@@ -280,7 +280,7 @@ export function SupplyChainMap({
   }
 
   return (
-    <div className="relative w-full h-full bg-white rounded-lg overflow-hidden">
+    <div className="relative w-full h-full bg-white rounded-lg overflow-hidden" data-tutorial="supply-chain-map">
       <div ref={setMapRef} className="relative w-full h-full">
         {/* Map image with level-specific SVG */}
         <div className="w-full h-full relative">

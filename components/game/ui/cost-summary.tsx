@@ -108,7 +108,7 @@ export function CostSummary({
   const annualRate = 0.25 * 100
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg border cost-summary">
+    <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Purchase Cost</p>

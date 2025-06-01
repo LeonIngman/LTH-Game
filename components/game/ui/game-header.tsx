@@ -72,7 +72,7 @@ export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutor
 
   return (
     <>
-      <div className="bg-white border-b p-4 sticky top-0 z-10 level-header">
+      <div className="bg-white border-b p-4 sticky top-0 z-10 level-header" data-tutorial="game-header">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h1 className="text-2xl font-bold">

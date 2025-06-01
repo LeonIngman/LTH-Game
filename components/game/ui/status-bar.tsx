@@ -18,7 +18,7 @@ export function StatusBar({ gameState, levelConfig }: StatusBarProps) {
   const daysToComplete = levelConfig?.daysToComplete || 30
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg border game-status-bar">
+    <div className="bg-gray-50 p-4 rounded-lg border game-status-bar" data-tutorial="status-bar">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Day</p>

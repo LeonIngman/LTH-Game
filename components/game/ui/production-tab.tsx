@@ -10,6 +10,7 @@ interface ProductionTabProps {
   maxProduction: number
   onProductionChange: (value: string) => void
   isDisabled: boolean
+  plannedProduction?: number
   inventory?: {
     patty: number
     cheese: number
@@ -23,6 +24,7 @@ export function ProductionTab({
   maxProduction,
   onProductionChange,
   isDisabled,
+  plannedProduction,
   inventory,
 }: ProductionTabProps) {
   // Define the allowed production values
@@ -82,6 +84,19 @@ export function ProductionTab({
               </p>
             )}
           </div>
+        </div>
+      )}
+
+      {plannedProduction !== undefined && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 space-y-2">
+          <h3 className="text-sm font-medium text-blue-800">Forecasting Plan</h3>
+          <p className="text-sm text-blue-700">
+            Planned Production: <span className="font-semibold">{plannedProduction} meals</span>
+          </p>
+          <p className="text-xs text-blue-600">
+            💡 If inventory is insufficient to meet the planned production quota, the factory will produce as many
+            finished meals as the available ingredients allow.
+          </p>
         </div>
       )}
 

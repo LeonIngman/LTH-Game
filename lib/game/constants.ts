@@ -4,7 +4,7 @@ export const HOLDING_COSTS = {
   CHEESE: 2.0,
   POTATO: 1.8,
 }
-
+// Not used
 export const OVERSTOCK_THRESHOLD = {
   PATTY: 100,
   BUN: Number.POSITIVE_INFINITY, // No threshold for buns
@@ -19,3 +19,5 @@ export const MATERIAL_BASE_PRICES = {
   cheese: 8.0,
   potato: 3.0,
 }
+
+// This whole file should be removed

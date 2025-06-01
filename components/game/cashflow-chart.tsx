@@ -383,7 +383,7 @@ export function CashflowChart({
   }, [data, width, height, profitThreshold, currentDay, containerWidth])
 
   return (
-    <Card>
+    <Card data-tutorial="cashflow-chart">
       <CardHeader className="pb-2">
         <CardTitle>Cashflow Chart</CardTitle>
         <CardDescription>Financial Performance Overview</CardDescription>

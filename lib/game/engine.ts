@@ -50,6 +50,7 @@ export function initializeGameState(levelConfig: LevelConfig): GameState {
     selectedDeliveryOption: defaultDeliveryOptionId,
     gameOver: false,
     latenessPenalties: [],
+    forecastData: null
   }
 }
 
@@ -182,13 +183,23 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
  * Process production using FIFO costing
  */
 function processProduction(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
-  if (action.production <= 0) return
+  // if (action.production <= 0) return
 
   const PATTIES_PER_MEAL = 1
-  const CHEESE_PER_MEAL = 1
-  const BUNS_PER_MEAL = 1
-  const POTATOES_PER_MEAL = 1
+  const CHEESE_PER_MEAL = 3
+  const BUNS_PER_MEAL = 2
+  const POTATOES_PER_MEAL = 4
 
+  // Determine production amount - use forecasted production if available
+  let targetProduction = action.production
+
+  // Check if we have forecasted production rates for this day
+  if (state.forecastData?.productionRates && state.forecastData.productionRates[state.day]) {
+    targetProduction = state.forecastData.productionRates[state.day]
+  }
+
+  if (targetProduction <= 0) return
+  
   // Calculate maximum possible production
   const maxProductionByPatty = Math.floor(state.inventory.patty / PATTIES_PER_MEAL)
   const maxProductionByCheese = Math.floor(state.inventory.cheese / CHEESE_PER_MEAL)
@@ -201,7 +212,7 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
     maxProductionByBun,
     maxProductionByPotato,
     state.productionCapacity,
-    action.production,
+    targetProduction,
   )
 
   if (maxProduction > 0) {
@@ -323,7 +334,7 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   newState.score = calculateScore(newState, levelConfig)
 
   // 12. Record daily results in history
-  recordDailyResults(newState, action, dailyProfit, levelConfig, dailyValuation, holdingCosts, latenessPenalties, overstockResult) // <-- pass this in
+  recordDailyResults(newState, action, dailyProfit, levelConfig, dailyValuation, holdingCosts, latenessPenalties, overstockResult)
 
   // 13. Check if player is bankrupt (cash <= 0)
   if (newState.cash <= 0 && !canRecoverFromZeroCash(newState)) {
@@ -669,11 +680,33 @@ function recordDailyResults(
     }
   }
 
+  // Calculate actual production (use forecasted if available)
+  let actualProduction = action.production
+  if (state.forecastData?.productionRates && state.forecastData.productionRates[state.day - 1]) {
+    // Use previous day's production since we've already advanced the day
+    const targetProduction = state.forecastData.productionRates[state.day - 1]
+
+    // Calculate what was actually produced based on inventory constraints
+    const maxProductionByPatty = Math.floor((state.inventory.patty + totalPattyPurchased) / 1)
+    const maxProductionByCheese = Math.floor((state.inventory.cheese + totalCheesePurchased) / 1)
+    const maxProductionByBun = Math.floor((state.inventory.bun + totalBunPurchased) / 1)
+    const maxProductionByPotato = Math.floor((state.inventory.potato + totalPotatoPurchased) / 1)
+
+    actualProduction = Math.min(
+      maxProductionByPatty,
+      maxProductionByCheese,
+      maxProductionByBun,
+      maxProductionByPotato,
+      state.productionCapacity,
+      targetProduction,
+    )
+  }
+
   // Calculate production cost
-  const totalProductionCost = action.production * levelConfig.productionCostPerUnit
+  const totalProductionCost = actualProduction * levelConfig.productionCostPerUnit
 
   // Calculate revenue from regular sales
-  const actualSales = Math.min(state.inventory.finishedGoods + action.production, action.salesAttempt)
+  const actualSales = Math.min(state.inventory.finishedGoods + actualProduction, action.salesAttempt)
   const revenue = actualSales * state.dailyDemand.pricePerUnit
 
   // Calculate revenue from customer orders
@@ -708,7 +741,7 @@ function recordDailyResults(
     cheesePurchased: totalCheesePurchased,
     bunPurchased: totalBunPurchased,
     potatoPurchased: totalPotatoPurchased,
-    production: action.production,
+    production: actualProduction,
     sales: actualSales,
     revenue: revenue,
     costs: {

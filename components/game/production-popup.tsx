@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
-import { CheckCircle } from "lucide-react"
+import { CheckCircle, Calendar, AlertTriangle } from "lucide-react"
 import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/constants"
 import type { Inventory } from "@/types/game"
 import { cn } from "@/lib/utils"
@@ -18,7 +18,11 @@ interface ProductionPopupProps {
   maxProduction: number
   onProductionChange: (value: string) => void
   isDisabled: boolean
-  inventory: Inventory
+  plannedProduction?: number
+  forecastData?: Record<string, any> | null
+  currentDay?: number
+  inventory: Inventory,
+  requiresForecasting: boolean
 }
 
 export function ProductionPopup({
@@ -28,7 +32,11 @@ export function ProductionPopup({
   maxProduction: propMaxProduction,
   onProductionChange,
   isDisabled,
+  plannedProduction,
+  forecastData,
+  currentDay = 1,
   inventory,
+  requiresForecasting
 }: ProductionPopupProps) {
   // Local state for pending production
   const [pendingProduction, setPendingProduction] = useState(0)
@@ -80,6 +88,44 @@ export function ProductionPopup({
 
   // Helper function to check if an option is available
   const isOptionAvailable = (option: number) => option <= calculatedMaxProduction
+
+  // Extract daily production rates from forecast data
+  const getDailyProductionRates = () => {
+    if (!forecastData) return null
+
+    // If we have explicit production rates
+    if (forecastData.productionRates) {
+      return forecastData.productionRates
+    }
+
+    // If we have customer forecasts, calculate implied production rates
+    if (
+      forecastData["yummy-zone"] !== undefined ||
+      forecastData["toast-to-go"] !== undefined ||
+      forecastData["study-fuel"] !== undefined
+    ) {
+      // For simplicity, we'll assume equal distribution across days
+      // In a real implementation, you might have more complex logic
+      const totalForecast =
+        (forecastData["yummy-zone"] || 0) + (forecastData["toast-to-go"] || 0) + (forecastData["study-fuel"] || 0)
+
+      // Assume 5 days for simplicity, adjust as needed
+      const daysToComplete = 5
+      const dailyRate = Math.ceil(totalForecast / daysToComplete)
+
+      // Create a daily distribution
+      const dailyRates: Record<string, number> = {}
+      for (let i = 1; i <= daysToComplete; i++) {
+        dailyRates[`day${i}`] = dailyRate
+      }
+
+      return dailyRates
+    }
+
+    return null
+  }
+
+  const dailyProductionRates = getDailyProductionRates()
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -153,25 +199,103 @@ export function ProductionPopup({
             </CardContent>
           </Card>
 
-          <div className="space-y-2">
-            <Label>Production Quantity</Label>
-            <div className="flex flex-wrap gap-2">
-              {allProductionOptions.map((option) => (
-                <Button
-                  key={option}
-                  variant={pendingProduction === option ? "default" : "outline"}
-                  onClick={() => {
-                    setPendingProduction(option)
-                    setHasConfirmedProduction(false)
-                  }}
-                  disabled={isDisabled || !isOptionAvailable(option)}
-                  className={cn("flex-1", !isOptionAvailable(option) && "opacity-50 cursor-not-allowed")}
-                  title={!isOptionAvailable(option) ? `Insufficient ingredients for ${option} meals` : undefined}
-                >
-                  {option}
-                </Button>
-              ))}
+          {/* Forecasting Plan Section */}
+          {requiresForecasting && dailyProductionRates && (
+            <Card className="border-blue-200 bg-blue-50">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg text-blue-800 flex items-center gap-2">
+                  <Calendar className="h-5 w-5" />
+                  Forecasting Production Plan
+                </CardTitle>
+                <CardDescription className="text-blue-700">
+                  Production is automatically set based on your forecasting
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(dailyProductionRates).map(([day, rate], index) => {
+                      if (Number(day) !== 0) { // skip day 0
+                        
+                      const dayNumber = day.replace("day", "")
+                      const isCurrentDay = Number.parseInt(dayNumber) === currentDay
+
+                      return (
+                        <div
+                          key={day}
+                          className={cn(
+                            "p-2 rounded-md border flex justify-between items-center",
+                            isCurrentDay
+                              ? "border-blue-400 bg-blue-100"
+                              : Number.parseInt(dayNumber) < currentDay
+                                ? "border-gray-200 bg-gray-50 opacity-70"
+                                : "border-blue-200",
+                          )}
+                        >
+                          <span className={cn("text-sm font-medium", isCurrentDay ? "text-blue-800" : "text-blue-700")}>
+                            Day {dayNumber}:
+                          </span>
+                          <span className={cn("font-bold", isCurrentDay ? "text-blue-800" : "text-blue-700")}>
+                            {rate} meals
+                            {isCurrentDay && (
+                              <Badge variant="outline" className="ml-1 bg-blue-200 border-blue-300 text-blue-800">
+                                Today
+                              </Badge>
+                            )}
+                          </span>
+                        </div>
+                      )
+                    }
+                    })}
+                  </div>
+
+                  {calculatedMaxProduction < (dailyProductionRates[`day${currentDay}`] || 0) && (
+                    <div className="flex items-start gap-2 p-2 bg-amber-50 border border-amber-200 rounded-md mt-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-amber-800">
+                        <p className="font-medium">Insufficient ingredients for today's planned production.</p>
+                        <p>
+                          The factory will produce {calculatedMaxProduction} meals instead of the planned{" "}
+                          {dailyProductionRates[`day${currentDay}`]} meals.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="text-xs text-blue-700 mt-2">
+                    <p>
+                      💡 Production is automatically set according to your forecasting plan. The factory will produce as
+                      many meals as possible based on available ingredients.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {!requiresForecasting && (
+            <div className="space-y-2">
+              <Label>Production Quantity</Label>
+              <div className="flex flex-wrap gap-2">
+                {allProductionOptions.map((option) => (
+                  <Button
+                    key={option}
+                    variant={pendingProduction === option ? "default" : "outline"}
+                    onClick={() => {
+                      setPendingProduction(option)
+                      setHasConfirmedProduction(false)
+                    }}
+                    disabled={isDisabled || !isOptionAvailable(option)}
+                    className={cn("flex-1", !isOptionAvailable(option) && "opacity-50 cursor-not-allowed")}
+                    title={!isOptionAvailable(option) ? `Insufficient ingredients for ${option} meals` : undefined}
+                  >
+                    {option}
+                  </Button>
+                ))}
+              </div>
             </div>
+          )}
+          <div className="space-y-2">
             <p className="text-sm text-muted-foreground">
               Maximum production: {calculatedMaxProduction} meals
               {calculatedMaxProduction === 0 && <span className="text-destructive"> (Insufficient ingredients)</span>}
@@ -203,7 +327,7 @@ export function ProductionPopup({
           <Button variant="outline" onClick={onClose}>
             Close
           </Button>
-          {pendingProduction >= 0 && (
+          {!requiresForecasting && pendingProduction >= 0 && (
             <Button
               onClick={handleConfirmProduction}
               disabled={isDisabled || (!hasPendingChanges && hasConfirmedProduction)}

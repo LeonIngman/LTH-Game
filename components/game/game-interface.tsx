@@ -32,6 +32,7 @@ import { ForecastingDialog } from "./forecasting-dialog"
 import { DailyOrderSummary } from "./ui/daily-order-summary"
 import { DebugPriceInfo } from "./ui/debug-price-info"
 import { QuickActionsWidget } from "./ui/quick-actions-widget"
+import { TutorialOverlay } from "./tutorial-overlay"
 
 // Import our custom hooks
 import { useGameState } from "@/hooks/use-game-state"
@@ -93,12 +94,15 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const [showMap, setShowMap] = useState<boolean>(false)
   const [showChart, setShowChart] = useState<boolean>(false)
   const [showObjectives, setShowObjectives] = useState<boolean>(false)
+  const [objectivesCompleted, setObjectivesCompleted] = useState<boolean>(false)
   const [showGameOver, setShowGameOver] = useState<boolean>(false)
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
   const [showSupplierPopup, setShowSupplierPopup] = useState<boolean>(false)
   const [showProductionPopup, setShowProductionPopup] = useState<boolean>(false)
   const [selectedRestaurant, setSelectedRestaurant] = useState<Customer | null>(null)
   const [showRestaurantPopup, setShowRestaurantPopup] = useState<boolean>(false)
+  const [forecastData, setForecastData] = useState<Record<string, any> | null>(null)
+
 
   // Delivery option state
   const [selectedDeliveryOption, setSelectedDeliveryOption] = useState<number>(() => {
@@ -126,12 +130,16 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   // Check if forecasting is required
   const requiresForecasting = levelConfig.id === 2 || levelConfig.id === 3
 
-  // Show forecasting dialog for levels 2 and 3
+  // Show objectives dialog first for all levels, then forecasting for levels 2 and 3
   useEffect(() => {
-    if (requiresForecasting && !forecastingCompleted && gameState.day === 1) {
-      setShowForecasting(true)
+    if (gameState.day === 1) {
+      if (!objectivesCompleted) {
+        setShowObjectives(true)
+      } else if (requiresForecasting && !forecastingCompleted) {
+        setShowForecasting(true)
+      }
     }
-  }, [requiresForecasting, forecastingCompleted, gameState.day])
+  }, [objectivesCompleted, requiresForecasting, forecastingCompleted, gameState.day])
 
   // Update action when delivery option changes
   useEffect(() => {
@@ -140,6 +148,16 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
       deliveryOptionId: selectedDeliveryOption,
     }))
   }, [selectedDeliveryOption])
+
+  // Store forecast data in game state when it's available
+  useEffect(() => {
+    if (forecastData && gameState) {
+      setGameState((prev) => ({
+        ...prev,
+        forecastData: forecastData, // ← NEW: Store forecast data in game state
+      }))
+    }
+  }, [forecastData, setGameState])
 
   // Initialize hooks
   const { supplierOrders, setSupplierOrders, handleSupplierOrderChange, initializeSupplierOrders } = useSupplierOrders({
@@ -254,17 +272,41 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   }, [gameState.day, isLastDay, levelConfig.daysToComplete])
 
   // Handle forecasting completion
-  const handleForecastingComplete = useCallback(
-    (forecasts: Record<string, number>) => {
-      setForecastingCompleted(true)
-      setShowForecasting(false)
-      toast({
-        title: "Forecasting Complete",
-        description: "You can now start the level with your forecasts.",
-      })
-    },
-    [toast],
-  )
+const handleForecastingComplete = useCallback(
+  (forecasts: Record<string, any>) => {
+    setForecastingCompleted(true)
+    setShowForecasting(false)
+    setForecastData(forecasts)
+
+    toast({
+      title: "Forecasting Complete",
+      description: "You can now start the level with your forecasts.",
+    })
+  },
+  [toast],
+)
+
+// Get today's planned production
+const getTodaysPlannedProduction = useCallback(() => {
+  if (!forecastData?.productionRates) return undefined
+  return forecastData.productionRates[gameState.day] || 0 // ← NEW: Get current day's production
+}, [forecastData, gameState.day])
+
+  // Handle objectives completion
+  const handleObjectivesComplete = useCallback(() => {
+    setObjectivesCompleted(true)
+    setShowObjectives(false)
+
+    // If this level requires forecasting, show it next
+    if (requiresForecasting && !forecastingCompleted) {
+      setShowForecasting(true)
+    }
+
+    toast({
+      title: "Objectives Reviewed",
+      description: "You can now proceed with the level.",
+    })
+  }, [requiresForecasting, forecastingCompleted, toast])
 
   // Reset all orders
   const resetAllOrders = useCallback(() => {
@@ -366,13 +408,39 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   )
 
   // Don't render if forecasting is required but not completed
-  if (requiresForecasting && !forecastingCompleted) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
-      </div>
-    )
+  // if (requiresForecasting && !forecastingCompleted) {
+  //   return (
+  //     <div className="min-h-screen flex items-center justify-center">
+  //       <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
+  //       <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
+  //     </div>
+  //   )
+  // }
+
+// Added function to render dialogs
+const renderDialogs = () => (
+  <>
+    <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
+
+    {requiresForecasting && (
+      <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
+    )}
+  </>
+)
+
+// Added function to calculate planned production
+const getPlannedProduction = useCallback(() => {
+  if (!forecastData) return undefined
+
+  if (forecastData.productionRates) {
+    // Sum up the production rates for all days
+    console.log(forecastData.productionRates)
+    return Object.values(forecastData.productionRates)//.reduce((sum: number, rate: number) => sum + rate, 0)
+  } else {
+    // Sum up the customer forecasts
+    return (forecastData["yummy-zone"] || 0) + (forecastData["toast-to-go"] || 0) + (forecastData["study-fuel"] || 0)
   }
+}, [forecastData])
 
   const lastDayPenalty =
     gameState.overstockPenalties && gameState.overstockPenalties.length > 0
@@ -381,6 +449,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
   return (
     <div className="space-y-6">
+      {renderDialogs()} 
       <GameHeader
         levelId={levelConfig.id}
         levelConfig={levelConfig}
@@ -395,6 +464,17 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
           <AlertCircle className="h-4 w-4" />
           <AlertTitle>Error</AlertTitle>
           <AlertDescription>{errorMessage}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Show forecasting status for levels with forecasting */}
+      {requiresForecasting && forecastingCompleted && getTodaysPlannedProduction() !== undefined && (
+        <Alert>
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Automatic Production Active</AlertTitle>
+          <AlertDescription>
+            Today's planned production: {getTodaysPlannedProduction()} meals (based on your forecasting plan)
+          </AlertDescription>
         </Alert>
       )}
 
@@ -482,6 +562,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
             data={gameState.history}
             currentInventory={gameState.inventory}
             overstock={levelConfig.overstock}
+            safetystock={levelConfig.safetystock}
           />
         </div>
         <div className="md:col-span-8">
@@ -527,7 +608,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         level={levelConfig.id}
       />
 
-      <ObjectivesDialog isOpen={showObjectives} onClose={() => setShowObjectives(false)} levelId={levelConfig.id} />
+      <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
 
       {user && (
         <GameOverDialog
@@ -568,11 +649,15 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
       <ProductionPopup
         isOpen={showProductionPopup}
         onClose={() => setShowProductionPopup(false)}
-        production={action.production}
+        production={getTodaysPlannedProduction() || action.production}
         maxProduction={maxProduction}
         onProductionChange={handleProductionChange}
         isDisabled={isLoading || gameEnded}
+        plannedProduction={getPlannedProduction()}
+        forecastData={forecastData}
+        currentDay={gameState.day}
         inventory={gameState.inventory}
+        requiresForecasting={requiresForecasting}
       />
 
       <RestaurantSalesPopup
@@ -589,8 +674,20 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         day={gameState.day}
         levelConfig={levelConfig}
       />
+      {/* Tutorial Overlay for Level 0 */}
+      {levelConfig.id === 0 && (
+        <TutorialOverlay onComplete={() => setShowTutorial(false)} isOpen={showTutorial} levelId={levelConfig.id} />
+      )}
     </div>
   )
+
+  function handleShowTutorial() {
+    if (levelConfig.id === 0) {
+      setShowTutorial(true)
+    } else {
+      setShowTutorial(true)
+    }
+  }
 }
 
 export default GameInterface;

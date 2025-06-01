@@ -10,7 +10,7 @@ export function GameHistory({ history }: GameHistoryProps) {
   // If there's no history yet, show a message
   if (history.length === 0) {
     return (
-      <Card>
+      <Card data-tutorial="game-history">
         <CardHeader>
           <CardTitle>Game History</CardTitle>
           <CardDescription>No history yet. Complete your first day to see results.</CardDescription>
@@ -20,7 +20,7 @@ export function GameHistory({ history }: GameHistoryProps) {
   }
 
   return (
-    <Card>
+    <Card data-tutorial="game-history">
       <CardHeader>
         <CardTitle>Game History</CardTitle>
         <CardDescription>Track your daily performance</CardDescription>

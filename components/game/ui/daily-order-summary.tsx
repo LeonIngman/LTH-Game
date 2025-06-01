@@ -237,7 +237,7 @@ export function DailyOrderSummary({
   // Handle case where supplierOrders is undefined
   if (!supplierOrders || !Array.isArray(supplierOrders)) {
     return (
-      <Card>
+      <Card data-tutorial="daily-order-summary">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
@@ -261,7 +261,7 @@ export function DailyOrderSummary({
   }
 
   return (
-    <Card>
+    <Card data-tutorial="daily-summary">
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
