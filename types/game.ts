@@ -3,6 +3,146 @@ export interface Inventory {
   bun: number
   cheese: number
   potato: number
+  finishedGoods: number
+}
+
+export interface InventoryTransaction {
+  id: string
+  materialType: "patty" | "cheese" | "bun" | "potato"
+  quantity: number
+  unitCost: number
+  totalCost: number
+  day: number
+  supplierId?: number
+  deliveryOptionId?: number
+  timestamp: Date | string
+}
+
+export interface FinishedGoodsBatch {
+  id: string
+  quantity: number
+  unitCost: number
+  totalCost: number
+  day: number
+  rawMaterialCosts: {
+    patty: number
+    cheese: number
+    bun: number
+    potato: number
+  }
+  productionCost: number
+  timestamp: Date | string
+}
+
+export interface DailyInventoryValuation {
+  day: number
+  pattyValue: number
+  cheeseValue: number
+  bunValue: number
+  potatoValue: number
+  finishedGoodsValue: number
+  totalValue: number
+  pattyQuantity: number
+  cheeseQuantity: number
+  bunQuantity: number
+  potatoQuantity: number
+  finishedGoodsQuantity: number
+}
+
+export interface InventoryHoldingCosts {
+  pattyHoldingCost: number
+  cheeseHoldingCost: number
+  bunHoldingCost: number
+  potatoHoldingCost: number
+  finishedGoodsHoldingCost: number
+  totalHoldingCost: number
+}
+
+export interface PendingOrder {
+  materialType: string
+  quantity: number
+  daysRemaining: number
+  totalCost: number
+  supplierId: number
+  deliveryOptionId: number
+  deliveryName?: string
+  supplierName?: string
+  actualLeadTime?: number
+}
+
+export interface CustomerOrder {
+  customerId: number
+  quantity: number
+  daysRemaining: number
+  totalRevenue: number
+  transportCost: number
+  netRevenue: number
+  actualLeadTime?: number
+}
+
+export interface LatenessPenalty {
+  customerId: number
+  customerName: string
+  day: number
+  missedAmount: number
+  penaltyAmount: number
+}
+
+export interface GameAction {
+  supplierOrders: Array<{
+    supplierId: number
+    pattyPurchase: number
+    cheesePurchase: number
+    bunPurchase: number
+    potatoPurchase: number
+  }>
+  production: number
+  salesAttempt: number
+  deliveryOptionId: number
+  customerOrders: Array<{
+    customerId: number
+    quantity: number
+  }>
+}
+
+export interface DailyResult {
+  day: number
+  cash: number
+  inventory: Inventory
+  inventoryValuation: DailyInventoryValuation
+  holdingCosts: InventoryHoldingCosts
+  pattyPurchased: number
+  cheesePurchased: number
+  bunPurchased: number
+  potatoPurchased: number
+  production: number
+  sales: number
+  revenue: number
+  costs: {
+    purchases: number
+    production: number
+    holding: number
+    total: number
+  }
+  profit: number
+  cumulativeProfit: number
+  score: number
+  deliveryOptionId: number
+  customerDeliveries?: Record<number, { quantity: number; revenue: number }>
+  latenessPenalties?: LatenessPenalty[]
+  overstockPenalty?: number
+  overstockPenaltyDetails?: Record<string, number>
+}
+
+export interface GameResult {
+  levelId: number
+  userId: string
+  finalDay: number
+  finalCash: number
+  finalInventory: Inventory
+  cumulativeProfit: number
+  score: number
+  history: DailyResult[]
 }
 
 export interface Supplier {
@@ -14,31 +154,43 @@ export interface Supplier {
   materials: string[]
   shipmentPrices: Record<string, Record<number, number>>
   shipmentPricesIncludeBaseCost: boolean
+  randomLeadTime?: boolean
+  leadTimeRange?: number[]
 }
 
 export interface DeliveryOption {
   id: number
   name: string
-  costPerUnit: number
+  costPerUnit?: number
   leadTime: number
-  capacity: number
+  capacity?: number
   costMultiplier: number
-  daysToDeliver: number
+  daysToDeliver?: number
+  description?: string
 }
 
 export interface Customer {
   id: number
   name: string
-  location: { x: number; y: number }
-  demand: (day: number) => number
+  description?: string
+  location?: { x: number; y: number }
+  demand?: (day: number) => number
+  leadTime?: number
+  totalRequirement?: number
+  deliverySchedule?: Array<{ day: number; requiredAmount: number }>
+  pricePerUnit?: number
+  transportCosts?: Record<number, number>
+  allowedShipmentSizes?: number[]
+  minimumDeliveryAmount?: number
+  active?: boolean
+  randomLeadTime?: boolean
+  leadTimeRange?: number[]
 }
 
 export interface DailyDemand {
   quantity: number
-  price: number
+  pricePerUnit: number
 }
-
-// Add the MapPosition interface to the existing types/game.ts file
 
 export interface MapPosition {
   x: number
@@ -51,34 +203,6 @@ export interface MapPositions {
   mainFactory: MapPosition
   suppliers: Record<number, MapPosition>
   restaurants: MapPosition[]
-}
-
-// Update the LevelConfig interface to include mapPositions
-export interface LevelConfig {
-  id: number
-  name: string
-  description: string
-  initialCash: number
-  initialInventory: Inventory
-  daysToComplete: number
-  productionCostPerUnit: number
-  holdingCostPerUnit: number
-  sellingPricePerUnit: number
-  materialBasePrices: Record<string, number>
-  holdingCosts: {
-    patty: number
-    bun: number
-    cheese: number
-    potato: number
-  }
-  orderQuantities: number[]
-  suppliers: Supplier[]
-  deliveryOptions?: DeliveryOption[]
-  customers?: Customer[]
-  demandModel: (day: number) => DailyDemand
-  maxScore: number
-  mapPositions?: Record<number, MapPositions> // Add map positions for each level
-  overstock?: OverstockConfig
 }
 
 export interface OverstockRule {
@@ -94,7 +218,52 @@ export interface OverstockConfig {
   finishedGoods?: OverstockRule
 }
 
-// Add to GameState interface
 export interface GameState {
+  day: number
+  cash: number
+  inventory: Inventory
+  inventoryTransactions: InventoryTransaction[]
+  finishedGoodsBatches: FinishedGoodsBatch[]
+  dailyInventoryValuations: DailyInventoryValuation[]
+  pendingOrders: PendingOrder[]
+  pendingCustomerOrders: CustomerOrder[]
+  customerDeliveries: Record<number, number>
+  supplierDeliveries: Record<number, Record<string, number>>
+  dailyDemand: DailyDemand
+  productionCapacity: number
+  cumulativeProfit: number
+  score: number
+  history: DailyResult[]
+  selectedDeliveryOption: number
+  gameOver: boolean
+  latenessPenalties: LatenessPenalty[]
   overstockPenalties?: Array<{ day: number; penalty: number; details: Record<string, number> }>
+}
+
+export interface LevelConfig {
+  id: number
+  name: string
+  description: string
+  initialCash: number
+  initialInventory: Inventory
+  daysToComplete: number
+  productionCostPerUnit: number
+  holdingCostPerUnit?: number
+  sellingPricePerUnit?: number
+  materialBasePrices: Record<string, number>
+  holdingCosts: {
+    patty: number
+    bun: number
+    cheese: number
+    potato: number
+    finishedGoods?: number
+  }
+  orderQuantities?: number[]
+  suppliers: Supplier[]
+  deliveryOptions?: DeliveryOption[]
+  customers?: Customer[]
+  demandModel: (day: number) => DailyDemand
+  maxScore: number
+  mapPositions?: Record<number, MapPositions>
+  overstock?: OverstockConfig
 }
