@@ -39,9 +39,6 @@ export function SupplierOrderForm({
   // Check if a material is available from this supplier
   const checkMaterialAvailability = (supplierId: number, materialType: string): boolean => {
     if (isMaterialAvailable) return isMaterialAvailable(supplierId, materialType)
-    if (typeof supplier.capacityPerDay === "object") {
-      return supplier.capacityPerDay[materialType] > 0
-    }
     return true
   }
 
@@ -119,7 +116,6 @@ export function SupplierOrderForm({
     <div className="space-y-4 pt-2">
       <div className="p-3 bg-gray-50 rounded-md mb-2">
         <h4 className="font-medium">{supplier.name}</h4>
-        <p className="text-sm text-gray-600">{supplier.description}</p>
         <p className="text-xs text-gray-500 mt-1">
           {supplier.randomLeadTime ? (
             <span>Lead time: {supplier.leadTimeRange?.join(", ")} days (varies due to uncertainty)</span>

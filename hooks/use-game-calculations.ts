@@ -33,17 +33,11 @@ export function useGameCalculations({
       }
 
       // If supplier has specific material prices, use those
-      if (supplier.materialBasePrices && typeof supplier.materialBasePrices[materialType] === "number") {
-        return supplier.materialBasePrices[materialType]
+      if (supplier.materialPrices && typeof supplier.materialPrices[materialType] === "number") {
+        return supplier.materialPrices[materialType]
       }
 
-      // Otherwise use the standard pricing model from levelConfig
-      if (!levelConfig.materialBasePrices || typeof levelConfig.materialBasePrices[materialType] !== "number") {
-        console.warn(`Material price for ${materialType} not found in levelConfig`)
-        return 0
-      }
-
-      return levelConfig.materialBasePrices[materialType]
+      return 0
     } catch (error) {
       console.error(`Error in getMaterialPriceForSupplier:`, error)
       return 0 // Return a safe default value

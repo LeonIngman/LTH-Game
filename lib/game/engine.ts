@@ -143,7 +143,6 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
 
   // Check each customer's delivery schedule
   for (const customer of levelConfig.customers) {
-    if (!customer.active) continue
 
     // Find milestones that were due on the current day
     const dueMilestones = customer.deliverySchedule.filter((milestone) => milestone.day === state.day)
@@ -563,7 +562,7 @@ function processCustomerOrders(state: GameState, action: GameAction, levelConfig
   // Process each customer order
   for (const customerOrder of action.customerOrders || []) {
     const customer = getCustomer(customerOrder.customerId, levelConfig)
-    if (!customer || !customer.active) continue
+    if (!customer) continue
 
     // Check if we have enough inventory
     if (customerOrder.quantity > state.inventory.finishedGoods) {

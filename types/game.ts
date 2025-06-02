@@ -150,12 +150,12 @@ export interface Supplier {
   name: string
   leadTime: number
   capacityPerGame: Record<string, number>
-  capacityPerDay: Record<string, number>
   materials: string[]
   shipmentPrices: Record<string, Record<number, number>>
   shipmentPricesIncludeBaseCost: boolean
   randomLeadTime?: boolean
   leadTimeRange?: number[]
+  materialPrices: Record<string, number>
 }
 
 export interface DeliveryOption {
@@ -175,14 +175,13 @@ export interface Customer {
   description?: string
   location?: { x: number; y: number }
   demand?: (day: number) => number
-  leadTime?: number
+  leadTime: number
   totalRequirement?: number
-  deliverySchedule?: Array<{ day: number; requiredAmount: number }>
-  pricePerUnit?: number
-  transportCosts?: Record<number, number>
-  allowedShipmentSizes?: number[]
+  deliverySchedule: Array<{ day: number; requiredAmount: number }>
+  pricePerUnit: number
+  transportCosts: Record<number, number>
+  allowedShipmentSizes: number[]
   minimumDeliveryAmount?: number
-  active?: boolean
   randomLeadTime?: boolean
   leadTimeRange?: number[]
 }
@@ -262,7 +261,6 @@ export interface LevelConfig {
   productionCostPerUnit: number
   holdingCostPerUnit?: number
   sellingPricePerUnit?: number
-  materialBasePrices: Record<string, number>
   holdingCosts: {
     patty: number
     bun: number

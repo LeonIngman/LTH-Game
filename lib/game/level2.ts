@@ -17,12 +17,6 @@ export const level2Config: LevelConfig = {
     potato: 300,
     finishedGoods: 0,
   },
-  materialBasePrices: {
-    patty: 10,
-    cheese: 5,
-    bun: 3,
-    potato: 2,
-  },
   holdingCosts: {
     patty: 1.0,
     cheese: 0.5,
@@ -40,8 +34,13 @@ export const level2Config: LevelConfig = {
       name: "Pink Patty",
       leadTime: 0,
       capacityPerGame: { patty: 150, cheese: 500, bun: 200, potato: 0 },
-      capacityPerDay: { patty: 20, cheese: 10, bun: 15, potato: 0 },
       materials: ["patty", "cheese", "bun", "potato"],
+      materialPrices: {
+        patty: 10,
+        cheese: 5,
+        bun: 3,
+        potato: 2,
+      },
       shipmentPrices: {
         patty: { 50: 116, 100: 134},
         bun: { 50: 89, 100: 98, 200: 134 },
@@ -55,8 +54,13 @@ export const level2Config: LevelConfig = {
       name: "Brown Sauce",
       leadTime: 0,
       capacityPerGame: { patty: 200, cheese: 0, bun: 200, potato: 850 },
-      capacityPerDay: { patty: 15, cheese: 20, bun: 10, potato: 5 },
       materials: ["patty", "cheese", "bun", "potato"],
+      materialPrices: {
+        patty: 10,
+        cheese: 5,
+        bun: 3,
+        potato: 2,
+      },
       shipmentPrices: {
         patty: { 50: 121, 100: 139, 200: 186 },
         bun: { 50: 92, 100: 102, 200: 139 },
@@ -70,8 +74,13 @@ export const level2Config: LevelConfig = {
       name: "Firehouse Foods",
       leadTime: 0,
       capacityPerGame: { patty: 0, cheese: 500, bun: 250, potato: 700 },
-      capacityPerDay: { patty: 10, cheese: 10, bun: 20, potato: 10 },
       materials: ["patty", "cheese", "bun", "potato"],
+      materialPrices: {
+        patty: 10,
+        cheese: 5,
+        bun: 3,
+        potato: 2,
+      },
       shipmentPrices: {
         patty: { 50: 126, 100: 145, 150: 175 },
         bun: { 50: 96, 100: 106, 150: 126 },

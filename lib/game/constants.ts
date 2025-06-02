@@ -4,14 +4,6 @@ export const HOLDING_COSTS = {
   CHEESE: 2.0,
   POTATO: 1.8,
 }
-// Not used
-export const OVERSTOCK_THRESHOLD = {
-  PATTY: 100,
-  BUN: Number.POSITIVE_INFINITY, // No threshold for buns
-  CHEESE: 250,
-  POTATO: 300,
-  FINISHED_GOODS: 50,
-}
 
 export const MATERIAL_BASE_PRICES = {
   patty: 20.0,

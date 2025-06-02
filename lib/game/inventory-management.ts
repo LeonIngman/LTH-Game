@@ -35,10 +35,8 @@ export function calculateUnitCost(
 ): number {
   // Get base price
   let basePrice = 0
-  if (supplier.materialBasePrices && supplier.materialBasePrices[materialType]) {
-    basePrice = supplier.materialBasePrices[materialType]
-  } else {
-    basePrice = levelConfig.materialBasePrices[materialType]
+  if (supplier.materialPrices && supplier.materialPrices[materialType]) {
+    basePrice = supplier.materialPrices[materialType]
   }
 
   // Check for special shipment pricing

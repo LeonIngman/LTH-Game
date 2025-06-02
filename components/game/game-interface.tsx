@@ -30,7 +30,6 @@ import { ObjectivesDialog } from "./objectives-dialog"
 import { GameOverDialog } from "./game-over-dialog"
 import { ForecastingDialog } from "./forecasting-dialog"
 import { DailyOrderSummary } from "./ui/daily-order-summary"
-import { DebugPriceInfo } from "./ui/debug-price-info"
 import { QuickActionsWidget } from "./ui/quick-actions-widget"
 import { TutorialOverlay } from "./tutorial-overlay"
 
@@ -211,10 +210,12 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const calculateMaterialPurchaseCost = useCallback(() => {
     let total = 0
     for (const order of supplierOrders) {
-      if (order.pattyPurchase > 0) total += order.pattyPurchase * (levelConfig.materialBasePrices?.patty || 0)
-      if (order.cheesePurchase > 0) total += order.cheesePurchase * (levelConfig.materialBasePrices?.cheese || 0)
-      if (order.bunPurchase > 0) total += order.bunPurchase * (levelConfig.materialBasePrices?.bun || 0)
-      if (order.potatoPurchase > 0) total += order.potatoPurchase * (levelConfig.materialBasePrices?.potato || 0)
+      const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+      if (!supplier || !supplier.materialPrices) continue
+      if (order.pattyPurchase > 0) total += order.pattyPurchase * (supplier.materialPrices?.patty || 0)
+      if (order.cheesePurchase > 0) total += order.cheesePurchase * (supplier.materialPrices?.cheese || 0)
+      if (order.bunPurchase > 0) total += order.bunPurchase * (supplier.materialPrices?.bun || 0)
+      if (order.potatoPurchase > 0) total += order.potatoPurchase * (supplier.materialPrices?.potato || 0)
     }
     return total
   }, [supplierOrders, levelConfig])
@@ -589,8 +590,6 @@ const getPlannedProduction = useCallback(() => {
       />
 
       <GameHistory history={gameState.history} />
-
-      <DebugPriceInfo levelConfig={levelConfig} getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number} />
 
       <GameDialogs
         gameState={gameState}

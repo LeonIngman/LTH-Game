@@ -111,11 +111,6 @@ export interface StatusBarProps {
   levelConfig: LevelConfig
 }
 
-export interface InventorySectionProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-}
-
 export interface MarketInfoProps {
   levelConfig: LevelConfig
   pendingOrders: PendingOrder[]

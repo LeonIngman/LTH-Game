@@ -73,17 +73,6 @@ export async function POST(request: Request) {
         return NextResponse.json({ error: "Invalid level ID" }, { status: 400 })
     }
 
-    // Ensure levelConfig has required properties
-    if (!levelConfig.materialBasePrices) {
-      levelConfig.materialBasePrices = {
-        patty: 10,
-        cheese: 5,
-        bun: 3,
-        potato: 2,
-      }
-      console.warn("Missing materialBasePrices in levelConfig, using defaults")
-    }
-
     if (!levelConfig.holdingCosts) {
       levelConfig.holdingCosts = {
         patty: 1,
