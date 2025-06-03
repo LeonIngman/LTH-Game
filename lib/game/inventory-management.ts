@@ -30,8 +30,6 @@ export function calculateUnitCost(
   quantity: number,
   materialType: string,
   supplier: Supplier,
-  levelConfig: LevelConfig,
-  deliveryMultiplier: number,
 ): number {
   // Get base price
   let basePrice = 0
@@ -39,23 +37,18 @@ export function calculateUnitCost(
     basePrice = supplier.materialPrices[materialType]
   }
 
-  // Check for special shipment pricing
+  // Get shipment pricing
+  let shipmentCostPerUnit = 0
   if (
     supplier.shipmentPrices &&
     supplier.shipmentPrices[materialType] &&
     supplier.shipmentPrices[materialType][quantity]
   ) {
-    if (supplier.shipmentPricesIncludeBaseCost) {
-      return supplier.shipmentPrices[materialType][quantity] / quantity
-    } else {
-      const shipmentCostPerUnit = supplier.shipmentPrices[materialType][quantity] / quantity
-      return basePrice + shipmentCostPerUnit
-    }
+    shipmentCostPerUnit = supplier.shipmentPrices[materialType][quantity] / quantity
   }
 
-  // Standard pricing with delivery multiplier
-  const costMultiplier = supplier.costMultiplier || 1.0
-  return basePrice * costMultiplier * deliveryMultiplier
+  // Return cost per unit
+  return basePrice + shipmentCostPerUnit
 }
 
 /**

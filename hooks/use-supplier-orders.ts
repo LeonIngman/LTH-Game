@@ -1,8 +1,8 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { SupplierOrder } from "@/types/game"
-import type { SupplierOrdersHook, SupplierOrdersParams, MaterialType } from "./types"
+import type { SupplierOrder, MaterialType } from "@/types/game"
+import type { SupplierOrdersHook, SupplierOrdersParams } from "../types/hooks"
 
 /**
  * Hook for managing supplier orders
@@ -62,8 +62,8 @@ export function useSupplierOrders({ levelConfig, action, setAction }: SupplierOr
       const supplier = levelConfig.suppliers.find((s) => s.id === supplierId)
       if (!supplier) return false
 
-      if (typeof supplier.capacityPerDay === "object") {
-        return supplier.capacityPerDay[materialType] > 0
+      if (typeof supplier.capacityPerGame === "object") {
+        return supplier.capacityPerGame[materialType] > 0
       }
 
       return true
@@ -82,10 +82,10 @@ export function useSupplierOrders({ levelConfig, action, setAction }: SupplierOr
       const supplier = levelConfig.suppliers.find((s) => s.id === supplierId)
       if (!supplier) return 0
 
-      if (typeof supplier.capacityPerDay === "object") {
-        return supplier.capacityPerDay[materialType] || 0
+      if (typeof supplier.capacityPerGame === "object") {
+        return supplier.capacityPerGame[materialType] || 0
       } else {
-        return supplier.capacityPerDay
+        return supplier.capacityPerGame
       }
     },
     [levelConfig.suppliers],
@@ -106,26 +106,26 @@ export function useSupplierOrders({ levelConfig, action, setAction }: SupplierOr
       if (!supplier) return 0
 
       // If supplier has per-material capacity
-      if (typeof supplier.capacityPerDay === "object") {
+      if (typeof supplier.capacityPerGame === "object") {
         if (materialType) {
           // Return capacity for specific material
-          const materialCapacity = supplier.capacityPerDay[materialType] || 0
+          const materialCapacity = supplier.capacityPerGame[materialType] || 0
           const materialOrdered = order[`${materialType}Purchase` as keyof typeof order] || 0
           return materialCapacity - materialOrdered
         } else {
           // Return total remaining capacity across all materials
           const totalOrdered = order.pattyPurchase + order.cheesePurchase + order.bunPurchase + order.potatoPurchase
           const totalCapacity =
-            (supplier.capacityPerDay.patty || 0) +
-            (supplier.capacityPerDay.cheese || 0) +
-            (supplier.capacityPerDay.bun || 0) +
-            (supplier.capacityPerDay.potato || 0)
+            (supplier.capacityPerGame.patty || 0) +
+            (supplier.capacityPerGame.cheese || 0) +
+            (supplier.capacityPerGame.bun || 0) +
+            (supplier.capacityPerGame.potato || 0)
           return totalCapacity - totalOrdered
         }
       } else {
         // Use the standard capacity model
         const totalOrdered = order.pattyPurchase + order.cheesePurchase + order.bunPurchase + order.potatoPurchase
-        return supplier.capacityPerDay - totalOrdered
+        return supplier.capacityPerGame - totalOrdered
       }
     },
     [levelConfig.suppliers, supplierOrders],

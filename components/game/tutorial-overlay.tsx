@@ -5,6 +5,7 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { createPortal } from "react-dom"
+import type { TutorialOverlayProps, TutorialStep } from "@/types/components"
 
 function getLevelTutorialSteps(levelId: number): TutorialStep[] {
   if (levelId !== 0) return []
@@ -90,21 +91,6 @@ function getLevelTutorialSteps(levelId: number): TutorialStep[] {
   ]
 }
 
-interface TutorialStep {
-  title: string
-  description: string
-  targetSelector: string
-  position: "top" | "right" | "bottom" | "left" | "center"
-  tabToActivate?: string
-}
-
-interface TutorialOverlayProps {
-  steps?: TutorialStep[]
-  onComplete: () => void
-  isOpen: boolean
-  onTabChange?: (tabId: string) => void
-  levelId?: number
-}
 
 export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange, levelId }: TutorialOverlayProps) {
   // Use level-specific steps if no steps provided and levelId is available

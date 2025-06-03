@@ -7,19 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AlertTriangle, Calendar, CheckCircle2, CheckCircle } from "lucide-react"
-import type { Customer, CustomerOrderAction, GameState, LevelConfig } from "@/types/game"
-
-interface RestaurantSalesPopupProps {
-  isOpen: boolean
-  onClose: () => void
-  customer: Customer | null
-  customerOrders: CustomerOrderAction[]
-  handleCustomerOrderChange: (customerId: number, quantity: number) => void
-  isDisabled: boolean
-  gameState: GameState
-  day: number
-  levelConfig?: LevelConfig
-}
+import type { RestaurantSalesPopupProps } from "@/types/components"
 
 export function RestaurantSalesPopup({
   isOpen,

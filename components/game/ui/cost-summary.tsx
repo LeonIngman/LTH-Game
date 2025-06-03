@@ -3,26 +3,8 @@
 import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import type { LevelConfig } from "@/types/game"
+import type { CostSummaryProps } from "@/types/components"
 import { calculateDailyInventoryValuation, calculateInventoryHoldingCosts } from "@/lib/game/inventory-management"
-
-export interface CostSummaryProps {
-  gameState: any
-  levelConfig: any
-  action: any
-  supplierOrders: any[]
-  isLoading: boolean
-  gameEnded: boolean
-  onProcessDay: () => Promise<void>
-  calculateTotalPurchaseCost: () => number
-  calculateProductionCost: () => number
-  calculateMaterialPurchaseCost: () => number // <-- Add this line
-  calculateTransportationCost: () => number
-  calculateHoldingCost: () => number
-  calculateRevenue: () => number
-  isNextDayButtonDisabled: boolean
-  getNextDayDisabledReason: () => string
-}
 
 export function CostSummary({
   gameState,
@@ -182,7 +164,7 @@ export function CostSummary({
                   </Button>
                 </span>
               </TooltipTrigger>
-              {(isNextDayButtonDisabled || isButtonDisabled()) && (
+              {(isNextDayButtonDisabled() || isButtonDisabled()) && (
                 <TooltipContent>
                   <p>{getDisabledReason()}</p>
                 </TooltipContent>

@@ -1,8 +1,4 @@
-import type { GameState, LevelConfig, SupplierOrder, CustomerOrderAction, GameAction, PendingOrder } from "@/types/game"
-import type { MATERIAL_TYPES } from "@/lib/constants"
-
-// Define a union type for material types
-export type MaterialType = (typeof MATERIAL_TYPES)[number]
+import type { GameState, LevelConfig, SupplierOrder, CustomerOrderAction, GameAction, PendingOrder, MaterialType } from "@/types/game"
 
 // useGameState types
 export interface GameStateHook {
@@ -44,7 +40,6 @@ export interface GameCalculationsHook {
   getHoldingCost: () => number
   calculateTotalActionCost: () => number
   calculateTotalCost: () => number
-  getDeliveryMultiplier: () => number
   calculateMaxProduction: number
   isOnlySales: () => boolean
   isNextDayButtonDisabled: () => boolean
@@ -98,25 +93,6 @@ export interface CustomerOrdersParams {
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
 }
 
-// Component prop types
-export interface GameHeaderProps {
-  levelId: number
-  levelConfig: LevelConfig
-  onShowTutorial: () => void
-  onShowMap: () => void
-}
-
-export interface StatusBarProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-}
-
-export interface MarketInfoProps {
-  levelConfig: LevelConfig
-  pendingOrders: PendingOrder[]
-  onShowMap: () => void
-}
-
 export interface DailyActionsProps {
   gameState: GameState
   levelConfig: LevelConfig
@@ -132,41 +108,4 @@ export interface DailyActionsProps {
   gameEnded: boolean
   handleSupplierOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void
   handleCustomerOrderChange: (customerId: number, quantity: number) => void
-}
-
-export interface CostSummaryProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-  action: GameAction
-  supplierOrders: SupplierOrder[]
-  isLoading: boolean
-  gameEnded: boolean
-  onProcessDay: () => void
-  onShowChart: () => void
-  onShowTutorial: () => void
-  calculateTotalPurchaseCost: () => number
-  calculateProductionCost: () => number
-  calculateHoldingCost: () => number
-  calculateTotalCost: () => number
-  isNextDayButtonDisabled: () => boolean
-  getNextDayDisabledReason: () => string
-}
-
-export interface GameHistoryProps {
-  history: GameState["history"]
-}
-
-export interface GameDialogsProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-  showChart: boolean
-  setShowChart: (show: boolean) => void
-  showMap: boolean
-  setShowMap: (show: boolean) => void
-  showTutorial: boolean
-  setShowTutorial: (show: boolean) => void
-  gameEnded: boolean
-  setGameEnded: (ended: boolean) => void
-  onSubmitLevel: () => Promise<void>
-  isSubmitting: boolean
 }

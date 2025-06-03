@@ -1,0 +1,277 @@
+import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrderAction, GameAction, PendingOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
+
+export interface CurrentOrdersProps {
+  levelConfig: LevelConfig
+  pendingOrders: PendingOrder[]
+  pendingCustomerOrders?: CustomerOrder[]
+  onShowMap?: () => void
+}
+
+export interface GameHeaderProps {
+  levelId: number
+  levelConfig: LevelConfig
+  onShowObjectives: () => void
+  onShowTutorial: () => void
+}
+
+export interface StatusBarProps {
+  gameState: GameState
+  levelConfig: LevelConfig
+}
+
+export interface CostSummaryProps {
+  gameState: any
+  levelConfig: any
+  action: any
+  supplierOrders: any[]
+  isLoading: boolean
+  gameEnded: boolean
+  onProcessDay: () => Promise<void>
+  calculateTotalPurchaseCost: () => number
+  calculateProductionCost: () => number
+  calculateMaterialPurchaseCost: () => number // <-- Add this line
+  calculateTransportationCost: () => number
+  calculateHoldingCost: () => number
+  calculateRevenue: () => number
+  isNextDayButtonDisabled: () => boolean
+  getNextDayDisabledReason: () => string
+}
+
+export interface GameHistoryProps {
+  history: GameState["history"]
+}
+
+export interface GameDialogsProps {
+  gameState: GameState
+  levelConfig: LevelConfig
+  showChart: boolean
+  setShowChart: (show: boolean) => void
+  showMap: boolean
+  setShowMap: (show: boolean) => void
+  showTutorial: boolean
+  setShowTutorial: (show: boolean) => void
+  gameEnded: boolean
+  setGameEnded: (ended: boolean) => void
+  onSubmitLevel: () => Promise<void>
+  isSubmitting: boolean
+}
+
+export interface CustomerOrderFormProps {
+  customer: Customer
+  order: CustomerOrderAction
+  customerProgress: number
+  isDeliveryDueSoon: (customerId: number, day: number) => boolean
+  isDeliveryOverdue: (customerId: number, day: number) => boolean
+  onOrderChange: (customerId: number, quantity: number) => void
+  disabled: boolean
+  deliveredAmount: number
+  finishedGoodsInventory: number
+}
+
+export interface DailyOrderSummaryProps {
+  supplierOrders: SupplierOrder[]
+  suppliers: Supplier[]
+  getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number
+  production?: number
+  productionCostPerUnit?: number
+  customerOrders?: CustomerOrderAction[]
+  customers?: Customer[]
+  levelConfig?: LevelConfig
+  onResetAllOrders?: () => void
+  isDisabled?: boolean
+}
+
+export interface InventorySectionProps {
+  gameState: GameState
+  levelConfig: LevelConfig
+}
+
+export interface PendingOrdersProps {
+  pendingOrders: PendingOrder[]
+  pendingCustomerOrders: CustomerOrder[]
+  currentDay: number
+}
+
+export interface QuickReferenceProps {
+  levelConfig: LevelConfig
+  getMaterialPriceForSupplier: (supplierId: number, material: string) => number
+  currentDay: number
+  supplierOrders: SupplierOrder[]
+  pendingOrders: any[]
+  gameState: any
+  onEnablePlanningMode?: () => void
+  planningMode?: boolean
+}
+
+export interface SupplierOrderFormProps {
+  supplier: Supplier
+  supplierOrder: SupplierOrder
+  orderQuantities: number[]
+  onOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void
+  getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number
+  getMaterialCapacity?: (supplier: any, materialType: string) => number
+  isMaterialAvailable?: (supplierId: number, materialType: string) => boolean
+  disabled: boolean
+  gameState: GameState
+}
+
+export interface CashflowChartProps {
+  data: DailyResult[]
+  width?: number
+  height?: number
+  profitThreshold?: number
+  currentDay?: number
+}
+
+export interface ChartDialogProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  gameHistory: DailyResult[]
+  currentInventory?: any
+  currentDay?: number
+}
+
+export interface ForecastingDialogProps {
+  isOpen: boolean
+  onComplete: (forecasts: Record<string, number>) => void
+  levelId: number
+}
+
+export interface GameInterfaceProps {
+  levelId: number | string
+}
+
+export interface GameOverDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  gameState: GameState
+  levelConfig: LevelConfig
+  userId: string
+  onSubmitLevel: () => Promise<void>
+  isSubmitting: boolean
+}
+
+export interface InventoryChartProps {
+  data: DailyResult[]
+  width?: number
+  height?: number
+  currentInventory?: Inventory
+  overstock?: {
+    patty?: { threshold: number }
+    cheese?: { threshold: number }
+    bun?: { threshold: number }
+    potato?: { threshold: number }
+    finishedGoods?: { threshold: number }
+  }
+  safetystock?: {
+  patty?: { threshold: number }
+  cheese?: { threshold: number }
+  bun?: { threshold: number }
+  potato?: { threshold: number }
+  finishedGoods?: { threshold: number }
+  }
+}
+
+export interface MapDialogProps {
+  open: boolean
+  onClose: () => void
+  pendingOrders: PendingOrder[]
+  pendingCustomerOrders: CustomerOrder[]
+  gameState: GameState
+  suppliers: Supplier[]
+  customers: Customer[]
+  levelConfig: LevelConfig | undefined
+  onSupplierClick: (supplier: Supplier) => void
+  onFactoryClick: () => void
+  onRestaurantClick: () => void
+  level?: number
+}
+
+export interface ObjectivesDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  levelId: number
+}
+
+export interface ProductionPopupProps {
+  isOpen: boolean
+  onClose: () => void
+  production: number
+  maxProduction: number
+  onProductionChange: (value: string) => void
+  isDisabled: boolean
+  plannedProduction?: number
+  forecastData?: Record<string, any> | null
+  currentDay?: number
+  inventory: Inventory,
+  requiresForecasting: boolean
+}
+
+export interface ReplayWarningDialogProps {
+  isOpen: boolean
+  onClose: () => void
+  onConfirm: () => void
+  levelName: string
+  existingScore: number
+  existingProfit: number
+}
+
+export interface RestaurantSalesPopupProps {
+  isOpen: boolean
+  onClose: () => void
+  customer: Customer | null
+  customerOrders: CustomerOrderAction[]
+  handleCustomerOrderChange: (customerId: number, quantity: number) => void
+  isDisabled: boolean
+  gameState: GameState
+  day: number
+  levelConfig?: LevelConfig
+}
+
+export interface SupplierPurchasePopupProps {
+  isOpen: boolean
+  onClose: () => void
+  supplier: Supplier | null
+  supplierOrders: SupplierOrder[]
+  deliveryOptions: { id: number; name: string; costMultiplier: number; daysToDeliver: number }[]
+  selectedDeliveryOption: number
+  setSelectedDeliveryOption: (id: number) => void
+  handleSupplierOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void
+  isDisabled: boolean
+  getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number
+  getOrderQuantitiesForSupplier: (supplierId: number) => number[]
+  gameState: GameState
+  levelConfig?: LevelConfig
+  setGameState?: (state: GameState) => void
+  onOrderConfirmed?: () => void
+}
+
+export interface SupplyChainMapProps {
+  pendingOrders: PendingOrder[]
+  pendingCustomerOrders?: CustomerOrder[]
+  onClose?: () => void
+  gameState?: GameState
+  suppliers?: Supplier[]
+  customers?: Customer[]
+  levelConfig?: LevelConfig
+  onSupplierClick?: (supplierId: number) => void
+  onFactoryClick?: () => void
+  onRestaurantClick?: (restaurantIndex: number) => void
+  level?: number // Add level prop
+}
+
+export interface TutorialStep {
+  title: string
+  description: string
+  targetSelector: string
+  position: "top" | "right" | "bottom" | "left" | "center"
+  tabToActivate?: string
+}
+
+export interface TutorialOverlayProps {
+  steps?: TutorialStep[]
+  onComplete: () => void
+  isOpen: boolean
+  onTabChange?: (tabId: string) => void
+  levelId?: number
+}

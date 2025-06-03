@@ -3,19 +3,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import type { Customer, CustomerOrderAction } from "@/types/game"
-
-interface CustomerOrderFormProps {
-  customer: Customer
-  order: CustomerOrderAction
-  customerProgress: number
-  isDeliveryDueSoon: (customerId: number, day: number) => boolean
-  isDeliveryOverdue: (customerId: number, day: number) => boolean
-  onOrderChange: (customerId: number, quantity: number) => void
-  disabled: boolean
-  deliveredAmount: number
-  finishedGoodsInventory: number
-}
+import type { CustomerOrderFormProps } from "@/types/components"
 
 export function CustomerOrderForm({
   customer,

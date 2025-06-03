@@ -5,26 +5,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle } from "lucide-react"
-import type { Supplier, SupplierOrder, GameState, LevelConfig } from "@/types/game"
+import type { Supplier, SupplierOrder } from "@/types/game"
+import type { SupplierPurchasePopupProps } from "@/types/components"
 import { SupplierOrderForm } from "./ui/supplier-order-form"
-
-interface SupplierPurchasePopupProps {
-  isOpen: boolean
-  onClose: () => void
-  supplier: Supplier | null
-  supplierOrders: SupplierOrder[]
-  deliveryOptions: { id: number; name: string; costMultiplier: number; daysToDeliver: number }[]
-  selectedDeliveryOption: number
-  setSelectedDeliveryOption: (id: number) => void
-  handleSupplierOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void
-  isDisabled: boolean
-  getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number
-  getOrderQuantitiesForSupplier: (supplierId: number) => number[]
-  gameState?: GameState
-  levelConfig?: LevelConfig
-  setGameState?: (state: GameState) => void
-  onOrderConfirmed?: () => void
-}
 
 const MATERIALS = ["patty", "cheese", "bun", "potato"] as const
 
@@ -167,6 +150,7 @@ export function SupplierPurchasePopup({
             getMaterialPriceForSupplier={getMaterialPriceForSupplier}
             getMaterialCapacity={(_supplier, material) => getRemainingCapacity(material)}
             disabled={isDisabled}
+            gameState={gameState}
           />
         </div>
 

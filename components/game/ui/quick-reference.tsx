@@ -6,22 +6,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calculator } from "lucide-react"
-import type { LevelConfig, Supplier, SupplierOrder } from "@/types/game"
+import type { Supplier } from "@/types/game"
+import type { QuickReferenceProps } from "@/types/components"
 
 const MATERIALS = ["patty", "cheese", "bun", "potato"] as const
 
-interface QuickActionsWidgetProps {
-  levelConfig: LevelConfig
-  getMaterialPriceForSupplier: (supplierId: number, material: string) => number
-  currentDay: number
-  supplierOrders: SupplierOrder[]
-  pendingOrders: any[]
-  gameState: any
-  onEnablePlanningMode?: () => void
-  planningMode?: boolean
-}
-
-export function QuickActionsWidget({
+export function QuickReference({
   levelConfig,
   getMaterialPriceForSupplier,
   currentDay,
@@ -30,7 +20,7 @@ export function QuickActionsWidget({
   gameState,
   onEnablePlanningMode,
   planningMode = false,
-}: QuickActionsWidgetProps) {
+}: QuickReferenceProps) {
   const [activeTab, setActiveTab] = useState("suppliers")
 
   const getSupplierMaterials = (supplier: Supplier) => {
@@ -57,10 +47,10 @@ export function QuickActionsWidget({
   }
 
   const getMaterialCapacity = (supplier: Supplier, material: string) => {
-    if (typeof supplier.capacityPerDay === "object") {
-      return supplier.capacityPerDay[material] || 0
+    if (typeof supplier.capacityPerGame === "object") {
+      return supplier.capacityPerGame[material] || 0
     }
-    return supplier.capacityPerDay || supplier.capacity || 0
+    return supplier.capacityPerGame || 0
   }
 
   return (
@@ -119,18 +109,6 @@ export function QuickActionsWidget({
                       {supplier.leadTime} day{supplier.leadTime !== 1 ? "s" : ""}
                     </div>
                   </div>
-                  {supplier.transportCost && (
-                    <div className="grid grid-cols-2 gap-1 text-xs mt-2">
-                      <div>Transport:</div>
-                      <div className="text-right">{supplier.transportCost.toFixed(2)} kr</div>
-                    </div>
-                  )}
-                  {supplier.shipmentSize && (
-                    <div className="grid grid-cols-2 gap-1 text-xs mt-2">
-                      <div>Shipment Size:</div>
-                      <div className="text-right">{supplier.shipmentSize} units</div>
-                    </div>
-                  )}
                 </div>
               ))}
             </div>

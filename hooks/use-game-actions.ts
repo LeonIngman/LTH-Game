@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { useToast } from "@/components/ui/use-toast"
 import type { GameAction } from "@/types/game"
 import { useAuth } from "@/lib/auth-context"
-import type { GameActionsHook, GameActionsParams } from "./types"
+import type { GameActionsHook, GameActionsParams } from "../types/hooks"
 
 /**
  * Hook for managing game actions like processing a day and submitting level results

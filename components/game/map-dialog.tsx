@@ -3,28 +3,8 @@
 import type React from "react"
 import { Dialog, DialogTitle, DialogContent, IconButton } from "@mui/material"
 import CloseIcon from "@mui/icons-material/Close"
-import type { GameState } from "../../state/game-state"
-import type { Supplier } from "../../model/supplier"
-import type { Customer } from "../../model/customer"
-import type { LevelConfig } from "../../model/level-config"
 import { SupplyChainMap } from "./supply-chain-map"
-import type { Order } from "../../model/order"
-import type { CustomerOrder } from "../../model/customer-order"
-
-interface MapDialogProps {
-  open: boolean
-  onClose: () => void
-  pendingOrders: Order[]
-  pendingCustomerOrders: CustomerOrder[]
-  gameState: GameState
-  suppliers: Supplier[]
-  customers: Customer[]
-  levelConfig: LevelConfig | undefined
-  onSupplierClick: (supplier: Supplier) => void
-  onFactoryClick: () => void
-  onRestaurantClick: () => void
-  level?: number
-}
+import type { MapDialogProps } from "@/types/components"
 
 export const MapDialog: React.FC<MapDialogProps> = ({
   open,

@@ -15,20 +15,8 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { saveGameResults } from "@/lib/actions/game-actions"
-import type { LevelConfig } from "@/types/game"
-type GameState = any
+import type { GameOverDialogProps } from "@/types/components"
 import { calculateGameResult } from "@/lib/game/engine"
-import { InfoIcon } from "lucide-react"
-
-interface GameOverDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  gameState: GameState
-  levelConfig: LevelConfig
-  userId: string
-  onSubmitLevel: () => Promise<void>
-  isSubmitting: boolean
-}
 
 export function GameOverDialog({
   isOpen,

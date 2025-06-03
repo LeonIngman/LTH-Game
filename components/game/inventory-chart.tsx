@@ -2,29 +2,10 @@
 
 import { useEffect, useRef } from "react"
 import * as d3 from "d3"
-import type { DailyResult, Inventory } from "@/types/game"
+import type { Inventory } from "@/types/game"
+import type { InventoryChartProps } from "@/types/components"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
-interface InventoryChartProps {
-  data: DailyResult[]
-  width?: number
-  height?: number
-  currentInventory?: Inventory
-  overstock?: {
-    patty?: { threshold: number }
-    cheese?: { threshold: number }
-    bun?: { threshold: number }
-    potato?: { threshold: number }
-    finishedGoods?: { threshold: number }
-  }
-  safetystock?: {
-  patty?: { threshold: number }
-  cheese?: { threshold: number }
-  bun?: { threshold: number }
-  potato?: { threshold: number }
-  finishedGoods?: { threshold: number }
-  }
-}
 
 export function InventoryChart({ data, width = 800, height = 300, currentInventory, overstock, safetystock }: InventoryChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)

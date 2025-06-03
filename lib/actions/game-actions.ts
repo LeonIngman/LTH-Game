@@ -1,8 +1,8 @@
 "use server"
 
 import { sql, pgPool } from "@/lib/db"
+import type { GameState, DailyResult } from "@/types/game";
 
-type GameState = any;
 
 export async function checkExistingPerformance(userId: string, levelId: number) {
   try {
@@ -117,7 +117,7 @@ export async function saveGameResults(
 
     // If we have a valid performance ID and game history, save detailed daily data
     if (performanceId && Array.isArray(effectiveGameHistory) && effectiveGameHistory.length > 0) {
-      const values = effectiveGameHistory.map((entry: GameHistoryEntry) => [
+      const values = effectiveGameHistory.map((entry: DailyResult) => [
         performanceId,
         entry.day,
         entry.cash || 0,
@@ -129,12 +129,10 @@ export async function saveGameResults(
         entry.production || 0,
         entry.sales || 0,
         entry.revenue || 0,
-        entry.purchaseCosts || 0,
-        entry.productionCosts || 0,
-        entry.holdingCosts && typeof entry.holdingCosts === "object"
-          ? entry.holdingCosts.totalHoldingCost || 0
-          : entry.holdingCosts || 0,
-        entry.totalCosts || 0,
+        entry.costs.purchases || 0,
+        entry.costs.production || 0,
+        entry.costs.holding || 0,
+        entry.costs.total || 0,
         entry.profit || 0,
         entry.cumulativeProfit || 0,
         entry.overstockPenalty || 0, // <-- add this

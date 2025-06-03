@@ -8,22 +8,9 @@ import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { CheckCircle, Calendar, AlertTriangle } from "lucide-react"
 import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/constants"
-import type { Inventory } from "@/types/game"
+import type { ProductionPopupProps } from "@/types/components"
 import { cn } from "@/lib/utils"
 
-interface ProductionPopupProps {
-  isOpen: boolean
-  onClose: () => void
-  production: number
-  maxProduction: number
-  onProductionChange: (value: string) => void
-  isDisabled: boolean
-  plannedProduction?: number
-  forecastData?: Record<string, any> | null
-  currentDay?: number
-  inventory: Inventory,
-  requiresForecasting: boolean
-}
 
 export function ProductionPopup({
   isOpen,
@@ -157,7 +144,7 @@ export function ProductionPopup({
                       maxProductionByPatty === limitingFactor.max && maxProductionByPatty < 30 ? "text-amber-600" : "",
                     )}
                   >
-                    Patties: {inventory.patty} ({Math.min(maxProductionByPatty, 30)} meals)
+                    Patties: {inventory.patty} ({maxProductionByPatty} meals)
                   </p>
                   <p
                     className={cn(
@@ -167,7 +154,7 @@ export function ProductionPopup({
                         : "",
                     )}
                   >
-                    Cheese: {inventory.cheese} ({Math.min(maxProductionByCheese, 30)} meals)
+                    Cheese: {inventory.cheese} ({maxProductionByCheese} meals)
                   </p>
                 </div>
                 <div>
@@ -177,7 +164,7 @@ export function ProductionPopup({
                       maxProductionByBun === limitingFactor.max && maxProductionByBun < 30 ? "text-amber-600" : "",
                     )}
                   >
-                    Buns: {inventory.bun} ({Math.min(maxProductionByBun, 30)} meals)
+                    Buns: {inventory.bun} ({maxProductionByBun} meals)
                   </p>
                   <p
                     className={cn(
@@ -187,7 +174,7 @@ export function ProductionPopup({
                         : "",
                     )}
                   >
-                    Potatoes: {inventory.potato} ({Math.min(maxProductionByPotato, 30)} meals)
+                    Potatoes: {inventory.potato} ({maxProductionByPotato} meals)
                   </p>
                 </div>
               </div>

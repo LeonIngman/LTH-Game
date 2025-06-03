@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/components/ui/use-toast"
 import type { CustomerOrderAction } from "@/types/game"
-import type { CustomerOrdersHook, CustomerOrdersParams } from "./types"
+import type { CustomerOrdersHook, CustomerOrdersParams } from "../types/hooks"
 
 /**
  * Hook for managing customer orders

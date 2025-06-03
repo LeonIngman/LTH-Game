@@ -9,24 +9,10 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import type { GameState, LevelConfig } from "@/types/game"
+import type { GameDialogsProps } from "@/types/components"
 import { ChartDialog } from "../chart-dialog"
 import { MapDialog } from "../map-dialog"
 import { TutorialOverlay } from "../tutorial-overlay"
-
-interface GameDialogsProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-  showChart: boolean
-  setShowChart: (show: boolean) => void
-  showMap: boolean
-  setShowMap: (show: boolean) => void
-  showTutorial: boolean
-  setShowTutorial: (show: boolean) => void
-  gameEnded: boolean
-  setGameEnded: (ended: boolean) => void
-  onSubmitLevel: () => Promise<void>
-  isSubmitting: boolean
-}
 
 export function GameDialogs({
   gameState,

@@ -1,12 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { GameState, LevelConfig } from "@/types/game"
+import type { InventorySectionProps } from "@/types/components"
 import { calculateHoldingCost, getHoldingCostBreakdown } from "@/lib/game/calculations"
 import { HOLDING_COSTS } from "@/lib/game/constants"
-
-interface InventorySectionProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-}
 
 export function InventorySection({ gameState, levelConfig }: InventorySectionProps) {
   // Get holding cost breakdown for display - pass levelConfig as the second parameter

@@ -1,9 +1,9 @@
 "use client"
 
 import { useMemo } from "react"
-import type { GameCalculationsHook, GameCalculationsParams } from "./types"
+import type { GameCalculationsHook, GameCalculationsParams } from "../types/hooks"
 import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/constants"
-import type { MaterialType } from "./types"
+import type { MaterialType } from "../types/game"
 import { calculateHoldingCost } from "@/lib/game/calculations"
 
 /**
@@ -44,12 +44,41 @@ export function useGameCalculations({
     }
   }
 
-  // Get the delivery cost multiplier
-  const getDeliveryMultiplier = (): number => {
-    if (!levelConfig.deliveryOptions) return 1.0
+  // Validate the supplier has non-negative remaining capacity
+  const validateSupplierCapacity = (): { valid: boolean; message?: string } => {
+    for (const order of supplierOrders) {
+      const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+      if (!supplier || typeof supplier.capacityPerGame !== "object") continue
 
-    const option = levelConfig.deliveryOptions.find((d) => d.id === action.deliveryOptionId)
-    return option ? option.costMultiplier : 1.0
+      // Initialize if not exists
+      const currentPurchases = gameState.cumulativePurchases[supplier.id] || {
+        patty: 0, cheese: 0, bun: 0, potato: 0
+      }
+
+      // Check each material
+      const materials = [
+        { type: "patty", current: currentPurchases.patty, newOrder: order.pattyPurchase },
+        { type: "cheese", current: currentPurchases.cheese, newOrder: order.cheesePurchase },
+        { type: "bun", current: currentPurchases.bun, newOrder: order.bunPurchase },
+        { type: "potato", current: currentPurchases.potato, newOrder: order.potatoPurchase },
+      ]
+
+      for (const material of materials) {
+        if (material.newOrder > 0) {
+          const newTotal = material.current + material.newOrder
+          const capacity = supplier.capacityPerGame[material.type] || 0
+          
+          if (newTotal > capacity) {
+            return {
+              valid: false,
+              message: `${supplier.name}: ${material.type} order would exceed game capacity (${newTotal}/${capacity})`
+            }
+          }
+        }
+      }
+    }
+
+    return { valid: true }
   }
 
   // Calculate base cost for a material (price * quantity)
@@ -110,26 +139,20 @@ export function useGameCalculations({
       const supplier = levelConfig.suppliers.find((s) => s.id === supplierId)
       if (!supplier) return 0
 
-      // Check if supplier has special shipment prices
+      // Check if supplier has shipment prices
       if (
         supplier.shipmentPrices &&
         supplier.shipmentPrices[materialType] &&
         supplier.shipmentPrices[materialType][quantity]
       ) {
-        // If shipment prices include base cost, just return the shipment price
-        if (supplier.shipmentPricesIncludeBaseCost) {
-          return supplier.shipmentPrices[materialType][quantity]
-        }
-
-        // Otherwise, add base cost and shipment cost
+        // Add base cost and shipment cost
         const baseCost = calculateBaseCost(quantity, supplierId, materialType)
         return baseCost + supplier.shipmentPrices[materialType][quantity]
       }
 
       // If no special shipment prices, calculate with delivery multiplier
       const baseCost = calculateBaseCost(quantity, supplierId, materialType)
-      const costMultiplier = supplier.costMultiplier || 1.0
-      return Math.round(baseCost * costMultiplier * getDeliveryMultiplier() * 100) / 100
+      return Math.round(baseCost)
     } catch (error) {
       console.error(`Error calculating total cost for ${materialType} from supplier ${supplierId}:`, error)
       return 0
@@ -223,34 +246,23 @@ export function useGameCalculations({
 
   // Determine if the Next Day button should be disabled
   const isNextDayButtonDisabled = (): boolean => {
-    // Special case: if player has 0 cash but is only trying to sell, allow it
+    // Affordability check
     if (gameState.cash === 0 && isOnlySales()) return false
+    if (calculateTotalCost() > gameState.cash) return true
 
-    // Otherwise, check if they can afford all actions
-    return calculateTotalCost() > gameState.cash
+    // Capacity validation
+    const capacityCheck = validateSupplierCapacity()
+    if (!capacityCheck.valid) return true
+
+    return false
   }
 
   // Determine why the Next Day button is disabled
   const getNextDayDisabledReason = (): string => {
     // Check if total purchases exceed supplier capacity
-    const exceedsSupplierCapacity = supplierOrders.some((order) => {
-      const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-      if (!supplier) return false
-
-      if (typeof supplier.capacityPerDay === "object") {
-        if (order.pattyPurchase > (supplier.capacityPerDay.patty || 0)) return true
-        if (order.cheesePurchase > (supplier.capacityPerDay.cheese || 0)) return true
-        if (order.bunPurchase > (supplier.capacityPerDay.bun || 0)) return true
-        if (order.potatoPurchase > (supplier.capacityPerDay.potato || 0)) return true
-      } else {
-        const totalOrdered = order.pattyPurchase + order.cheesePurchase + order.bunPurchase + order.potatoPurchase
-        if (totalOrdered > (supplier.capacityPerDay || 0)) return true
-      }
-      return false
-    })
-
-    if (exceedsSupplierCapacity) {
-      return "You're trying to order more than suppliers have available"
+    const capacityCheck = validateSupplierCapacity()
+    if (!capacityCheck.valid) {
+      return capacityCheck.message || "Exceeds supplier capacity"
     }
 
     // Check if player can afford actions
@@ -269,15 +281,11 @@ export function useGameCalculations({
       const supplier = levelConfig.suppliers.find((s) => s.id === supplierId)
       return supplier?.orderQuantities || levelConfig.orderQuantities || [0, 10, 20, 30, 40, 50]
     },
-    calculateBaseCost,
-    calculateShipmentCost,
-    calculateMaterialTotalCost,
     calculateTotalPurchaseCost,
     calculateProductionCost,
     getHoldingCost,
     calculateTotalActionCost,
     calculateTotalCost,
-    getDeliveryMultiplier,
     calculateMaxProduction,
     isOnlySales,
     isNextDayButtonDisabled,

@@ -37,9 +37,9 @@ export const level1Config: LevelConfig = {
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
         patty: 10,
-        cheese: 5,
+        cheese: 1.5,
         bun: 3,
-        potato: 2,
+        potato: 0,
       },
       shipmentPrices: {
         patty: { 50: 116, 100: 134},
@@ -47,7 +47,6 @@ export const level1Config: LevelConfig = {
         cheese: { 50: 65, 100: 89, 200: 116 },
         potato: { 50: 98, 100: 134, 200: 134 },
       },
-      shipmentPricesIncludeBaseCost: false,
     },
     {
       id: 2,
@@ -56,10 +55,10 @@ export const level1Config: LevelConfig = {
       capacityPerGame: { patty: 200, cheese: 0, bun: 200, potato: 850 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
-        patty: 10,
-        cheese: 5,
-        bun: 3,
-        potato: 2,
+        patty: 13,
+        cheese: 0,
+        bun: 2.7,
+        potato: 1.6,
       },
       shipmentPrices: {
         patty: { 50: 121, 100: 139, 200: 186 },
@@ -67,7 +66,6 @@ export const level1Config: LevelConfig = {
         cheese: { 50: 68, 100: 92, 200: 121 },
         potato: { 50: 102, 100: 139, 200: 139 },
       },
-      shipmentPricesIncludeBaseCost: false,
     },
     {
       id: 3,
@@ -76,10 +74,10 @@ export const level1Config: LevelConfig = {
       capacityPerGame: { patty: 0, cheese: 500, bun: 250, potato: 700 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
-        patty: 10,
-        cheese: 5,
-        bun: 3,
-        potato: 2,
+        patty: 0,
+        cheese: 1.8,
+        bun: 3.4,
+        potato: 1.2,
       },
       shipmentPrices: {
         patty: { 50: 126, 100: 145, 150: 175 },
@@ -87,7 +85,6 @@ export const level1Config: LevelConfig = {
         cheese: { 50: 71, 100: 96, 150: 106 },
         potato: { 50: 106, 100: 145, 150: 145 },
       },
-      shipmentPricesIncludeBaseCost: false,
     },
   ],
 
@@ -97,7 +94,6 @@ export const level1Config: LevelConfig = {
       id: 1,
       name: "Standard Delivery",
       leadTime: 2,
-      costMultiplier: 1.0,
       description: "Standard delivery (2 days)",
     },
   ],
@@ -117,8 +113,6 @@ export const level1Config: LevelConfig = {
       pricePerUnit: 49,
       transportCosts: { 20: 134, 40: 179, 100: 204 },
       allowedShipmentSizes: [20, 40, 100],
-      minimumDeliveryAmount: 20,
-      active: true,
     },
     {
       id: 2,
@@ -133,8 +127,6 @@ export const level1Config: LevelConfig = {
       pricePerUnit: 46,
       transportCosts: { 20: 139, 40: 186, 100: 213 },
       allowedShipmentSizes: [20, 40, 100],
-      minimumDeliveryAmount: 20,
-      active: true,
     },
     {
       id: 3,
@@ -149,8 +141,6 @@ export const level1Config: LevelConfig = {
       pricePerUnit: 47,
       transportCosts: { 20: 145, 40: 194, 100: 222 },
       allowedShipmentSizes: [20, 40, 100],
-      minimumDeliveryAmount: 20,
-      active: true,
     },
   ],
 

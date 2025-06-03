@@ -11,12 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
-
-interface ObjectivesDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  levelId: number
-}
+import type { ObjectivesDialogProps } from "@/types/components"
 
 export function ObjectivesDialog({ isOpen, onClose, levelId }: ObjectivesDialogProps) {
   const getLevelTitle = () => {

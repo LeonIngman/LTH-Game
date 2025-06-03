@@ -1,6 +1,5 @@
 
-import type { Inventory } from "./inventory"
-import type { LevelConfig } from "./level-config"
+import type { Inventory, LevelConfig } from "@/types/game"
 import { HOLDING_COSTS } from "./constants"
 
 export function calculateHoldingCost(inventory: Inventory, levelConfig: LevelConfig): number {

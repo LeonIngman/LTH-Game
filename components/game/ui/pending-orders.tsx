@@ -3,13 +3,7 @@
 import { Package, Truck, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import type { PendingOrder, CustomerOrder } from "@/types/game"
-
-interface PendingOrdersProps {
-  pendingOrders: PendingOrder[]
-  pendingCustomerOrders: CustomerOrder[]
-  currentDay: number
-}
+import type { PendingOrdersProps } from "@/types/components"
 
 export function PendingOrders({ pendingOrders, pendingCustomerOrders, currentDay }: PendingOrdersProps) {
   const formatMaterialName = (material: string): string => {

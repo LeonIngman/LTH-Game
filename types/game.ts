@@ -1,3 +1,6 @@
+// Define a union type for material types
+export type MaterialType = "patty" | "cheese" | "bun" | "potato"
+
 export interface Inventory {
   patty: number
   bun: number
@@ -88,6 +91,19 @@ export interface LatenessPenalty {
   penaltyAmount: number
 }
 
+export interface SupplierOrder {
+  supplierId: number
+  pattyPurchase: number
+  cheesePurchase: number
+  bunPurchase: number
+  potatoPurchase: number
+}
+
+export interface CustomerOrderAction {
+  customerId: number
+  quantity: number
+}
+
 export interface GameAction {
   supplierOrders: Array<{
     supplierId: number
@@ -152,7 +168,6 @@ export interface Supplier {
   capacityPerGame: Record<string, number>
   materials: string[]
   shipmentPrices: Record<string, Record<number, number>>
-  shipmentPricesIncludeBaseCost: boolean
   randomLeadTime?: boolean
   leadTimeRange?: number[]
   materialPrices: Record<string, number>
@@ -164,7 +179,6 @@ export interface DeliveryOption {
   costPerUnit?: number
   leadTime: number
   capacity?: number
-  costMultiplier: number
   daysToDeliver?: number
   description?: string
 }
@@ -176,12 +190,11 @@ export interface Customer {
   location?: { x: number; y: number }
   demand?: (day: number) => number
   leadTime: number
-  totalRequirement?: number
+  totalRequirement: number
   deliverySchedule: Array<{ day: number; requiredAmount: number }>
   pricePerUnit: number
   transportCosts: Record<number, number>
   allowedShipmentSizes: number[]
-  minimumDeliveryAmount?: number
   randomLeadTime?: boolean
   leadTimeRange?: number[]
 }
@@ -204,7 +217,7 @@ export interface MapPositions {
   restaurants: MapPosition[]
 }
 
-export interface OverstockRule {
+interface OverstockRule {
   threshold: number
   penaltyPerUnit: number
 }
@@ -217,7 +230,7 @@ export interface OverstockConfig {
   finishedGoods?: OverstockRule
 }
 
-export interface SafetystockRule {
+interface SafetystockRule {
   threshold: number
 }
 
@@ -249,6 +262,7 @@ export interface GameState {
   latenessPenalties: LatenessPenalty[]
   overstockPenalties?: Array<{ day: number; penalty: number; details: Record<string, number> }>
   forecastData?: Record<string, any> | null
+  cumulativePurchases: Record<number, Record<MaterialType, number>> // supplierId -> materialType -> totalPurchased
 }
 
 export interface LevelConfig {
@@ -259,8 +273,6 @@ export interface LevelConfig {
   initialInventory: Inventory
   daysToComplete: number
   productionCostPerUnit: number
-  holdingCostPerUnit?: number
-  sellingPricePerUnit?: number
   holdingCosts: {
     patty: number
     bun: number
@@ -268,13 +280,12 @@ export interface LevelConfig {
     potato: number
     finishedGoods?: number
   }
-  orderQuantities?: number[]
   suppliers: Supplier[]
   deliveryOptions?: DeliveryOption[]
-  customers?: Customer[]
+  customers: Customer[]
   demandModel: (day: number) => DailyDemand
   maxScore: number
-  mapPositions?: Record<number, MapPositions>
-  overstock?: OverstockConfig
-  safetystock?: SafetystockConfig
+  mapPositions: Record<number, MapPositions>
+  overstock: OverstockConfig
+  safetystock: SafetystockConfig
 }

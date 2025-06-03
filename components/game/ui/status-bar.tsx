@@ -1,11 +1,7 @@
 "use client"
 
 import type { GameState, LevelConfig } from "@/types/game"
-
-interface StatusBarProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-}
+import type { StatusBarProps } from "@/types/components"
 
 export function StatusBar({ gameState, levelConfig }: StatusBarProps) {
   // Add safety checks for all gameState properties

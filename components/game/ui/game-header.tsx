@@ -15,13 +15,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import type { LevelConfig } from "@/types/game"
-
-interface GameHeaderProps {
-  levelId: number
-  levelConfig: LevelConfig
-  onShowObjectives: () => void
-  onShowTutorial: () => void
-}
+import type { GameHeaderProps } from "@/types/components"
 
 export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutorial }: GameHeaderProps) {
   const router = useRouter()

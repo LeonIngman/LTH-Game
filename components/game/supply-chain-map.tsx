@@ -1,22 +1,8 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import type { PendingOrder, CustomerOrder, GameState, Supplier, Customer, LevelConfig } from "@/types/game"
+import type { SupplyChainMapProps } from "@/types/components"
 import { generateDeliverySchedule } from "@/lib/game/customers"
-
-interface SupplyChainMapProps {
-  pendingOrders: PendingOrder[]
-  pendingCustomerOrders?: CustomerOrder[]
-  onClose?: () => void
-  gameState?: GameState
-  suppliers?: Supplier[]
-  customers?: Customer[]
-  levelConfig?: LevelConfig
-  onSupplierClick?: (supplierId: number) => void
-  onFactoryClick?: () => void
-  onRestaurantClick?: (restaurantIndex: number) => void
-  level?: number // Add level prop
-}
 
 // Colors for suppliers and restaurants
 const supplierColors = {
@@ -24,13 +10,6 @@ const supplierColors = {
   2: "#8B4513", // Brown Sauce - brown color
   3: "#FF0000", // Firehouse Foods - bright red
   finishedGoods: "#1E40AF", // Restaurants - deeper blue
-}
-
-// Default customer requirements if we can't get them from level config
-const defaultCustomerRequirements = {
-  1: { totalRequirement: 100, minimumDeliveryAmount: 20 },
-  2: { totalRequirement: 150, minimumDeliveryAmount: 20 },
-  3: { totalRequirement: 120, minimumDeliveryAmount: 20 },
 }
 
 // Default milestone days
@@ -229,26 +208,17 @@ export function SupplyChainMap({
 
       // Get customer requirements from level config if possible
       let totalRequirement = 100 // Default
-      let minimumDeliveryAmount = 20 // Default
 
       // Try to find customer in level config to get requirements
       if (levelConfig?.customers) {
         const customer = levelConfig.customers.find((c) => c.id === customerId)
         if (customer) {
           totalRequirement = customer.totalRequirement
-          minimumDeliveryAmount = customer.minimumDeliveryAmount
-        }
-      } else {
-        // Use default values if not found
-        const defaultReq = defaultCustomerRequirements[customerId as keyof typeof defaultCustomerRequirements]
-        if (defaultReq) {
-          totalRequirement = defaultReq.totalRequirement
-          minimumDeliveryAmount = defaultReq.minimumDeliveryAmount
         }
       }
 
       // Generate delivery schedule dynamically
-      deliverySchedule = generateDeliverySchedule(totalRequirement, daysToComplete, minimumDeliveryAmount)
+      deliverySchedule = generateDeliverySchedule(totalRequirement, daysToComplete)
     }
 
     if (!deliverySchedule || deliverySchedule.length === 0) {

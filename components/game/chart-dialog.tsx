@@ -3,15 +3,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { InventoryChart } from "@/components/game/inventory-chart"
 import { CashflowChart } from "@/components/game/cashflow-chart"
-import type { DailyResult } from "@/types/game"
-
-interface ChartDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-  gameHistory: DailyResult[]
-  currentInventory?: any
-  currentDay?: number
-}
+import type { ChartDialogProps } from "@/types/components"
 
 export function ChartDialog({ open, onOpenChange, gameHistory, currentInventory, currentDay = 0 }: ChartDialogProps) {
   return (

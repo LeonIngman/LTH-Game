@@ -4,7 +4,6 @@ import type { Customer, DeliveryScheduleItem } from "@/types/game"
 export function generateDeliverySchedule(
   totalRequirement: number,
   totalDays: number,
-  minDeliveryAmount = 5,
 ): DeliveryScheduleItem[] {
   // Validate inputs to prevent NaN errors
   if (totalRequirement <= 0 || totalDays <= 0) {
@@ -61,33 +60,4 @@ export function generateDeliverySchedule(
 
   // Sort by day
   return uniqueDaysSchedule.sort((a, b) => a.day - b.day)
-}
-
-// Function to create a standard customer with customizable parameters
-export function createCustomer(
-  id: number,
-  name: string,
-  description: string,
-  leadTime: number,
-  totalRequirement: number,
-  pricePerUnit: number,
-  allowedShipmentSizes: number[],
-  transportCosts: Record<number, number>,
-  minimumDeliveryAmount = 5,
-  daysToComplete = 30,
-  active = true,
-): Customer {
-  return {
-    id,
-    name,
-    description,
-    leadTime,
-    totalRequirement,
-    deliverySchedule: generateDeliverySchedule(totalRequirement, daysToComplete, minimumDeliveryAmount),
-    allowedShipmentSizes,
-    pricePerUnit,
-    transportCosts,
-    minimumDeliveryAmount,
-    active,
-  }
 }

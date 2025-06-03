@@ -10,15 +10,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import type { ReplayWarningDialogProps } from "@/types/components"
 
-interface ReplayWarningDialogProps {
-  isOpen: boolean
-  onClose: () => void
-  onConfirm: () => void
-  levelName: string
-  existingScore: number
-  existingProfit: number
-}
 
 export function ReplayWarningDialog({
   isOpen,

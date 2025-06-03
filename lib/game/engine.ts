@@ -20,6 +20,8 @@ import {
   calculateInventoryHoldingCosts,
   processFinishedGoodsSales,
 } from "@/lib/game/inventory-management"
+import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/constants"
+
 
 /**
  * Initialize a new game state based on level configuration
@@ -50,7 +52,8 @@ export function initializeGameState(levelConfig: LevelConfig): GameState {
     selectedDeliveryOption: defaultDeliveryOptionId,
     gameOver: false,
     latenessPenalties: [],
-    forecastData: null
+    forecastData: null,
+    cumulativePurchases: {}
   }
 }
 
@@ -73,7 +76,6 @@ export function validateAffordability(
 
   // Get delivery option
   const deliveryOption = levelConfig.deliveryOptions?.find((d) => d.id === action.deliveryOptionId)
-  const deliveryMultiplier = deliveryOption ? deliveryOption.costMultiplier : 1.0
 
   // Process orders from each supplier
   for (const order of action.supplierOrders) {
@@ -82,22 +84,22 @@ export function validateAffordability(
 
     // Calculate cost for each material
     if (order.pattyPurchase > 0) {
-      const unitCost = calculateUnitCost(order.pattyPurchase, "patty", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.pattyPurchase, "patty", supplier)
       totalPurchaseCost += order.pattyPurchase * unitCost
     }
 
     if (order.cheesePurchase > 0) {
-      const unitCost = calculateUnitCost(order.cheesePurchase, "cheese", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.cheesePurchase, "cheese", supplier)
       totalPurchaseCost += order.cheesePurchase * unitCost
     }
 
     if (order.bunPurchase > 0) {
-      const unitCost = calculateUnitCost(order.bunPurchase, "bun", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.bunPurchase, "bun", supplier)
       totalPurchaseCost += order.bunPurchase * unitCost
     }
 
     if (order.potatoPurchase > 0) {
-      const unitCost = calculateUnitCost(order.potatoPurchase, "potato", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.potatoPurchase, "potato", supplier)
       totalPurchaseCost += order.potatoPurchase * unitCost
     }
   }
@@ -183,11 +185,6 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
  */
 function processProduction(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
   // if (action.production <= 0) return
-
-  const PATTIES_PER_MEAL = 1
-  const CHEESE_PER_MEAL = 3
-  const BUNS_PER_MEAL = 2
-  const POTATOES_PER_MEAL = 4
 
   // Determine production amount - use forecasted production if available
   let targetProduction = action.production
@@ -484,8 +481,6 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
         ? "Economy Delivery"
         : "Standard Delivery"
 
-  const deliveryMultiplier = deliveryOption ? deliveryOption.costMultiplier : 1.0
-
   // Process orders from each supplier
   for (const order of action.supplierOrders) {
     const supplier = getSupplier(order.supplierId, levelConfig)
@@ -513,7 +508,16 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
     for (const material of materials) {
       if (material.quantity > 0) {
         // Calculate unit cost including transport
-        const unitCost = calculateUnitCost(material.quantity, material.type, supplier, levelConfig, deliveryMultiplier)
+      if (!state.cumulativePurchases[supplier.id]) {
+        state.cumulativePurchases[supplier.id] = {
+          patty: 0,
+          cheese: 0,
+          bun: 0,
+          potato: 0
+        };
+      }
+        state.cumulativePurchases[supplier.id][material.type] += material.quantity
+        const unitCost = calculateUnitCost(material.quantity, material.type, supplier)
         const totalCost = material.quantity * unitCost
 
         // Deduct cost from cash
@@ -572,11 +576,6 @@ function processCustomerOrders(state: GameState, action: GameAction, levelConfig
     // Check if the order quantity is valid
     if (!customer.allowedShipmentSizes.includes(customerOrder.quantity)) {
       continue // Skip if not an allowed shipment size
-    }
-
-    // Check if the order meets minimum requirements
-    if (customerOrder.quantity < customer.minimumDeliveryAmount) {
-      continue // Skip if below minimum delivery amount
     }
 
     // Process the sale using FIFO costing
@@ -649,7 +648,6 @@ function recordDailyResults(
 
   // Get delivery option
   const deliveryOption = levelConfig.deliveryOptions?.find((d) => d.id === action.deliveryOptionId)
-  const deliveryMultiplier = deliveryOption ? deliveryOption.costMultiplier : 1.0
 
   for (const order of action.supplierOrders) {
     const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
@@ -662,19 +660,19 @@ function recordDailyResults(
 
     // Calculate purchase costs
     if (order.pattyPurchase > 0) {
-      const unitCost = calculateUnitCost(order.pattyPurchase, "patty", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.pattyPurchase, "patty", supplier)
       totalPurchaseCost += order.pattyPurchase * unitCost
     }
     if (order.cheesePurchase > 0) {
-      const unitCost = calculateUnitCost(order.cheesePurchase, "cheese", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.cheesePurchase, "cheese", supplier)
       totalPurchaseCost += order.cheesePurchase * unitCost
     }
     if (order.bunPurchase > 0) {
-      const unitCost = calculateUnitCost(order.bunPurchase, "bun", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.bunPurchase, "bun", supplier)
       totalPurchaseCost += order.bunPurchase * unitCost
     }
     if (order.potatoPurchase > 0) {
-      const unitCost = calculateUnitCost(order.potatoPurchase, "potato", supplier, levelConfig, deliveryMultiplier)
+      const unitCost = calculateUnitCost(order.potatoPurchase, "potato", supplier)
       totalPurchaseCost += order.potatoPurchase * unitCost
     }
   }
@@ -709,7 +707,7 @@ function recordDailyResults(
   const revenue = actualSales * state.dailyDemand.pricePerUnit
 
   // Calculate revenue from customer orders
-  const customerDeliveries = {}
+  const customerDeliveries: Record<number, { quantity: number; revenue: number }> = {}
   for (const customerOrder of action.customerOrders || []) {
     const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
     if (!customer) continue

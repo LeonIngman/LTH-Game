@@ -3,20 +3,19 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import type { Supplier, Customer, LevelConfig } from "@/types/game"
-type GameAction = any
+import type { Supplier, Customer, LevelConfig, GameAction } from "@/types/game"
+import type { GameInterfaceProps } from "@/types/components"
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
 import { level3Config } from "@/lib/game/level3"
-import { DEFAULT_DELIVERY_OPTION_ID } from "@/lib/constants"
 import { useAuth } from "@/lib/auth-context"
 import { calculateDailyInventoryValuation, calculateInventoryHoldingCosts } from "@/lib/game/inventory-management"
 
 // Import our UI components
 import { GameHeader } from "./ui/game-header"
 import { StatusBar } from "./ui/status-bar"
-import { MarketInfo } from "./ui/market-info"
+import { CurrentOrders } from "./ui/current-orders"
 import { GameHistory } from "./ui/game-history"
 import { CostSummary } from "./ui/cost-summary"
 import { GameDialogs } from "./ui/game-dialogs"
@@ -30,7 +29,7 @@ import { ObjectivesDialog } from "./objectives-dialog"
 import { GameOverDialog } from "./game-over-dialog"
 import { ForecastingDialog } from "./forecasting-dialog"
 import { DailyOrderSummary } from "./ui/daily-order-summary"
-import { QuickActionsWidget } from "./ui/quick-actions-widget"
+import { QuickReference } from "./ui/quick-reference"
 import { TutorialOverlay } from "./tutorial-overlay"
 
 // Import our custom hooks
@@ -42,9 +41,6 @@ import { useCustomerOrders } from "@/hooks/use-customer-orders"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 
-interface GameInterfaceProps {
-  levelId: number | string
-}
 
 export function GameInterface({ levelId }: GameInterfaceProps) {
   const { toast } = useToast()
@@ -113,7 +109,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         ? levelConfig.deliveryOptions[1]?.id || levelConfig.deliveryOptions[0].id
         : levelConfig.deliveryOptions[0].id
     }
-    return DEFAULT_DELIVERY_OPTION_ID
+    return 0
   })
 
   // Initialize game state and action
@@ -493,7 +489,7 @@ const getPlannedProduction = useCallback(() => {
 
       <div className="grid gap-6 md:grid-cols-12">
         <div className="md:col-span-3">
-          <QuickActionsWidget
+          <QuickReference
             levelConfig={levelConfig}
             getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
             currentDay={gameState.day}
@@ -531,7 +527,7 @@ const getPlannedProduction = useCallback(() => {
         </div>
 
         <div className="md:col-span-3">
-          <MarketInfo
+          <CurrentOrders
             levelConfig={levelConfig}
             pendingOrders={gameState.pendingOrders}
             pendingCustomerOrders={gameState.pendingCustomerOrders}
@@ -543,10 +539,6 @@ const getPlannedProduction = useCallback(() => {
         supplierOrders={supplierOrders}
         suppliers={levelConfig.suppliers || []}
         getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
-        getDeliveryMultiplier={() => {
-          const option = levelConfig.deliveryOptions?.find((d) => d.id === action.deliveryOptionId)
-          return option ? option.costMultiplier : 1.0
-        }}
         production={action.production}
         productionCostPerUnit={levelConfig.productionCostPerUnit}
         customerOrders={customerOrders}

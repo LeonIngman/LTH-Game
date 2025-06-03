@@ -8,12 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Calculator, TrendingUp, Clock, Target, ArrowRight, Factory, AlertTriangle } from "lucide-react"
+import type { ForecastingDialogProps } from "@/types/components"
 
-interface ForecastingDialogProps {
-  isOpen: boolean
-  onComplete: (forecasts: Record<string, number>) => void
-  levelId: number
-}
 
 export function ForecastingDialog({ isOpen, onComplete, levelId }: ForecastingDialogProps) {
   const [currentStep, setCurrentStep] = useState(1)

@@ -4,27 +4,13 @@ import { ShoppingCart, Package, Factory, MenuIcon as Restaurant, RefreshCw } fro
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { Supplier, SupplierOrder, CustomerOrderAction, Customer, LevelConfig } from "@/types/game"
-
-interface DailyOrderSummaryProps {
-  supplierOrders: SupplierOrder[]
-  suppliers: Supplier[]
-  getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number
-  getDeliveryMultiplier?: () => number
-  production?: number
-  productionCostPerUnit?: number
-  customerOrders?: CustomerOrderAction[]
-  customers?: Customer[]
-  levelConfig?: LevelConfig
-  onResetAllOrders?: () => void
-  isDisabled?: boolean
-}
+import type { Supplier, Customer } from "@/types/game"
+import type { DailyOrderSummaryProps } from "@/types/components"
 
 export function DailyOrderSummary({
   supplierOrders,
   suppliers,
   getMaterialPriceForSupplier,
-  getDeliveryMultiplier = () => 1.0,
   production = 0,
   productionCostPerUnit = 0,
   customerOrders = [],
@@ -64,9 +50,6 @@ export function DailyOrderSummary({
         return material
     }
   }
-
-  // Get delivery multiplier
-  const deliveryMultiplier = getDeliveryMultiplier()
 
   // Calculate base cost for a specific material
   const calculateBaseCost = (quantity: number, supplierId: number, materialType: string): number => {
@@ -129,19 +112,15 @@ export function DailyOrderSummary({
         supplier.shipmentPrices[materialType] &&
         supplier.shipmentPrices[materialType][quantity]
       ) {
-        // If shipment prices include base cost, just return the shipment price
-        if (supplier.shipmentPricesIncludeBaseCost) {
-          return supplier.shipmentPrices[materialType][quantity]
-        }
-
-        // Otherwise, add base cost and shipment cost
+  
+        // Add base cost and shipment cost
         const baseCost = calculateBaseCost(quantity, supplierId, materialType)
         return baseCost + supplier.shipmentPrices[materialType][quantity]
       }
 
       // If no special shipment prices, calculate with delivery multiplier
       const baseCost = calculateBaseCost(quantity, supplierId, materialType)
-      return Math.round(baseCost * deliveryMultiplier * 100) / 100
+      return Math.round(baseCost)
     } catch (error) {
       console.error(`Error calculating total cost for ${materialType} from supplier ${supplierId}:`, error)
       return 0
@@ -500,12 +479,6 @@ export function DailyOrderSummary({
                 <div className="text-xs text-muted-foreground">No customer orders</div>
               )}
             </div>
-          </div>
-        )}
-
-        {deliveryMultiplier !== 1.0 && (
-          <div className="text-xs text-muted-foreground text-right mt-4">
-            Includes delivery multiplier: {deliveryMultiplier.toFixed(2)}x
           </div>
         )}
       </CardContent>

@@ -1,16 +1,9 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import type { LevelConfig, PendingOrder, CustomerOrder } from "@/types/game"
+import type { CurrentOrdersProps } from "@/types/components"
 import { Badge } from "@/components/ui/badge"
 import { Clock, ArrowDownToLine, ArrowUpFromLine } from "lucide-react"
 
-interface MarketInfoProps {
-  levelConfig: LevelConfig
-  pendingOrders: PendingOrder[]
-  pendingCustomerOrders?: CustomerOrder[]
-  onShowMap?: () => void
-}
-
-export function MarketInfo({ levelConfig, pendingOrders, pendingCustomerOrders = [], onShowMap }: MarketInfoProps) {
+export function CurrentOrders({ levelConfig, pendingOrders, pendingCustomerOrders = [], onShowMap }: CurrentOrdersProps) {
   // Get customer names map
   const customerMap = new Map((levelConfig.customers || []).map((customer) => [customer.id, customer.name]))
 

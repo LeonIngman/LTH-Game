@@ -2,16 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import * as d3 from "d3"
-import type { DailyResult } from "@/types/game"
+import type { CashflowChartProps } from "@/types/components" 
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
-
-interface CashflowChartProps {
-  data: DailyResult[]
-  width?: number
-  height?: number
-  profitThreshold?: number
-  currentDay?: number
-}
 
 export function CashflowChart({
   data,

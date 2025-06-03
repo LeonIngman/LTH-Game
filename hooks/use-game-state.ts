@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react"
 import type { GameState, LevelConfig } from "@/types/game"
 import { initializeGameState } from "@/lib/game/engine"
-import type { GameStateHook } from "./types"
+import type { GameStateHook } from "../types/hooks"
 
 /**
  * Hook for managing game state
