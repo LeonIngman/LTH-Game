@@ -177,12 +177,12 @@ export function SupplierOrderForm({
           <div className="space-y-2">
             <div className="flex justify-between items-center">
               <Label className="text-gray-400">
-                Patties ({getMaterialPriceForSupplier(supplier.id, "patty").toFixed(2)} kr/unit)
+                {label} ({getMaterialPriceForSupplier(supplier.id, key).toFixed(2)} kr/unit)
               </Label>
               <span className="text-xs text-red-500">No capacity remaining</span>
             </div>
             <div className="p-2 bg-gray-100 rounded text-sm text-gray-600">
-              This supplier has no remaining capacity for patties this game.
+              This supplier has no remaining capacity for {label.toLowerCase()} this game.
             </div>
           </div>
           )

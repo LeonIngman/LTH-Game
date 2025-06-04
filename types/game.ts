@@ -166,7 +166,7 @@ export interface Supplier {
   name: string
   leadTime: number
   capacityPerGame: Record<string, number>
-  materials: string[]
+  materials: MaterialType[]
   shipmentPrices: Record<string, Record<number, number>>
   randomLeadTime?: boolean
   leadTimeRange?: number[]

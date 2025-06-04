@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calculator } from "lucide-react"
-import type { Supplier } from "@/types/game"
+import type { Supplier, MaterialType } from "@/types/game"
 import type { QuickReferenceProps } from "@/types/components"
 
 const MATERIALS = ["patty", "cheese", "bun", "potato"] as const
@@ -33,7 +33,7 @@ export function QuickReference({
   // Defensive: fallback to empty object if undefined
   const supplierDeliveries = gameState?.supplierDeliveries || {}
 
-  const calculateRemainingCapacity = (supplier: Supplier, material: string) => {
+  const calculateRemainingCapacity = (supplier: Supplier, material: MaterialType) => {
     const lifetimeCapacity =
       (supplier.capacityPerGame && supplier.capacityPerGame[material]) ?? 0
 
@@ -46,7 +46,7 @@ export function QuickReference({
     return Math.max(0, lifetimeCapacity - deliveredSoFar - stagedOrder)
   }
 
-  const getMaterialCapacity = (supplier: Supplier, material: string) => {
+  const getMaterialCapacity = (supplier: Supplier, material: MaterialType) => {
     if (typeof supplier.capacityPerGame === "object") {
       return supplier.capacityPerGame[material] || 0
     }
@@ -82,7 +82,7 @@ export function QuickReference({
                     <div className="font-semibold">Material</div>
                     <div className="font-semibold text-right">Remaining</div>
                     <div className="font-semibold text-right">Price</div>
-                    {getSupplierMaterials(supplier).map((material: string) => {
+                    {getSupplierMaterials(supplier).map((material: MaterialType) => {
                       const remaining = calculateRemainingCapacity(supplier, material)
                       if (remaining === 0) return null // Hide materials with 0 remaining
                       return (
@@ -128,12 +128,12 @@ export function QuickReference({
                         </>
                       )}
 
-                      {customer.dailyRequirement && (
+                      {/* {customer.dailyRequirement && (
                         <>
                           <div>Daily Requirement:</div>
                           <div className="text-right">{customer.dailyRequirement} units</div>
                         </>
-                      )}
+                      )} */}
 
                       {customer.demand && typeof customer.demand === "function" && (
                         <>
