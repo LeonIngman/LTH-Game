@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useEffect } from "react"
+import { cn } from "@/lib/utils"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -512,6 +513,9 @@ export function ForecastingDialog({ isOpen, onComplete, levelId }: ForecastingDi
     )
   }
 
+ // Define all production options
+  const allProductionOptions = [0, 10, 20, 30]
+
   // Step 4: Production Planning
   if (currentStep === 4) {
     return (
@@ -589,7 +593,7 @@ export function ForecastingDialog({ isOpen, onComplete, levelId }: ForecastingDi
                   <AlertTriangle className="h-4 w-4 text-red-600" />
                   <span className="text-sm text-red-800">
                     <strong>Warning:</strong> Once you proceed, your production rates cannot be changed during the rest
-                    of this level!
+                    of this level! Note that the customers will still have time-limited delivery requirements.
                   </span>
                 </div>
               </CardContent>
@@ -600,23 +604,30 @@ export function ForecastingDialog({ isOpen, onComplete, levelId }: ForecastingDi
               <CardHeader>
                 <CardTitle>Daily Production Rates (meals per day)</CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-7 gap-3">
+              <CardContent className="max-w-5xl max-h-[95vh] overflow-y-auto">
+                <div className="grid grid-cols-7 gap-2 max-h-[400px] overflow-y-auto">
                   {Array.from({ length: 20 }, (_, i) => {
                     const day = i + 1 // go from 1 to 20
                     return (
-                    <div key={day} className="space-y-1">
-                      <Label htmlFor={`day-${day}`} className="text-xs font-medium">
+                    <div key={day} className="space-y-2 p-2 border rounded">
+                      <Label htmlFor={`day-${day}`} className="text-xs font-medium text-center block">
                         Day {day}
                       </Label>
-                      <Input
-                        id={`day-${day}`}
-                        type="number"
-                        min="0"
-                        value={productionRates[day] || 0}
-                        onChange={(e) => handleProductionRateChange(day, e.target.value)}
-                        className="text-center text-sm"
-                      />
+                      <div className="flex justify-center gap-1 flex-wrap">
+                        {[0, 10, 20, 30].map((option) => (
+                        <Button
+                          key={option}
+                          variant={productionRates[i] === option ? "default" : "outline"}
+                          onClick={() => handleProductionRateChange(i, option.toString())}
+                          className={cn(
+                            "h-6 w-6 text-xs",
+                            productionRates[i] === option && "bg-blue-600 hover:bg-blue-700"
+                          )}
+                          >
+                            {option}
+                          </Button>
+                        ))}
+                      </div>
                     </div>
                     )
                   })}
