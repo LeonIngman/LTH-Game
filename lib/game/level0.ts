@@ -1,4 +1,4 @@
-import type { LevelConfig, DailyDemand } from "@/types/game"
+import type { LevelConfig } from "@/types/game"
 
 /**
  * Level 0 configuration - Introduction to basic logistics concepts
@@ -143,16 +143,6 @@ export const level0Config: LevelConfig = {
       allowedShipmentSizes: [20, 40, 100],
     },
   ],
-
-  // Demand model for Level 0 - relatively stable demand
-  demandModel: (day: number): DailyDemand => {
-    const baseDemand = 10
-    const variation = Math.floor(Math.random() * 5) - 2
-    const weeklyBoost = day % 7 === 1 ? 5 : 0
-    const quantity = Math.max(0, baseDemand + variation + weeklyBoost)
-    const pricePerUnit = 30
-    return { quantity, pricePerUnit }
-  },
 
   overstock: {
     patty: { threshold: 100, penaltyPerUnit: 2.5 },

@@ -2,9 +2,9 @@
 
 import { useMemo } from "react"
 import type { GameCalculationsHook, GameCalculationsParams } from "../types/hooks"
-import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/constants"
+import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/game/inventory-management"
 import type { MaterialType } from "../types/game"
-import { calculateHoldingCost } from "@/lib/game/calculations"
+import { calculateHoldingCost, calculateOverstockCost } from "@/lib/game/inventory-management"
 
 /**
  * Hook for calculating game-related values like costs, production limits, etc.
@@ -192,7 +192,12 @@ export function useGameCalculations({
 
   // Get the holding cost for the current inventory using level-specific costs
   const getHoldingCost = (): number => {
-    return calculateHoldingCost(gameState.inventory, levelConfig)
+    return calculateHoldingCost(gameState)
+  }
+
+  // Get the overstock cost for the current inventory using level-specific costs
+  const getOverstockCost = (): number => {
+    return calculateOverstockCost(gameState, levelConfig)
   }
 
   // Calculate total cost of all actions
@@ -207,7 +212,7 @@ export function useGameCalculations({
 
   // Calculate maximum production based on available materials
   const calculateMaxProduction = useMemo((): number => {
-    const { inventory, productionCapacity } = gameState
+    const inventory = gameState.inventory
 
     // Calculate max production for each ingredient based on the requirements
     const maxProductionByPatty = Math.floor(inventory.patty / PATTIES_PER_MEAL)
@@ -215,17 +220,11 @@ export function useGameCalculations({
     const maxProductionByBun = Math.floor(inventory.bun / BUNS_PER_MEAL)
     const maxProductionByPotato = Math.floor(inventory.potato / POTATOES_PER_MEAL)
 
-    // Handle edge cases where inventory might be zero
-    if (inventory.patty <= 0 || inventory.cheese <= 0 || inventory.bun <= 0 || inventory.potato < POTATOES_PER_MEAL) {
-      return 0
-    }
-
     return Math.min(
       maxProductionByPatty,
       maxProductionByCheese,
       maxProductionByBun,
       maxProductionByPotato,
-      productionCapacity,
     )
   }, [gameState.inventory, gameState])
 
@@ -284,6 +283,7 @@ export function useGameCalculations({
     calculateTotalPurchaseCost,
     calculateProductionCost,
     getHoldingCost,
+    getOverstockCost,
     calculateTotalActionCost,
     calculateTotalCost,
     calculateMaxProduction,

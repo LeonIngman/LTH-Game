@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { CostSummaryProps } from "@/types/components"
-import { calculateDailyInventoryValuation, calculateInventoryHoldingCosts } from "@/lib/game/inventory-management"
+import { calculateHoldingCosts } from "@/lib/game/inventory-management"
 
 export function CostSummary({
   gameState,
@@ -19,6 +19,7 @@ export function CostSummary({
   calculateMaterialPurchaseCost,
   calculateTransportationCost,
   calculateHoldingCost,
+  calculateOverstockCost,
   calculateRevenue,
   isNextDayButtonDisabled,
   getNextDayDisabledReason,
@@ -31,26 +32,16 @@ export function CostSummary({
   const transportationCost = calculateTransportationCost()
 
   // Calculate holding cost using the same method as the game engine
-  const currentValuation = calculateDailyInventoryValuation(gameState, gameState.day)
-  const holdingCosts = calculateInventoryHoldingCosts(currentValuation)
-  const holdingCost = holdingCosts.totalHoldingCost
+  const holdingCost = calculateHoldingCost()
+
+  // Calculate overstock cost using the same method as the game engine
+  const overstockCost = calculateOverstockCost()
 
   // Calculate revenue from both direct sales and customer orders
   const revenue = calculateRevenue()
 
-  // Find the overstock penalty for the current day
-  const currentDay = gameState.day
-  const overstockPenaltyEntry =
-    Array.isArray(gameState.overstockPenalties)
-      ? gameState.overstockPenalties.find((entry: any) => entry.day === currentDay - 1)
-      : null
-
-  // Always use fallback values
-  const overstockPenalty = Number(overstockPenaltyEntry?.penalty ?? 0)
-  const overstockDetails = overstockPenaltyEntry?.details ?? {}
-
   // Calculate total cost as sum of all components
-  const totalCost = purchaseCost + productionCost + holdingCost + overstockPenalty
+  const totalCost = purchaseCost + productionCost + holdingCost + overstockCost
   const profit = revenue - totalCost
 
   // Check if the player is only attempting sales (no purchases or production)
@@ -110,34 +101,21 @@ export function CostSummary({
           </p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">
-            Daily Holding Cost <span className="text-xs">({annualRate}% annual rate)</span>
-          </p>
+          <p className="text-sm font-medium text-muted-foreground">Daily Holding Cost</p>
           <p className="text-xl font-bold">{holdingCost.toFixed(2)} kr</p>
           <p className="text-xs text-muted-foreground mt-1">Total inventory value × 25% annual rate ÷ 365 days</p>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Overstock Cost</p>
-          <p className="text-xl font-bold text-red-600">{overstockPenalty.toFixed(2)} kr</p>
-          {overstockPenalty > 0 && (
-            <div className="text-xs text-muted-foreground mt-1">
-              {Object.entries(overstockDetails).map(([item, value]) => (
-                <div key={item}>
-                  {item}: {Number(value ?? 0).toFixed(2)} kr
-                </div>
-              ))}
-            </div>
-          )}
-          {overstockPenalty === 0 && (
-            <p className="text-xs text-muted-foreground mt-1">No overstock penalty</p>
-          )}
+          <p className="text-xl font-bold">{overstockCost.toFixed(2)} kr</p>
+          <p className="text-xs text-muted-foreground mt-1">Inventory value of overstocked materials × 25% annual rate ÷ 365 days</p>
         </div>
       </div>
       <div className="mt-4 border-t pt-4 flex justify-between items-center">
         <div className="grid grid-cols-3 gap-8 flex-1">
           <div>
             <p className="text-sm font-medium">Total Cost</p>
-            <p className="text-xl font-bold">{totalCost.toFixed(2)} kr</p>
+            <p className="text-xl font-bold text-red-600">{totalCost.toFixed(2)} kr</p>
           </div>
           <div>
             <p className="text-sm font-medium">Revenue</p>

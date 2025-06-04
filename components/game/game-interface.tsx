@@ -10,7 +10,6 @@ import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
 import { level3Config } from "@/lib/game/level3"
 import { useAuth } from "@/lib/auth-context"
-import { calculateDailyInventoryValuation, calculateInventoryHoldingCosts } from "@/lib/game/inventory-management"
 
 // Import our UI components
 import { GameHeader } from "./ui/game-header"
@@ -184,9 +183,12 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     getMaterialPriceForSupplier,
     getOrderQuantitiesForSupplier,
     calculateTotalPurchaseCost,
+    getHoldingCost,
+    getOverstockCost,
     calculateProductionCost,
     isNextDayButtonDisabled,
     getNextDayDisabledReason,
+    calculateMaxProduction
   } = useGameCalculations({
     gameState,
     levelConfig,
@@ -194,13 +196,6 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     action,
   })
 
-  // Calculate holding cost using the same inventory valuation system as the game engine
-  const calculateHoldingCost = useCallback(() => {
-    // Use the same inventory valuation system that treats starting inventory as having no value
-    const currentValuation = calculateDailyInventoryValuation(gameState, gameState.day)
-    const holdingCosts = calculateInventoryHoldingCosts(currentValuation)
-    return holdingCosts.totalHoldingCost
-  }, [gameState])
 
   // Calculates only the base material purchase cost (no transport)
   const calculateMaterialPurchaseCost = useCallback(() => {
@@ -224,7 +219,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
       if (!supplier || !supplier.shipmentPrices) continue
 
       // For each material, find the closest shipment size and add its price
-      for (const material of ["patty", "cheese", "bun", "potato"]) {
+      for (const material of ["patty", "cheese", "bun", "potato"] as const) {
         const amount = order[`${material}Purchase`]
         if (amount > 0 && supplier.shipmentPrices[material]) {
           const sizes = Object.keys(supplier.shipmentPrices[material]).map(Number)
@@ -388,31 +383,12 @@ const getTodaysPlannedProduction = useCallback(() => {
       if (!isNaN(production) && production >= 0) {
         setAction((prev: any) => ({
           ...prev,
-          production: Math.min(production, gameState.productionCapacity),
+          production: production,
         }))
       }
     },
-    [gameState.productionCapacity],
+    [],
   )
-
-  // Calculate max production
-  const maxProduction = Math.min(
-    gameState.inventory.patty,
-    gameState.inventory.cheese,
-    gameState.inventory.bun,
-    Math.floor(gameState.inventory.potato / 4),
-    gameState.productionCapacity,
-  )
-
-  // Don't render if forecasting is required but not completed
-  // if (requiresForecasting && !forecastingCompleted) {
-  //   return (
-  //     <div className="min-h-screen flex items-center justify-center">
-  //       <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
-  //       <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
-  //     </div>
-  //   )
-  // }
 
 // Added function to render dialogs
 const renderDialogs = () => (
@@ -575,7 +551,8 @@ const getPlannedProduction = useCallback(() => {
         calculateProductionCost={calculateProductionCost}
         calculateMaterialPurchaseCost={calculateMaterialPurchaseCost}
         calculateTransportationCost={calculateTransportationCost}
-        calculateHoldingCost={calculateHoldingCost}
+        calculateHoldingCost={getHoldingCost}
+        calculateOverstockCost={getOverstockCost}
         calculateRevenue={calculateRevenue}
         isNextDayButtonDisabled={isNextDayButtonDisabled}
         getNextDayDisabledReason={getNextDayDisabledReason}
@@ -641,7 +618,7 @@ const getPlannedProduction = useCallback(() => {
         isOpen={showProductionPopup}
         onClose={() => setShowProductionPopup(false)}
         production={getTodaysPlannedProduction() || action.production}
-        maxProduction={maxProduction}
+        maxProduction={calculateMaxProduction}
         onProductionChange={handleProductionChange}
         isDisabled={isLoading || gameEnded}
         plannedProduction={getPlannedProduction()}

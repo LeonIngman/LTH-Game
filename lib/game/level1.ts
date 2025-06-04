@@ -1,4 +1,4 @@
-import type { LevelConfig, DailyDemand } from "@/types/game"
+import type { LevelConfig } from "@/types/game"
 
 /**
  * Level 1 configuration - Timing is Everything
@@ -143,19 +143,6 @@ export const level1Config: LevelConfig = {
       allowedShipmentSizes: [20, 40, 100],
     },
   ],
-
-  // Demand model for Level 1 - more variable demand
-  demandModel: (day: number): DailyDemand => {
-    const baseDemand = 12
-    const variation = Math.floor(Math.random() * 9) - 4
-    const weeklyBoost = day % 7 === 1 || day % 7 === 2 ? 8 : 0
-    const seasonalTrend = Math.floor(day / 10)
-    const quantity = Math.max(0, baseDemand + variation + weeklyBoost + seasonalTrend)
-    const basePrice = 40
-    const priceVariation = Math.floor(Math.random() * 5) - 2
-    const pricePerUnit = basePrice + priceVariation
-    return { quantity, pricePerUnit }
-  },
 
   overstock: {
     patty: { threshold: 100, penaltyPerUnit: 2 },

@@ -1,4 +1,5 @@
 import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrderAction, GameAction, PendingOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
+import { Action } from "sonner"
 
 export interface CurrentOrdersProps {
   levelConfig: LevelConfig
@@ -20,18 +21,19 @@ export interface StatusBarProps {
 }
 
 export interface CostSummaryProps {
-  gameState: any
-  levelConfig: any
-  action: any
-  supplierOrders: any[]
+  gameState: GameState
+  levelConfig: LevelConfig
+  action: GameAction
+  supplierOrders: SupplierOrder[]
   isLoading: boolean
   gameEnded: boolean
   onProcessDay: () => Promise<void>
   calculateTotalPurchaseCost: () => number
   calculateProductionCost: () => number
-  calculateMaterialPurchaseCost: () => number // <-- Add this line
+  calculateMaterialPurchaseCost: () => number
   calculateTransportationCost: () => number
   calculateHoldingCost: () => number
+  calculateOverstockCost: () => number
   calculateRevenue: () => number
   isNextDayButtonDisabled: () => boolean
   getNextDayDisabledReason: () => string
@@ -79,11 +81,6 @@ export interface DailyOrderSummaryProps {
   levelConfig?: LevelConfig
   onResetAllOrders?: () => void
   isDisabled?: boolean
-}
-
-export interface InventorySectionProps {
-  gameState: GameState
-  levelConfig: LevelConfig
 }
 
 export interface PendingOrdersProps {

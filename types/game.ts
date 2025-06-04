@@ -9,60 +9,32 @@ export interface Inventory {
   finishedGoods: number
 }
 
-export interface InventoryTransaction {
-  id: string
-  materialType: "patty" | "cheese" | "bun" | "potato"
-  quantity: number
-  unitCost: number
-  totalCost: number
-  day: number
-  supplierId?: number
-  deliveryOptionId?: number
-  timestamp: Date | string
-}
-
-export interface FinishedGoodsBatch {
-  id: string
-  quantity: number
-  unitCost: number
-  totalCost: number
-  day: number
-  rawMaterialCosts: {
-    patty: number
-    cheese: number
-    bun: number
-    potato: number
-  }
-  productionCost: number
-  timestamp: Date | string
-}
-
-export interface DailyInventoryValuation {
-  day: number
-  pattyValue: number
-  cheeseValue: number
-  bunValue: number
-  potatoValue: number
-  finishedGoodsValue: number
-  totalValue: number
-  pattyQuantity: number
-  cheeseQuantity: number
-  bunQuantity: number
-  potatoQuantity: number
-  finishedGoodsQuantity: number
+export interface InventoryValue {
+  patty: number
+  cheese: number
+  bun: number
+  potato: number
+  finishedGoods: number
 }
 
 export interface InventoryHoldingCosts {
-  pattyHoldingCost: number
-  cheeseHoldingCost: number
-  bunHoldingCost: number
-  potatoHoldingCost: number
-  finishedGoodsHoldingCost: number
-  totalHoldingCost: number
+  patty: number
+  cheese: number
+  bun: number
+  potato: number
+  finishedGoods: number
+}
+
+export interface InventoryOverstockCosts {
+  patty: number
+  cheese: number
+  bun: number
+  potato: number
+  finishedGoods: number
 }
 
 export interface PendingOrder {
-  materialType: string
+  materialType: MaterialType
   quantity: number
   daysRemaining: number
   totalCost: number
@@ -125,8 +97,9 @@ export interface DailyResult {
   day: number
   cash: number
   inventory: Inventory
-  inventoryValuation: DailyInventoryValuation
+  inventoryValue: InventoryValue
   holdingCosts: InventoryHoldingCosts
+  overstockCosts: InventoryOverstockCosts
   pattyPurchased: number
   cheesePurchased: number
   bunPurchased: number
@@ -146,8 +119,6 @@ export interface DailyResult {
   deliveryOptionId: number
   customerDeliveries?: Record<number, { quantity: number; revenue: number }>
   latenessPenalties?: LatenessPenalty[]
-  overstockPenalty?: number
-  overstockPenaltyDetails?: Record<string, number>
 }
 
 export interface GameResult {
@@ -199,11 +170,6 @@ export interface Customer {
   leadTimeRange?: number[]
 }
 
-export interface DailyDemand {
-  quantity: number
-  pricePerUnit: number
-}
-
 export interface MapPosition {
   x: number
   y: number
@@ -223,11 +189,11 @@ interface OverstockRule {
 }
 
 export interface OverstockConfig {
-  patty?: OverstockRule
-  bun?: OverstockRule
-  cheese?: OverstockRule
-  potato?: OverstockRule
-  finishedGoods?: OverstockRule
+  patty: OverstockRule
+  bun: OverstockRule
+  cheese: OverstockRule
+  potato: OverstockRule
+  finishedGoods: OverstockRule
 }
 
 interface SafetystockRule {
@@ -245,15 +211,11 @@ export interface GameState {
   day: number
   cash: number
   inventory: Inventory
-  inventoryTransactions: InventoryTransaction[]
-  finishedGoodsBatches: FinishedGoodsBatch[]
-  dailyInventoryValuations: DailyInventoryValuation[]
+  inventoryValue: InventoryValue
   pendingOrders: PendingOrder[]
   pendingCustomerOrders: CustomerOrder[]
   customerDeliveries: Record<number, number>
   supplierDeliveries: Record<number, Record<string, number>>
-  dailyDemand: DailyDemand
-  productionCapacity: number
   cumulativeProfit: number
   score: number
   history: DailyResult[]
@@ -283,7 +245,6 @@ export interface LevelConfig {
   suppliers: Supplier[]
   deliveryOptions?: DeliveryOption[]
   customers: Customer[]
-  demandModel: (day: number) => DailyDemand
   maxScore: number
   mapPositions: Record<number, MapPositions>
   overstock: OverstockConfig

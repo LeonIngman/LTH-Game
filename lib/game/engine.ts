@@ -10,17 +10,21 @@ import type {
   CustomerOrder,
   Customer,
   LatenessPenalty,
-  DailyInventoryValuation,
+  InventoryValue,
   InventoryHoldingCosts,
+  InventoryOverstockCosts,
 } from "@/types/game"
 import {
   calculateUnitCost,
-  addInventoryTransaction,
-  calculateDailyInventoryValuation,
-  calculateInventoryHoldingCosts,
-  processFinishedGoodsSales,
+  calculateHoldingCost,
+  getHoldingCostBreakdown,
+  addInventoryValue,
+  removeInventoryValue,
+  calculateOverstockCost,
+  getOverstockCostBreakdown
 } from "@/lib/game/inventory-management"
-import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/constants"
+import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/game/inventory-management"
+import { News_Cycle } from "next/font/google"
 
 
 /**
@@ -37,15 +41,17 @@ export function initializeGameState(levelConfig: LevelConfig): GameState {
     day: 1,
     cash: levelConfig.initialCash,
     inventory: { ...levelConfig.initialInventory },
-    inventoryTransactions: [],
-    finishedGoodsBatches: [],
-    dailyInventoryValuations: [],
+    inventoryValue: {
+      patty: 0,
+      cheese: 0,
+      bun: 0,
+      potato: 0,
+      finishedGoods: 0,
+    },
     pendingOrders: [],
     pendingCustomerOrders: [],
     customerDeliveries: {},
-    supplierDeliveries: {}, // <-- Add this line
-    dailyDemand: levelConfig.demandModel(1),
-    productionCapacity: 50, // Default value, can be adjusted per level
+    supplierDeliveries: {},
     cumulativeProfit: 0,
     score: 0,
     history: [],
@@ -110,13 +116,14 @@ export function validateAffordability(
   // Calculate total action cost
   const totalActionCost = totalPurchaseCost + productionCost
 
-  // Calculate holding cost using new inventory valuation method
-  const currentValuation = calculateDailyInventoryValuation(gameState, gameState.day)
-  const holdingCosts = calculateInventoryHoldingCosts(currentValuation)
-  const holdingCost = holdingCosts.totalHoldingCost
+  // Calculate holding cost
+  const holdingCost = calculateHoldingCost(gameState)
+
+  // Calculate overstock cost
+  const overstockCost = calculateOverstockCost(gameState, levelConfig)
 
   // Calculate total cost
-  const totalCost = totalActionCost + holdingCost
+  const totalCost = totalActionCost + holdingCost + overstockCost
 
   // Check if player has enough cash
   if (totalCost > gameState.cash) {
@@ -181,7 +188,7 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
 }
 
 /**
- * Process production using FIFO costing
+ * Process production
  */
 function processProduction(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
   // if (action.production <= 0) return
@@ -207,44 +214,55 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
     maxProductionByCheese,
     maxProductionByBun,
     maxProductionByPotato,
-    state.productionCapacity,
     targetProduction,
   )
 
   if (maxProduction > 0) {
-    // Deduct raw materials from inventory
-    state.inventory.patty -= maxProduction * PATTIES_PER_MEAL
-    state.inventory.cheese -= maxProduction * CHEESE_PER_MEAL
-    state.inventory.bun -= maxProduction * BUNS_PER_MEAL
-    state.inventory.potato -= maxProduction * POTATOES_PER_MEAL
+    // Calculate production cost
+     const productionCost = maxProduction * levelConfig.productionCostPerUnit
 
-    // Add finished goods to inventory
-    state.inventory.finishedGoods += maxProduction
+    // Remove materials and decrease their inventory values
+    removeInventoryValue(state, "patty", maxProduction * PATTIES_PER_MEAL)
+    removeInventoryValue(state, "cheese", maxProduction * CHEESE_PER_MEAL)
+    removeInventoryValue(state, "bun", maxProduction * BUNS_PER_MEAL)
+    removeInventoryValue(state, "potato", maxProduction * POTATOES_PER_MEAL)
+
+    // Add to finished goods with value
+    addInventoryValue(state, "finishedGoods", maxProduction, productionCost)
 
     // Deduct production cost from cash
-    const totalProductionCost = maxProduction * levelConfig.productionCostPerUnit
-    state.cash = Number.parseFloat((state.cash - totalProductionCost).toFixed(2))
+    state.cash = Number.parseFloat((state.cash - productionCost).toFixed(2))
   }
 }
 
 /**
- * Process sales using FIFO costing
+ * Process sales
  */
 function processSales(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
   // Calculate actual sales based on inventory and sales attempt
   const actualSales = Math.min(state.inventory.finishedGoods, action.salesAttempt)
 
   if (actualSales > 0) {
-    // Process sales using FIFO costing
-    const salesResult = processFinishedGoodsSales(state, actualSales)
 
-    if (salesResult.success) {
-      // Calculate revenue using the current price per unit from dailyDemand
-      const revenue = actualSales * state.dailyDemand.pricePerUnit
+    // Calculate revenue from customer orders
+    let revenue = 0
+    for (const customerOrder of action.customerOrders || []) {
+      const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
+      if (!customer) continue
 
-      // Update cash
-      state.cash = Number.parseFloat((state.cash + revenue).toFixed(2))
+      // Only count immediate revenue (lead time = 0)
+      if (customer.leadTime === 0) {
+        const orderRevenue = customerOrder.quantity * customer.pricePerUnit - customer.transportCosts[customerOrder.quantity]
+
+        revenue += orderRevenue
+      }
     }
+
+    // Remove from inventory with value
+    removeInventoryValue(state, "finishedGoods", actualSales)
+
+    // Update cash
+    state.cash = Number.parseFloat((state.cash + revenue).toFixed(2))
   }
 }
 
@@ -279,10 +297,10 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   // 3. Process new purchases and deduct costs
   processPurchases(newState, action, levelConfig)
 
-  // 4. Process production using FIFO costing
+  // 4. Process production
   processProduction(newState, action, levelConfig)
 
-  // 5. Process sales using FIFO costing
+  // 5. Process sales
   processSales(newState, action, levelConfig)
 
   // 6. Process customer orders
@@ -299,28 +317,14 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
     newState.latenessPenalties = [...newState.latenessPenalties, ...latenessPenalties]
   }
 
-  // 8. Calculate daily inventory valuation and holding costs
-  const dailyValuation = calculateDailyInventoryValuation(newState, newState.day)
-  const holdingCosts = calculateInventoryHoldingCosts(dailyValuation)
-
-  // Store the daily valuation
-  newState.dailyInventoryValuations.push(dailyValuation)
+  // 8. Calculate holding costs
+  const baseHoldingCost = calculateHoldingCost(newState)
+  const baseHoldingCostBreakdown = getHoldingCostBreakdown(newState)
+  const overstockCost = calculateOverstockCost(newState, levelConfig)
+  const overstockBreakdown = getOverstockCostBreakdown(newState, levelConfig)
 
   // 9. Deduct holding costs
-  newState.cash = Number.parseFloat((newState.cash - holdingCosts.totalHoldingCost).toFixed(2))
-
-  // --- Add this block for overstock penalty ---
-  const overstockResult = calculateOverstockPenalty(newState, levelConfig)
-  if (!newState.overstockPenalties) newState.overstockPenalties = []
-  newState.overstockPenalties.push({
-    day: newState.day,
-    penalty: typeof overstockResult.total === "number" ? overstockResult.total : 0,
-    details: overstockResult.details ?? {},
-  })
-  if (overstockResult.total > 0) {
-    newState.cash = Number.parseFloat((newState.cash - overstockResult.total).toFixed(2))
-  }
-  // --------------------------------------------
+  newState.cash = Number.parseFloat((newState.cash - baseHoldingCost - overstockCost).toFixed(2))
 
   // 10. Calculate daily profit and update cumulative profit
   const dailyProfit = newState.cash - initialCash
@@ -330,7 +334,7 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   newState.score = calculateScore(newState, levelConfig)
 
   // 12. Record daily results in history
-  recordDailyResults(newState, action, dailyProfit, levelConfig, dailyValuation, holdingCosts, latenessPenalties, overstockResult)
+  recordDailyResults(newState, action, dailyProfit, levelConfig, baseHoldingCostBreakdown, overstockBreakdown, latenessPenalties)
 
   // 13. Check if player is bankrupt (cash <= 0)
   if (newState.cash <= 0 && !canRecoverFromZeroCash(newState)) {
@@ -338,10 +342,9 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
     console.log("GAME OVER: Player is bankrupt with cash:", newState.cash)
   }
 
-  // 14. Advance to next day and update demand (only if not game over)
+  // 14. Advance to next day (only if not game over)
   if (!newState.gameOver) {
     newState.day += 1
-    newState.dailyDemand = levelConfig.demandModel(newState.day)
   }
 
   return newState
@@ -374,17 +377,13 @@ function processPendingOrders(state: GameState): void {
   }
 
   for (const order of arrivingOrders) {
-    state.inventory[order.materialType] += order.quantity
-    const unitCost = order.totalCost / order.quantity
-    addInventoryTransaction(
-      state,
-      order.materialType as "patty" | "cheese" | "bun" | "potato",
-      order.quantity,
-      unitCost,
-      state.day,
-      order.supplierId,
-      order.deliveryOptionId,
-    )
+      // Add to inventory with value
+      addInventoryValue(
+        state, 
+        order.materialType, 
+        order.quantity, 
+        order.totalCost
+      )
   }
 
   state.pendingOrders = remainingOrders
@@ -523,25 +522,17 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
         // Deduct cost from cash
         state.cash = Number.parseFloat((state.cash - totalCost).toFixed(2))
 
+        // Add to inventory value
+        state.inventoryValue[material.type] += totalCost
+
         // Always update deliveredSoFar immediately
         if (!state.supplierDeliveries[order.supplierId]) state.supplierDeliveries[order.supplierId] = {}
         state.supplierDeliveries[order.supplierId][material.type] =
           (state.supplierDeliveries[order.supplierId][material.type] || 0) + material.quantity
 
         if (totalLeadTime === 0) {
-          // For level 0 with instant delivery (leadTime = 0), add directly to inventory
-          state.inventory[material.type] += material.quantity
-
-          // Add inventory transaction for tracking
-          addInventoryTransaction(
-            state,
-            material.type,
-            material.quantity,
-            unitCost,
-            state.day,
-            order.supplierId,
-            action.deliveryOptionId,
-          )
+          // Add directly to inventory with value
+          addInventoryValue(state, material.type, material.quantity, totalCost)
         } else {
           // Add to pending orders with lead time
           state.pendingOrders.push({
@@ -578,39 +569,37 @@ function processCustomerOrders(state: GameState, action: GameAction, levelConfig
       continue // Skip if not an allowed shipment size
     }
 
-    // Process the sale using FIFO costing
-    const salesResult = processFinishedGoodsSales(state, customerOrder.quantity)
+    // Remove from inventory with value
+    removeInventoryValue(state, "finishedGoods", customerOrder.quantity)
 
-    if (salesResult.success) {
-      // Calculate revenue and transport cost
-      const revenue = customerOrder.quantity * customer.pricePerUnit
-      const transportCost = customer.transportCosts[customerOrder.quantity] || 0
-      const netRevenue = revenue - transportCost
+    // Calculate revenue and transport cost
+    const revenue = customerOrder.quantity * customer.pricePerUnit
+    const transportCost = customer.transportCosts[customerOrder.quantity] || 0
+    const netRevenue = revenue - transportCost
 
-      // Get actual lead time (random for Yummy Zone in Level 3)
-      const actualLeadTime = getRandomLeadTime(customer)
+    // Get actual lead time (random for Yummy Zone in Level 3)
+    const actualLeadTime = getRandomLeadTime(customer)
 
-      // If lead time is 0, add revenue immediately
-      if (actualLeadTime === 0) {
-        state.cash = Number.parseFloat((state.cash + netRevenue).toFixed(2))
+    // If lead time is 0, add revenue immediately
+    if (actualLeadTime === 0) {
+      state.cash = Number.parseFloat((state.cash + netRevenue).toFixed(2))
 
-        // Update customer delivery tracking
-        if (!state.customerDeliveries[customer.id]) {
-          state.customerDeliveries[customer.id] = 0
-        }
-        state.customerDeliveries[customer.id] += customerOrder.quantity
-      } else {
-        // Otherwise, add to pending customer orders
-        state.pendingCustomerOrders.push({
-          customerId: customer.id,
-          quantity: customerOrder.quantity,
-          daysRemaining: actualLeadTime,
-          totalRevenue: revenue,
-          transportCost: transportCost,
-          netRevenue: netRevenue,
-          actualLeadTime: actualLeadTime, // Store the actual lead time used
-        })
+      // Update customer delivery tracking
+      if (!state.customerDeliveries[customer.id]) {
+        state.customerDeliveries[customer.id] = 0
       }
+      state.customerDeliveries[customer.id] += customerOrder.quantity
+    } else {
+      // Otherwise, add to pending customer orders
+      state.pendingCustomerOrders.push({
+        customerId: customer.id,
+        quantity: customerOrder.quantity,
+        daysRemaining: actualLeadTime,
+        totalRevenue: revenue,
+        transportCost: transportCost,
+        netRevenue: netRevenue,
+        actualLeadTime: actualLeadTime, // Store the actual lead time used
+      })
     }
   }
 }
@@ -634,10 +623,9 @@ function recordDailyResults(
   action: GameAction,
   dailyProfit: number,
   levelConfig: LevelConfig,
-  dailyValuation: DailyInventoryValuation,
   holdingCosts: InventoryHoldingCosts,
+  overstockCosts: InventoryOverstockCosts,
   latenessPenalties: LatenessPenalty[],
-  overstockResult: { total: number; details: Record<string, number> } // <-- add this
 ): void {
   // Calculate total purchases from all suppliers
   let totalPattyPurchased = 0
@@ -645,9 +633,6 @@ function recordDailyResults(
   let totalBunPurchased = 0
   let totalPotatoPurchased = 0
   let totalPurchaseCost = 0
-
-  // Get delivery option
-  const deliveryOption = levelConfig.deliveryOptions?.find((d) => d.id === action.deliveryOptionId)
 
   for (const order of action.supplierOrders) {
     const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
@@ -694,7 +679,6 @@ function recordDailyResults(
       maxProductionByCheese,
       maxProductionByBun,
       maxProductionByPotato,
-      state.productionCapacity,
       targetProduction,
     )
   }
@@ -702,12 +686,17 @@ function recordDailyResults(
   // Calculate production cost
   const totalProductionCost = actualProduction * levelConfig.productionCostPerUnit
 
-  // Calculate revenue from regular sales
+  // Calculate sales quantity
   const actualSales = Math.min(state.inventory.finishedGoods + actualProduction, action.salesAttempt)
-  const revenue = actualSales * state.dailyDemand.pricePerUnit
+
+  // Calculate holding costs
+  const baseHoldingCost = Object.values(holdingCosts).reduce((sum, value) => sum + value, 0);
+  const overstockCost = Object.values(overstockCosts).reduce((sum, value) => sum + value, 0);
+  const totalHoldingCost = baseHoldingCost + overstockCost
 
   // Calculate revenue from customer orders
   const customerDeliveries: Record<number, { quantity: number; revenue: number }> = {}
+  let revenue = 0
   for (const customerOrder of action.customerOrders || []) {
     const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
     if (!customer) continue
@@ -725,6 +714,7 @@ function recordDailyResults(
         customerOrder.quantity * customer.pricePerUnit - customer.transportCosts[customerOrder.quantity]
       customerDeliveries[customer.id].quantity += customerOrder.quantity
       customerDeliveries[customer.id].revenue += orderRevenue
+      revenue += orderRevenue
     }
   }
 
@@ -732,8 +722,9 @@ function recordDailyResults(
     day: state.day,
     cash: state.cash,
     inventory: { ...state.inventory },
-    inventoryValuation: dailyValuation,
+    inventoryValue: { ...state.inventoryValue},
     holdingCosts: holdingCosts,
+    overstockCosts: overstockCosts,
     pattyPurchased: totalPattyPurchased,
     cheesePurchased: totalCheesePurchased,
     bunPurchased: totalBunPurchased,
@@ -744,8 +735,8 @@ function recordDailyResults(
     costs: {
       purchases: totalPurchaseCost,
       production: totalProductionCost,
-      holding: holdingCosts.totalHoldingCost,
-      total: totalPurchaseCost + totalProductionCost + holdingCosts.totalHoldingCost + (typeof overstockResult.total === "number" ? overstockResult.total : 0),
+      holding: totalHoldingCost,
+      total: totalPurchaseCost + totalProductionCost + totalHoldingCost,
     },
     profit: dailyProfit,
     cumulativeProfit: state.cumulativeProfit,
@@ -753,8 +744,6 @@ function recordDailyResults(
     deliveryOptionId: action.deliveryOptionId,
     customerDeliveries: Object.keys(customerDeliveries).length > 0 ? customerDeliveries : undefined,
     latenessPenalties: latenessPenalties.length > 0 ? latenessPenalties : undefined,
-    overstockPenalty: typeof overstockResult.total === "number" ? overstockResult.total : 0,
-    overstockPenaltyDetails: overstockResult.details ?? {},
   }
 
   state.history.push(dailyResult)
@@ -781,26 +770,4 @@ export function calculateGameResult(state: GameState, levelConfig: LevelConfig, 
     score: state.score,
     history: [...state.history],
   }
-}
-
-/**
- * Calculate overstock penalty based on current inventory and level configuration
- */
-function calculateOverstockPenalty(state: GameState, levelConfig: LevelConfig): { total: number, details: Record<string, number> } {
-  if (!levelConfig.overstock) return { total: 0, details: {} }
-  let totalPenalty = 0
-  const details: Record<string, number> = {}
-  for (const key of Object.keys(levelConfig.overstock) as Array<keyof typeof state.inventory>) {
-    const rule = levelConfig.overstock[key]
-    if (!rule) continue
-    const inventoryAmount = state.inventory[key] || 0
-    // Log here, after variables are defined
-    console.log("Overstock check:", key, "inventory:", inventoryAmount, "threshold:", rule.threshold, "penaltyPerUnit:", rule.penaltyPerUnit)
-    if (inventoryAmount > rule.threshold) {
-      const penalty = (inventoryAmount - rule.threshold) * rule.penaltyPerUnit
-      totalPenalty += penalty
-      details[key] = penalty
-    }
-  }
-  return { total: totalPenalty, details }
 }

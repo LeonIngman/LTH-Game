@@ -38,6 +38,7 @@ export interface GameCalculationsHook {
   calculateTotalPurchaseCost: () => number
   calculateProductionCost: () => number
   getHoldingCost: () => number
+  getOverstockCost: () => number
   calculateTotalActionCost: () => number
   calculateTotalCost: () => number
   calculateMaxProduction: number
