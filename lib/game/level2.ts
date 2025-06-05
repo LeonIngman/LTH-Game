@@ -152,18 +152,16 @@ export const level2Config: LevelConfig = {
 
   // Map positions for Level 2
   mapPositions: {
-    2: {
       mainFactory: { x: 400, y: 500 },
-      suppliers: {
-        1: { x: 80, y: 300, name: "Pink Patty" },
-        2: { x: 500, y: 100, name: "Brown Sauce" },
-        3: { x: 950, y: 350, name: "Firehouse Foods" },
-      },
-      restaurants: [
-        { x: 600, y: 800, name: "Yummy Zone", customerId: 1 },
-        { x: 800, y: 150, name: "Toast-to-go", customerId: 2 },
-        { x: 100, y: 650, name: "StudyFuel", customerId: 3 },
+      suppliers: [
+        { x: 80, y: 300, name: "Pink Patty", id: 1 },
+        { x: 500, y: 100, name: "Brown Sauce", id: 2 },
+        { x: 950, y: 350, name: "Firehouse Foods", id: 3 },
       ],
-    },
+      customers: [
+        { x: 600, y: 800, name: "Yummy Zone", id: 1 },
+        { x: 800, y: 150, name: "Toast-to-go", id: 2 },
+        { x: 100, y: 650, name: "StudyFuel", id: 3 },
+      ],
   },
 }

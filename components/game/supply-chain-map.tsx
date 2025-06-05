@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import type { SupplyChainMapProps } from "@/types/components"
-import { generateDeliverySchedule } from "@/lib/game/customers"
+import { MapPositions } from "@/types/game"
 
 // Colors for suppliers and restaurants
 const supplierColors = {
@@ -25,7 +25,7 @@ export function SupplyChainMap({
   levelConfig,
   onSupplierClick,
   onFactoryClick,
-  onRestaurantClick,
+  onCustomerClick,
   level = 0, // Default to level 0
 }: SupplyChainMapProps) {
   const [activeSuppliers, setActiveSuppliers] = useState<Record<number, boolean>>({
@@ -34,54 +34,37 @@ export function SupplyChainMap({
     3: false, // Firehouse Foods
   })
 
-  const [activeCustomerOrders, setActiveCustomerOrders] = useState<boolean[]>([false, false, false])
+  const [activeCustomerOrders, setActiveCustomerOrders] = useState<Record<number, boolean>>({
+    1: false, // Yummy zone
+    2: false, // Toast-to-go
+    3: false, // StudyFuel
+  })
+
   const [imageLoaded, setImageLoaded] = useState(false)
   const [imageError, setImageError] = useState(false)
   const [mapRef, setMapRef] = useState<HTMLDivElement | null>(null)
 
   // Get map positions from level config if available
-  const getPositions = () => {
+  const getPositions = (): MapPositions => {
     if (levelConfig?.mapPositions) {
       // Try to get positions for the specific level
-      if (levelConfig.mapPositions[level]) {
-        return levelConfig.mapPositions[level]
-      }
-
-      // If level-specific positions don't exist, try to get positions for the level ID
-      if (levelConfig.id !== undefined && levelConfig.mapPositions[levelConfig.id]) {
-        return levelConfig.mapPositions[levelConfig.id]
-      }
-    }
-
-    // Level-specific default positions
-    if (level === 1 || level === 2) {
-      return {
-        mainFactory: { x: 210, y: 495 },
-        suppliers: {
-          1: { x: 30, y: 360, name: "Pink Patty" },
-          2: { x: 460, y: 150, name: "Brown Sauce" },
-          3: { x: 970, y: 325, name: "Firehouse Foods" },
-        },
-        restaurants: [
-          { x: 590, y: 750, name: "Yummy Zone", customerId: 1 },
-          { x: 795, y: 125, name: "Toast-to-go", customerId: 2 },
-          { x: 55, y: 610, name: "StudyFuel", customerId: 3 },
-        ],
+      if (levelConfig.mapPositions) {
+        return levelConfig.mapPositions
       }
     }
 
     // Default positions for other levels
     return {
       mainFactory: { x: 515, y: 432 },
-      suppliers: {
-        1: { x: 150, y: 250, name: "Pink Patty" },
-        2: { x: 350, y: 430, name: "Brown Sauce" },
-        3: { x: 150, y: 650, name: "Firehouse Foods" },
-      },
-      restaurants: [
-        { x: 850, y: 150, name: "Yummy Zone", customerId: 1 },
-        { x: 850, y: 430, name: "Toast-to-go", customerId: 2 },
-        { x: 850, y: 650, name: "StudyFuel", customerId: 3 },
+      suppliers: [
+        { x: 150, y: 250, name: "Pink Patty", id: 1 },
+        { x: 350, y: 430, name: "Brown Sauce", id: 2 },
+        { x: 150, y: 650, name: "Firehouse Foods", id: 3 },
+      ],
+      customers: [
+        { x: 850, y: 150, name: "Yummy Zone", id: 1 },
+        { x: 850, y: 430, name: "Toast-to-go", id: 2 },
+        { x: 850, y: 650, name: "StudyFuel", id: 3 },
       ],
     }
   }
@@ -163,9 +146,9 @@ export function SupplyChainMap({
   }
 
   // Handle restaurant click
-  const handleRestaurantClick = (restaurantIndex: number) => {
-    if (onRestaurantClick) {
-      onRestaurantClick(restaurantIndex)
+  const handleCustomerClick = (customerId: number) => {
+    if (onCustomerClick) {
+      onCustomerClick(customerId)
     }
   }
 
@@ -201,37 +184,9 @@ export function SupplyChainMap({
       }
     }
 
-    // If still not found, generate delivery schedule dynamically based on level config
-    if (!deliverySchedule || deliverySchedule.length === 0) {
-      // Get total days from level config or use default
-      const daysToComplete = levelConfig?.daysToComplete || 30
+    // If still not found, return false
+    if (!deliverySchedule) return false
 
-      // Get customer requirements from level config if possible
-      let totalRequirement = 100 // Default
-
-      // Try to find customer in level config to get requirements
-      if (levelConfig?.customers) {
-        const customer = levelConfig.customers.find((c) => c.id === customerId)
-        if (customer) {
-          totalRequirement = customer.totalRequirement
-        }
-      }
-
-      // Generate delivery schedule dynamically
-      deliverySchedule = generateDeliverySchedule(totalRequirement, daysToComplete)
-    }
-
-    if (!deliverySchedule || deliverySchedule.length === 0) {
-      // As a last resort, create a simple milestone schedule based on default days
-      const totalRequirement =
-        defaultCustomerRequirements[customerId as keyof typeof defaultCustomerRequirements]?.totalRequirement || 100
-      const amountPerMilestone = Math.ceil(totalRequirement / defaultMilestoneDays.length)
-
-      deliverySchedule = defaultMilestoneDays.map((day) => ({
-        day,
-        requiredAmount: amountPerMilestone,
-      }))
-    }
 
     // Find all milestones that have passed
     const passedMilestones = deliverySchedule.filter((item) => item.day <= currentDay)
@@ -282,12 +237,12 @@ export function SupplyChainMap({
                   <div className="absolute inset-[10%] bg-green-500 rounded-3xl"></div>
 
                   {/* Supplier indicators */}
-                  {Object.entries(positions.suppliers).map(([id, supplier]) => {
+                  {positions.suppliers.map((supplier) => {
                     const normalizedX = (supplier.x / 1000) * 100
                     const normalizedY = (supplier.y / 800) * 100
                     return (
                       <div
-                        key={`fallback-supplier-${id}`}
+                        key={`fallback-supplier-${supplier.id}`}
                         className="absolute w-8 h-8 bg-yellow-500 rounded-md border-2 border-gray-700"
                         style={{
                           left: `calc(${normalizedX}% - 16px)`,
@@ -298,12 +253,12 @@ export function SupplyChainMap({
                   })}
 
                   {/* Restaurant indicators */}
-                  {positions.restaurants.map((restaurant, index) => {
-                    const normalizedX = (restaurant.x / 1000) * 100
-                    const normalizedY = (restaurant.y / 800) * 100
+                  {positions.customers.map((customer) => {
+                    const normalizedX = (customer.x / 1000) * 100
+                    const normalizedY = (customer.y / 800) * 100
                     return (
                       <div
-                        key={`fallback-restaurant-${index}`}
+                        key={`fallback-restaurant-${customer.id}`}
                         className="absolute w-8 h-8 bg-red-500 rounded-md border-2 border-gray-700"
                         style={{
                           left: `calc(${normalizedX}% - 16px)`,
@@ -337,21 +292,21 @@ export function SupplyChainMap({
           {/* Define all paths first so they can be referenced */}
           <defs>
             {/* Supplier paths */}
-            {Object.entries(positions.suppliers).map(([id, supplier]) => (
+            {positions.suppliers.map((supplier) => (
               <path
-                key={`path-def-supplier-${id}`}
-                id={getPathId(`supplier-${id}`, "factory", 0)}
+                key={`path-def-supplier-${supplier.id}`}
+                id={getPathId(`supplier-${supplier.id}`, "factory", 0)}
                 d={createCurvedPath(supplier, positions.mainFactory)}
                 fill="none"
               />
             ))}
 
             {/* Restaurant paths */}
-            {positions.restaurants.map((restaurant, index) => (
+            {positions.customers.map((customer) => (
               <path
-                key={`path-def-restaurant-${index}`}
-                id={getPathId("factory", `restaurant-${index}`, 0)}
-                d={createCurvedPath(positions.mainFactory, restaurant)}
+                key={`path-def-restaurant-${customer.id}`}
+                id={getPathId("factory", `restaurant-${customer.id}`, 0)}
+                d={createCurvedPath(positions.mainFactory, customer)}
                 fill="none"
               />
             ))}
@@ -381,13 +336,13 @@ export function SupplyChainMap({
           </g>
 
           {/* Supplier indicators - Now clickable */}
-          {Object.entries(positions.suppliers).map(([id, supplier]) => {
-            const supplierId = Number(id)
+          {positions.suppliers.map((supplier) => {
+            const supplierId = Number(supplier.id)
             const supplierColor = supplierColors[supplierId as keyof typeof supplierColors] || "#999"
 
             return (
               <g
-                key={`supplier-${id}`}
+                key={`supplier-${supplier.id}`}
                 onClick={() => handleSupplierClick(supplierId)}
                 style={{ cursor: "pointer" }}
                 className="hover:opacity-80 transition-opacity"
@@ -409,21 +364,21 @@ export function SupplyChainMap({
           })}
 
           {/* Restaurant indicators - Now clickable */}
-          {positions.restaurants.map((restaurant, index) => {
-            const customerId = restaurant.customerId
+          {positions.customers.map((customer) => {
+            const customerId = Number(customer.id)
             const missed = customerId ? hasMissedMilestone(customerId) : false
 
             return (
               <g
-                key={`restaurant-${index}`}
-                onClick={() => handleRestaurantClick(index)}
+                key={`restaurant-${customer.id}`}
+                onClick={() => handleCustomerClick(customerId)}
                 style={{ cursor: "pointer" }}
                 className="hover:opacity-80 transition-opacity"
               >
                 {/* Restaurant circle */}
                 <circle
-                  cx={restaurant.x}
-                  cy={restaurant.y}
+                  cx={customer.x}
+                  cy={customer.y}
                   r="15"
                   fill={supplierColors.finishedGoods}
                   stroke={missed ? "#EF4444" : "#1E3A8A"}
@@ -432,15 +387,15 @@ export function SupplyChainMap({
 
                 {/* Restaurant name */}
                 <text
-                  x={restaurant.x}
-                  y={restaurant.y + 30}
+                  x={customer.x}
+                  y={customer.y + 30}
                   textAnchor="middle"
                   fill={supplierColors.finishedGoods}
                   fontSize="14"
                   fontWeight="bold"
                   pointerEvents="none"
                 >
-                  {restaurant.name}
+                  {customer.name}
                 </text>
               </g>
             )
@@ -479,14 +434,15 @@ export function SupplyChainMap({
           })}
 
           {/* Main Factory to Restaurant Paths */}
-          {activeCustomerOrders.map((isActive, index) => {
-            if (!isActive || !positions.restaurants[index]) return null
+          {Object.entries(activeCustomerOrders).map(([customerId, isActive]) => {
+            const id = Number(customerId)
+            if (!isActive || !positions.customers[id]) return null
 
-            const pathId = getPathId("factory", `restaurant-${index}`, 0)
+            const pathId = getPathId("factory", `restaurant-${id}`, 0)
             const fillColor = supplierColors.finishedGoods || "#3B82F6"
 
             return (
-              <g key={`restaurant-path-${index}`} pointerEvents="none">
+              <g key={`restaurant-path-${id}`} pointerEvents="none">
                 {/* Dotted path line */}
                 <use
                   href={`#${pathId}`}
@@ -499,7 +455,7 @@ export function SupplyChainMap({
 
                 {/* Animated dots along the path */}
                 {[0, 1, 2].map((i) => (
-                  <circle key={`restaurant-dot-${index}-${i}`} r="8" fill={fillColor}>
+                  <circle key={`restaurant-dot-${id}-${i}`} r="8" fill={fillColor}>
                     <animateMotion dur="3s" begin={`${i}s`} repeatCount="indefinite" rotate="auto">
                       <mpath href={`#${pathId}`} />
                     </animateMotion>

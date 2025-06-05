@@ -7,10 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { AlertTriangle, Calendar, CheckCircle2, CheckCircle } from "lucide-react"
-import type { RestaurantSalesPopupProps } from "@/types/components"
+import type { CostumerSalesPopupProps } from "@/types/components"
 import { CustomerOrderForm } from "./ui/customer-order-form"
 
-export function RestaurantSalesPopup({
+export function CustomerSalesPopup({
   isOpen,
   onClose,
   customer,
@@ -20,7 +20,7 @@ export function RestaurantSalesPopup({
   gameState,
   day,
   levelConfig,
-}: RestaurantSalesPopupProps) {
+}: CostumerSalesPopupProps) {
   // Local state for pending order
   const [pendingQuantity, setPendingQuantity] = useState(0)
   const [hasConfirmedOrder, setHasConfirmedOrder] = useState(false)

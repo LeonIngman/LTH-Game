@@ -1,4 +1,4 @@
-import type { GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, PendingOrder, MaterialType } from "@/types/game"
+import type { GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, MaterialOrder, MaterialType } from "@/types/game"
 
 // useGameState types
 export interface GameStateHook {
@@ -30,7 +30,6 @@ export interface GameActionsParams {
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
 }
 
-// useGameCalculations types
 export interface GameCalculationsHook {
   getMaterialPriceForSupplier: (supplierId: number, materialType: MaterialType) => number
   getOrderQuantitiesForSupplier: (supplierId: number) => number[]
@@ -53,7 +52,6 @@ export interface GameCalculationsParams {
   action: GameAction
 }
 
-// useSupplierOrders types
 export interface SupplierOrdersHook {
   supplierOrders: SupplierOrder[]
   setSupplierOrders: (orders: SupplierOrder[] | ((prev: SupplierOrder[]) => SupplierOrder[])) => void
@@ -71,7 +69,6 @@ export interface SupplierOrdersParams {
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
 }
 
-// useCustomerOrders types
 export interface CustomerOrdersHook {
   customerOrders: CustomerOrder[]
   setCustomerOrders: (orders: CustomerOrder[] | ((prev: CustomerOrder[]) => CustomerOrder[])) => void
@@ -93,17 +90,3 @@ export interface CustomerOrdersParams {
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
 }
 
-export interface DailyActionsProps {
-  gameState: GameState
-  levelConfig: LevelConfig
-  action: GameAction
-  setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
-  supplierOrders: SupplierOrder[]
-  setSupplierOrders: (orders: SupplierOrder[] | ((prev: SupplierOrder[]) => SupplierOrder[])) => void
-  customerOrders: CustomerOrder[]
-  setCustomerOrders: (orders: CustomerOrder[] | ((prev: CustomerOrder[]) => CustomerOrder[])) => void
-  isLoading: boolean
-  gameEnded: boolean
-  handleSupplierOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void
-  handleCustomerOrderChange: (customerId: number, quantity: number) => void
-}

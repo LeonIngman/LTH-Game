@@ -33,7 +33,7 @@ export function SupplierOrderForm({
   // --- Calculate remaining capacity over the whole game, including staged orders ---
   const getRemainingCapacity = (materialType: MaterialType): number => {
     // Get current cumulative purchases for this supplier
-    const currentPurchases = gameState.cumulativePurchases[supplier.id] || {}
+    const currentPurchases = gameState.supplierDeliveries[supplier.id] || {}
     const usedCapacity = currentPurchases[materialType] || 0
     
     // Get total game capacity
