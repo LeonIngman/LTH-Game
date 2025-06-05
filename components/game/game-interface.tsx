@@ -3,13 +3,15 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import type { Supplier, Customer, LevelConfig, GameAction } from "@/types/game"
+import type { Supplier, Customer, LevelConfig, GameAction, GameState } from "@/types/game"
 import type { GameInterfaceProps } from "@/types/components"
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
 import { level3Config } from "@/lib/game/level3"
 import { useAuth } from "@/lib/auth-context"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useToast } from "@/components/ui/use-toast"
 
 // Import our UI components
 import { GameHeader } from "./ui/game-header"
@@ -37,8 +39,6 @@ import { useGameActions } from "@/hooks/use-game-actions"
 import { useGameCalculations } from "@/hooks/use-game-calculations"
 import { useSupplierOrders } from "@/hooks/use-supplier-orders"
 import { useCustomerOrders } from "@/hooks/use-customer-orders"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { useToast } from "@/components/ui/use-toast"
 
 
 export function GameInterface({ levelId }: GameInterfaceProps) {
@@ -65,10 +65,6 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
   // Ensure levelConfig has required properties
   useEffect(() => {
-    if (!levelConfig.demandModel) {
-      // Use default demand model if not defined
-      levelConfig.demandModel = (day) => ({ quantity: 10, pricePerUnit: 30, price: 30 })
-    }
 
     // Ensure suppliers array exists
     if (!levelConfig.suppliers) {
@@ -97,27 +93,11 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const [showRestaurantPopup, setShowRestaurantPopup] = useState<boolean>(false)
   const [forecastData, setForecastData] = useState<Record<string, any> | null>(null)
 
-
-  // Delivery option state
-  const [selectedDeliveryOption, setSelectedDeliveryOption] = useState<number>(() => {
-    if (levelConfig.deliveryOptions && levelConfig.deliveryOptions.length > 0) {
-      if (levelConfig.id === 0 && levelConfig.deliveryOptions.length > 0) {
-        return levelConfig.deliveryOptions[0].id
-      }
-      return levelConfig.deliveryOptions.length > 1
-        ? levelConfig.deliveryOptions[1]?.id || levelConfig.deliveryOptions[0].id
-        : levelConfig.deliveryOptions[0].id
-    }
-    return 0
-  })
-
   // Initialize game state and action
   const { gameState, setGameState, isLastDay } = useGameState(levelConfig)
   const [action, setAction] = useState<GameAction>({
     supplierOrders: [],
     production: 0,
-    salesAttempt: 0,
-    deliveryOptionId: selectedDeliveryOption,
     customerOrders: [],
   })
 
@@ -135,21 +115,13 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     }
   }, [objectivesCompleted, requiresForecasting, forecastingCompleted, gameState.day])
 
-  // Update action when delivery option changes
-  useEffect(() => {
-    setAction((prev: any) => ({
-      ...prev,
-      deliveryOptionId: selectedDeliveryOption,
-    }))
-  }, [selectedDeliveryOption])
-
   // Store forecast data in game state when it's available
   useEffect(() => {
     if (forecastData && gameState) {
-      setGameState((prev) => ({
-        ...prev,
-        forecastData: forecastData, // ← NEW: Store forecast data in game state
-      }))
+      setGameState({
+        ...gameState,
+        forecastData: forecastData,
+      })
     }
   }, [forecastData, setGameState])
 
@@ -176,7 +148,6 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     setSupplierOrders,
     setCustomerOrders,
     setAction,
-    selectedDeliveryOption,
   })
 
   const {
@@ -240,7 +211,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
     // Revenue from direct sales attempts
     const salesPrice = levelConfig.sellingPricePerUnit || 25
-    totalRevenue += action.salesAttempt * salesPrice
+    totalRevenue += salesPrice
 
     // Revenue from customer orders
     if (action.customerOrders) {
@@ -312,8 +283,6 @@ const getTodaysPlannedProduction = useCallback(() => {
       setAction({
         supplierOrders: newSupplierOrders,
         production: 0,
-        salesAttempt: 0,
-        deliveryOptionId: selectedDeliveryOption,
         customerOrders: newCustomerOrders,
       })
 
@@ -335,7 +304,6 @@ const getTodaysPlannedProduction = useCallback(() => {
     initializeCustomerOrders,
     setCustomerOrders,
     setAction,
-    selectedDeliveryOption,
     toast,
   ])
 
@@ -470,7 +438,6 @@ const getPlannedProduction = useCallback(() => {
             getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
             currentDay={gameState.day}
             supplierOrders={supplierOrders}
-            pendingOrders={gameState.pendingOrders}
             gameState={gameState}
           />
         </div>
@@ -488,7 +455,7 @@ const getPlannedProduction = useCallback(() => {
             <CardContent>
               <div className="w-full h-[500px]">
                 <SupplyChainMap
-                  pendingOrders={gameState.pendingOrders}
+                  pendingOrders={gameState.pendingSupplierOrders}
                   pendingCustomerOrders={gameState.pendingCustomerOrders}
                   gameState={gameState}
                   levelConfig={levelConfig}
@@ -505,7 +472,7 @@ const getPlannedProduction = useCallback(() => {
         <div className="md:col-span-3">
           <CurrentOrders
             levelConfig={levelConfig}
-            pendingOrders={gameState.pendingOrders}
+            pendingOrders={gameState.pendingSupplierOrders}
             pendingCustomerOrders={gameState.pendingCustomerOrders}
           />
         </div>
@@ -598,9 +565,6 @@ const getPlannedProduction = useCallback(() => {
         }}
         supplier={selectedSupplier}
         supplierOrders={supplierOrders}
-        deliveryOptions={levelConfig.deliveryOptions || []}
-        selectedDeliveryOption={selectedDeliveryOption}
-        setSelectedDeliveryOption={setSelectedDeliveryOption}
         handleSupplierOrderChange={handleSupplierOrderChange}
         isDisabled={isLoading || gameEnded}
         getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}

@@ -6,7 +6,6 @@ import type {
   PendingOrder,
   GameResult,
   Supplier,
-  DeliveryOption,
   CustomerOrder,
   Customer,
   LatenessPenalty,
@@ -24,18 +23,12 @@ import {
   getOverstockCostBreakdown
 } from "@/lib/game/inventory-management"
 import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/game/inventory-management"
-import { News_Cycle } from "next/font/google"
 
 
 /**
  * Initialize a new game state based on level configuration
  */
 export function initializeGameState(levelConfig: LevelConfig): GameState {
-  // Set default delivery option to the standard one
-  const defaultDeliveryOptionId =
-    levelConfig.deliveryOptions && levelConfig.deliveryOptions.length > 0
-      ? levelConfig.deliveryOptions[1]?.id || levelConfig.deliveryOptions[0].id
-      : 2
 
   return {
     day: 1,
@@ -48,14 +41,13 @@ export function initializeGameState(levelConfig: LevelConfig): GameState {
       potato: 0,
       finishedGoods: 0,
     },
-    pendingOrders: [],
+    pendingSupplierOrders: [],
     pendingCustomerOrders: [],
     customerDeliveries: {},
     supplierDeliveries: {},
     cumulativeProfit: 0,
     score: 0,
     history: [],
-    selectedDeliveryOption: defaultDeliveryOptionId,
     gameOver: false,
     latenessPenalties: [],
     forecastData: null,
@@ -79,9 +71,6 @@ export function validateAffordability(
 } {
   // Calculate total purchase cost
   let totalPurchaseCost = 0
-
-  // Get delivery option
-  const deliveryOption = levelConfig.deliveryOptions?.find((d) => d.id === action.deliveryOptionId)
 
   // Process orders from each supplier
   for (const order of action.supplierOrders) {
@@ -188,10 +177,10 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
 }
 
 /**
- * Process production
+ * Process production and update cash and inventory value
  */
 function processProduction(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
-  // if (action.production <= 0) return
+  if (action.production <= 0) return
 
   // Determine production amount - use forecasted production if available
   let targetProduction = action.production
@@ -236,37 +225,6 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
 }
 
 /**
- * Process sales
- */
-function processSales(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
-  // Calculate actual sales based on inventory and sales attempt
-  const actualSales = Math.min(state.inventory.finishedGoods, action.salesAttempt)
-
-  if (actualSales > 0) {
-
-    // Calculate revenue from customer orders
-    let revenue = 0
-    for (const customerOrder of action.customerOrders || []) {
-      const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
-      if (!customer) continue
-
-      // Only count immediate revenue (lead time = 0)
-      if (customer.leadTime === 0) {
-        const orderRevenue = customerOrder.quantity * customer.pricePerUnit - customer.transportCosts[customerOrder.quantity]
-
-        revenue += orderRevenue
-      }
-    }
-
-    // Remove from inventory with value
-    removeInventoryValue(state, "finishedGoods", actualSales)
-
-    // Update cash
-    state.cash = Number.parseFloat((state.cash + revenue).toFixed(2))
-  }
-}
-
-/**
  * Process a single day of gameplay based on player actions
  */
 export function processDay(state: GameState, action: GameAction, levelConfig: LevelConfig): GameState {
@@ -280,33 +238,25 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   action = {
     supplierOrders: action.supplierOrders || [],
     production: action.production || 0,
-    salesAttempt: action.salesAttempt || 0,
-    deliveryOptionId: action.deliveryOptionId || 2,
     customerOrders: action.customerOrders || [],
   }
 
-  // Update selected delivery option
-  newState.selectedDeliveryOption = action.deliveryOptionId
-
   // 1. Process pending orders (materials arriving)
-  processPendingOrders(newState)
+  processPendingSupplierOrders(newState)
 
   // 2. Process pending customer orders (revenue from previous days)
   processPendingCustomerOrders(newState)
 
-  // 3. Process new purchases and deduct costs
+  // 3. Process new purchases
   processPurchases(newState, action, levelConfig)
 
   // 4. Process production
   processProduction(newState, action, levelConfig)
 
-  // 5. Process sales
+  // 5. Process new sales
   processSales(newState, action, levelConfig)
 
-  // 6. Process customer orders
-  processCustomerOrders(newState, action, levelConfig)
-
-  // 7. Check for missed milestones and apply penalties
+  // 6. Check for missed milestones and apply penalties
   const latenessPenalties = checkMissedMilestones(newState, levelConfig)
 
   // Add penalties to state
@@ -317,32 +267,32 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
     newState.latenessPenalties = [...newState.latenessPenalties, ...latenessPenalties]
   }
 
-  // 8. Calculate holding costs
+  // 7. Calculate holding costs
   const baseHoldingCost = calculateHoldingCost(newState)
   const baseHoldingCostBreakdown = getHoldingCostBreakdown(newState)
   const overstockCost = calculateOverstockCost(newState, levelConfig)
   const overstockBreakdown = getOverstockCostBreakdown(newState, levelConfig)
 
-  // 9. Deduct holding costs
+  // 8. Deduct holding costs
   newState.cash = Number.parseFloat((newState.cash - baseHoldingCost - overstockCost).toFixed(2))
 
-  // 10. Calculate daily profit and update cumulative profit
+  // 9. Calculate daily profit and update cumulative profit
   const dailyProfit = newState.cash - initialCash
   newState.cumulativeProfit += dailyProfit
 
-  // 11. Calculate score
+  // 10. Calculate score
   newState.score = calculateScore(newState, levelConfig)
 
-  // 12. Record daily results in history
+  // 11. Record daily results in history
   recordDailyResults(newState, action, dailyProfit, levelConfig, baseHoldingCostBreakdown, overstockBreakdown, latenessPenalties)
 
-  // 13. Check if player is bankrupt (cash <= 0)
+  // 12. Check if player is bankrupt (cash <= 0)
   if (newState.cash <= 0 && !canRecoverFromZeroCash(newState)) {
     newState.gameOver = true
     console.log("GAME OVER: Player is bankrupt with cash:", newState.cash)
   }
 
-  // 14. Advance to next day (only if not game over)
+  // 13. Advance to next day (only if not game over)
   if (!newState.gameOver) {
     newState.day += 1
   }
@@ -361,11 +311,12 @@ function canRecoverFromZeroCash(state: GameState): boolean {
 /**
  * Process any pending orders that are due to arrive
  */
-function processPendingOrders(state: GameState): void {
+function processPendingSupplierOrders(state: GameState): void {
   const arrivingOrders: PendingOrder[] = []
   const remainingOrders: PendingOrder[] = []
 
-  for (const order of state.pendingOrders) {
+  const pendingOrders = state.pendingSupplierOrders ?? []
+  for (const order of state.pendingSupplierOrders) {
     if (order.daysRemaining <= 1) {
       arrivingOrders.push(order)
     } else {
@@ -386,7 +337,7 @@ function processPendingOrders(state: GameState): void {
       )
   }
 
-  state.pendingOrders = remainingOrders
+  state.pendingSupplierOrders = remainingOrders
 }
 
 /**
@@ -443,15 +394,8 @@ function getCustomer(customerId: number, levelConfig: LevelConfig): Customer | n
 }
 
 /**
- * Get delivery option by ID from level config
- */
-function getDeliveryOption(deliveryOptionId: number, levelConfig: LevelConfig): DeliveryOption | null {
-  if (!levelConfig.deliveryOptions) return null
-  return levelConfig.deliveryOptions.find((d) => d.id === deliveryOptionId) || null
-}
-
-/**
- * Get random lead time for suppliers/customers with random lead times
+ * Get random lead time for suppliers/customers with random lead times,
+ * otherwise fixed lead time
  */
 function getRandomLeadTime(entity: Supplier | Customer): number {
   if (entity.randomLeadTime && entity.leadTimeRange) {
@@ -461,24 +405,11 @@ function getRandomLeadTime(entity: Supplier | Customer): number {
   return entity.leadTime
 }
 
-// Update processPurchases function to use random lead time for Brown Sauce supplier
+/**
+ * Process purchases and keep track of cumulative purchases, update cash and inventory value,
+ * and push to pending orders
+ */
 function processPurchases(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
-  // Get selected delivery option
-  const deliveryOption = getDeliveryOption(action.deliveryOptionId, levelConfig)
-  const deliveryOptionLeadTime = deliveryOption
-    ? deliveryOption.leadTime
-    : action.deliveryOptionId === 1
-      ? 1
-      : action.deliveryOptionId === 3
-        ? 5
-        : 3
-  const deliveryName = deliveryOption
-    ? deliveryOption.name
-    : action.deliveryOptionId === 1
-      ? "Express Delivery"
-      : action.deliveryOptionId === 3
-        ? "Economy Delivery"
-        : "Standard Delivery"
 
   // Process orders from each supplier
   for (const order of action.supplierOrders) {
@@ -487,14 +418,8 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
 
     const supplierName = supplier.name
 
-    // Get actual lead time (random for Brown Sauce supplier in Level 3)
-    const supplierLeadTime = getRandomLeadTime(supplier)
-
-    // For suppliers with random lead times, use the supplier's lead time directly
-    // For regular suppliers, use the max of delivery option and supplier lead time
-    const totalLeadTime = supplier.randomLeadTime
-      ? supplierLeadTime
-      : Math.max(deliveryOptionLeadTime, supplierLeadTime)
+    // Get lead time
+    const leadTime = getRandomLeadTime(supplier)
 
     // Process each material type
     const materials = [
@@ -530,21 +455,19 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
         state.supplierDeliveries[order.supplierId][material.type] =
           (state.supplierDeliveries[order.supplierId][material.type] || 0) + material.quantity
 
-        if (totalLeadTime === 0) {
+        if (leadTime === 0) {
           // Add directly to inventory with value
           addInventoryValue(state, material.type, material.quantity, totalCost)
         } else {
           // Add to pending orders with lead time
-          state.pendingOrders.push({
+          state.pendingSupplierOrders.push({
             materialType: material.type,
             quantity: material.quantity,
-            daysRemaining: totalLeadTime,
+            daysRemaining: leadTime,
             totalCost: totalCost,
             supplierId: order.supplierId,
-            deliveryOptionId: action.deliveryOptionId,
-            deliveryName: deliveryName,
             supplierName: supplierName,
-            actualLeadTime: supplierLeadTime,
+            actualLeadTime: leadTime,
           })
         }
       }
@@ -552,8 +475,11 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
   }
 }
 
-// Update processCustomerOrders function to use random lead time for Yummy Zone
-function processCustomerOrders(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
+/**
+ * Process sales and update cash and inventory value,
+ * and push to pending orders
+ */
+function processSales(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
   // Process each customer order
   for (const customerOrder of action.customerOrders || []) {
     const customer = getCustomer(customerOrder.customerId, levelConfig)
@@ -577,11 +503,11 @@ function processCustomerOrders(state: GameState, action: GameAction, levelConfig
     const transportCost = customer.transportCosts[customerOrder.quantity] || 0
     const netRevenue = revenue - transportCost
 
-    // Get actual lead time (random for Yummy Zone in Level 3)
-    const actualLeadTime = getRandomLeadTime(customer)
+    // Get lead time
+    const leadTime = getRandomLeadTime(customer)
 
     // If lead time is 0, add revenue immediately
-    if (actualLeadTime === 0) {
+    if (leadTime === 0) {
       state.cash = Number.parseFloat((state.cash + netRevenue).toFixed(2))
 
       // Update customer delivery tracking
@@ -594,11 +520,11 @@ function processCustomerOrders(state: GameState, action: GameAction, levelConfig
       state.pendingCustomerOrders.push({
         customerId: customer.id,
         quantity: customerOrder.quantity,
-        daysRemaining: actualLeadTime,
+        daysRemaining: leadTime,
         totalRevenue: revenue,
         transportCost: transportCost,
         netRevenue: netRevenue,
-        actualLeadTime: actualLeadTime, // Store the actual lead time used
+        actualLeadTime: leadTime,
       })
     }
   }
@@ -687,7 +613,7 @@ function recordDailyResults(
   const totalProductionCost = actualProduction * levelConfig.productionCostPerUnit
 
   // Calculate sales quantity
-  const actualSales = Math.min(state.inventory.finishedGoods + actualProduction, action.salesAttempt)
+  const actualSales = state.inventory.finishedGoods + actualProduction
 
   // Calculate holding costs
   const baseHoldingCost = Object.values(holdingCosts).reduce((sum, value) => sum + value, 0);
@@ -741,7 +667,6 @@ function recordDailyResults(
     profit: dailyProfit,
     cumulativeProfit: state.cumulativeProfit,
     score: state.score,
-    deliveryOptionId: action.deliveryOptionId,
     customerDeliveries: Object.keys(customerDeliveries).length > 0 ? customerDeliveries : undefined,
     latenessPenalties: latenessPenalties.length > 0 ? latenessPenalties : undefined,
   }

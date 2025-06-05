@@ -4,9 +4,10 @@ import { Package, Truck, Clock } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import type { PendingOrdersProps } from "@/types/components"
+import { MaterialType } from "@/types/game"
 
 export function PendingOrders({ pendingOrders, pendingCustomerOrders, currentDay }: PendingOrdersProps) {
-  const formatMaterialName = (material: string): string => {
+  const formatMaterialName = (material: MaterialType): string => {
     switch (material) {
       case "patty":
         return "Burger Patties"

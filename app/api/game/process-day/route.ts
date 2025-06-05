@@ -29,6 +29,7 @@ export async function POST(request: Request) {
   try {
     const { userId, levelId, gameState, action } = await request.json()
 
+
     if (!userId || levelId === undefined || !gameState || !action) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
     }
@@ -47,11 +48,6 @@ export async function POST(request: Request) {
         gameState.inventory[prop] = 0 // Set default value instead of failing
         console.warn(`Missing inventory property ${prop}, setting to 0`)
       }
-    }
-
-    // Ensure action has delivery option ID
-    if (action.deliveryOptionId === undefined) {
-      action.deliveryOptionId = gameState.selectedDeliveryOption || 2
     }
 
     // Get the appropriate level configuration
@@ -101,7 +97,7 @@ export async function POST(request: Request) {
             order.potatoPurchase === 0,
         ) &&
         action.production === 0 &&
-        (action.salesAttempt > 0 || (action.customerOrders && action.customerOrders.length > 0))
+        (action.customerOrders && action.customerOrders.length > 0)
 
       if (isOnlySales && gameState.cash === 0) {
         // Allow the player to proceed with just sales

@@ -37,7 +37,7 @@ export function GameDialogs({
       <MapDialog
         open={showMap}
         onOpenChange={setShowMap}
-        pendingOrders={gameState.pendingOrders}
+        pendingOrders={gameState.pendingSupplierOrders}
         pendingCustomerOrders={gameState.customerDeliveries}
       />
 

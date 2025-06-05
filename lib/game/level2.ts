@@ -32,7 +32,7 @@ export const level2Config: LevelConfig = {
     {
       id: 1,
       name: "Pink Patty",
-      leadTime: 0,
+      leadTime: 1,
       capacityPerGame: { patty: 150, cheese: 500, bun: 200, potato: 0 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -51,7 +51,7 @@ export const level2Config: LevelConfig = {
     {
       id: 2,
       name: "Brown Sauce",
-      leadTime: 0,
+      leadTime: 2,
       capacityPerGame: { patty: 200, cheese: 0, bun: 200, potato: 850 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -70,7 +70,7 @@ export const level2Config: LevelConfig = {
     {
       id: 3,
       name: "Firehouse Foods",
-      leadTime: 0,
+      leadTime: 3,
       capacityPerGame: { patty: 0, cheese: 500, bun: 250, potato: 700 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -85,22 +85,6 @@ export const level2Config: LevelConfig = {
         cheese: { 50: 71, 100: 96, 150: 106 },
         potato: { 50: 106, 100: 145, 150: 145 },
       },
-    },
-  ],
-
-  // Delivery options for Level 2
-  deliveryOptions: [
-    {
-      id: 1,
-      name: "Standard Delivery",
-      leadTime: 3,
-      description: "Standard delivery (3 days)",
-    },
-    {
-      id: 2,
-      name: "Express Delivery",
-      leadTime: 1,
-      description: "Faster delivery at a higher cost (1 day)",
     },
   ],
 
@@ -125,7 +109,7 @@ export const level2Config: LevelConfig = {
       id: 2,
       name: "Toast-to-go",
       description: "A quick-service restaurant requiring regular deliveries.",
-      leadTime: 2,
+      leadTime: 3,
       totalRequirement: 160,
       deliverySchedule: [
         { day: 6, requiredAmount: 40 },
@@ -139,7 +123,7 @@ export const level2Config: LevelConfig = {
       id: 3,
       name: "StudyFuel",
       description: "A campus food service catering to university students.",
-      leadTime: 2,
+      leadTime: 1,
       totalRequirement: 140,
       deliverySchedule: [
         { day: 8, requiredAmount: 60 },

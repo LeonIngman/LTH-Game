@@ -55,7 +55,7 @@ export function CostSummary({
     )
 
     const hasCustomerOrders = action.customerOrders && action.customerOrders.some((order) => order.quantity > 0)
-    return noOrders && action.production === 0 && (action.salesAttempt > 0 || hasCustomerOrders)
+    return noOrders && action.production === 0 && (hasCustomerOrders)
   }
 
   // Determine if the Next Day button should be disabled

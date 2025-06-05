@@ -39,8 +39,6 @@ export interface PendingOrder {
   daysRemaining: number
   totalCost: number
   supplierId: number
-  deliveryOptionId: number
-  deliveryName?: string
   supplierName?: string
   actualLeadTime?: number
 }
@@ -71,26 +69,15 @@ export interface SupplierOrder {
   potatoPurchase: number
 }
 
-export interface CustomerOrderAction {
+export interface CustomerOrder {
   customerId: number
   quantity: number
 }
 
 export interface GameAction {
-  supplierOrders: Array<{
-    supplierId: number
-    pattyPurchase: number
-    cheesePurchase: number
-    bunPurchase: number
-    potatoPurchase: number
-  }>
+  supplierOrders: SupplierOrder[]
   production: number
-  salesAttempt: number
-  deliveryOptionId: number
-  customerOrders: Array<{
-    customerId: number
-    quantity: number
-  }>
+  customerOrders: CustomerOrder[]
 }
 
 export interface DailyResult {
@@ -116,7 +103,6 @@ export interface DailyResult {
   profit: number
   cumulativeProfit: number
   score: number
-  deliveryOptionId: number
   customerDeliveries?: Record<number, { quantity: number; revenue: number }>
   latenessPenalties?: LatenessPenalty[]
 }
@@ -144,22 +130,11 @@ export interface Supplier {
   materialPrices: Record<string, number>
 }
 
-export interface DeliveryOption {
-  id: number
-  name: string
-  costPerUnit?: number
-  leadTime: number
-  capacity?: number
-  daysToDeliver?: number
-  description?: string
-}
-
 export interface Customer {
   id: number
   name: string
   description?: string
   location?: { x: number; y: number }
-  demand?: (day: number) => number
   leadTime: number
   totalRequirement: number
   deliverySchedule: Array<{ day: number; requiredAmount: number }>
@@ -212,14 +187,13 @@ export interface GameState {
   cash: number
   inventory: Inventory
   inventoryValue: InventoryValue
-  pendingOrders: PendingOrder[]
+  pendingSupplierOrders: PendingOrder[]
   pendingCustomerOrders: CustomerOrder[]
   customerDeliveries: Record<number, number>
   supplierDeliveries: Record<number, Record<string, number>>
   cumulativeProfit: number
   score: number
   history: DailyResult[]
-  selectedDeliveryOption: number
   gameOver: boolean
   latenessPenalties: LatenessPenalty[]
   overstockPenalties?: Array<{ day: number; penalty: number; details: Record<string, number> }>
@@ -243,7 +217,6 @@ export interface LevelConfig {
     finishedGoods?: number
   }
   suppliers: Supplier[]
-  deliveryOptions?: DeliveryOption[]
   customers: Customer[]
   maxScore: number
   mapPositions: Record<number, MapPositions>

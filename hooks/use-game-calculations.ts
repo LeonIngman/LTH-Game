@@ -240,7 +240,7 @@ export function useGameCalculations({
 
     const totalCustomerOrders = action.customerOrders?.reduce((total, order) => total + order.quantity, 0) || 0
 
-    return noOrders && action.production === 0 && (action.salesAttempt > 0 || totalCustomerOrders > 0)
+    return noOrders && action.production === 0 && ( totalCustomerOrders > 0)
   }
 
   // Determine if the Next Day button should be disabled

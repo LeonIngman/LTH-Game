@@ -12,30 +12,28 @@ export function useGameState(levelConfig: LevelConfig): GameStateHook {
   // Initialize game state with proper error handling
   const [gameState, setGameState] = useState<GameState>(() => {
     try {
-      // Ensure levelConfig has a demandModel function
-      if (!levelConfig.demandModel) {
-        // Use default demand model instead of logging an error
-        levelConfig.demandModel = (day) => ({ quantity: 10, pricePerUnit: 30 })
-      }
 
       // Initialize the game state
       const initialState = initializeGameState(levelConfig)
 
+      //   customerDeliveries?: Record<number, { quantity: number; revenue: number }>
+      //   latenessPenalties?: LatenessPenalty[]
+      // }
+
       // Add day 0 to the game history with initial inventory values
-      if (!initialState.gameHistory || initialState.gameHistory.length === 0) {
-        initialState.gameHistory = [
+      if (!initialState.history || initialState.history.length === 0) {
+        initialState.history = [
           {
             day: 0,
-            inventory: { ...levelConfig.initialInventory },
             cash: levelConfig.initialCash,
-            totalCost: 0,
-            revenue: 0,
-            profit: 0,
-            productionAmount: 0,
-            customerOrders: [],
-            supplierOrders: [],
-            customerDeliveries: [],
-            supplierDeliveries: [],
+            inventory: { ...levelConfig.initialInventory },
+            inventoryValue: {
+              patty: 0,
+              bun: 0,
+              cheese: 0,
+              potato: 0,
+              finishedGoods: 0,
+            },
             holdingCosts: {
               patty: 0,
               bun: 0,
@@ -43,8 +41,31 @@ export function useGameState(levelConfig: LevelConfig): GameStateHook {
               potato: 0,
               finishedGoods: 0,
             },
-            productionCost: 0,
-            totalHoldingCost: 0,
+            overstockCosts: {
+              patty: 0,
+              bun: 0,
+              cheese: 0,
+              potato: 0,
+              finishedGoods: 0,
+            },
+            pattyPurchased: 0,
+            cheesePurchased: 0,
+            bunPurchased: 0,
+            potatoPurchased: 0,
+            production: 0,
+            sales: 0,
+            revenue: 0,
+            costs: {
+              purchases: 0,
+              production: 0,
+              holding: 0,
+              total: 0,
+            },
+            profit: 0,
+            cumulativeProfit: 0,
+            score: 0,
+            customerDeliveries: [],
+            latenessPenalties: [],
           },
         ]
       }
@@ -66,20 +87,19 @@ export function useGameState(levelConfig: LevelConfig): GameStateHook {
       const initialState = initializeGameState(levelConfig)
 
       // Add day 0 to the game history with initial inventory values
-      if (!initialState.gameHistory || initialState.gameHistory.length === 0) {
-        initialState.gameHistory = [
+      if (!initialState.history || initialState.history.length === 0) {
+        initialState.history = [
           {
             day: 0,
-            inventory: { ...levelConfig.initialInventory },
             cash: levelConfig.initialCash,
-            totalCost: 0,
-            revenue: 0,
-            profit: 0,
-            productionAmount: 0,
-            customerOrders: [],
-            supplierOrders: [],
-            customerDeliveries: [],
-            supplierDeliveries: [],
+            inventory: { ...levelConfig.initialInventory },
+            inventoryValue: {
+              patty: 0,
+              bun: 0,
+              cheese: 0,
+              potato: 0,
+              finishedGoods: 0,
+            },
             holdingCosts: {
               patty: 0,
               bun: 0,
@@ -87,8 +107,31 @@ export function useGameState(levelConfig: LevelConfig): GameStateHook {
               potato: 0,
               finishedGoods: 0,
             },
-            productionCost: 0,
-            totalHoldingCost: 0,
+            overstockCosts: {
+              patty: 0,
+              bun: 0,
+              cheese: 0,
+              potato: 0,
+              finishedGoods: 0,
+            },
+            pattyPurchased: 0,
+            cheesePurchased: 0,
+            bunPurchased: 0,
+            potatoPurchased: 0,
+            production: 0,
+            sales: 0,
+            revenue: 0,
+            costs: {
+              purchases: 0,
+              production: 0,
+              holding: 0,
+              total: 0,
+            },
+            profit: 0,
+            cumulativeProfit: 0,
+            score: 0,
+            customerDeliveries: [],
+            latenessPenalties: [],
           },
         ]
       }

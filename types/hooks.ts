@@ -1,4 +1,4 @@
-import type { GameState, LevelConfig, SupplierOrder, CustomerOrderAction, GameAction, PendingOrder, MaterialType } from "@/types/game"
+import type { GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, PendingOrder, MaterialType } from "@/types/game"
 
 // useGameState types
 export interface GameStateHook {
@@ -24,11 +24,10 @@ export interface GameActionsParams {
   gameState: GameState
   setGameState: (state: GameState) => void
   initializeSupplierOrders: () => SupplierOrder[]
-  initializeCustomerOrders: () => CustomerOrderAction[]
+  initializeCustomerOrders: () => CustomerOrder[]
   setSupplierOrders: (orders: SupplierOrder[]) => void
-  setCustomerOrders: (orders: CustomerOrderAction[]) => void
+  setCustomerOrders: (orders: CustomerOrder[]) => void
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
-  selectedDeliveryOption: number
 }
 
 // useGameCalculations types
@@ -74,12 +73,12 @@ export interface SupplierOrdersParams {
 
 // useCustomerOrders types
 export interface CustomerOrdersHook {
-  customerOrders: CustomerOrderAction[]
-  setCustomerOrders: (orders: CustomerOrderAction[] | ((prev: CustomerOrderAction[]) => CustomerOrderAction[])) => void
+  customerOrders: CustomerOrder[]
+  setCustomerOrders: (orders: CustomerOrder[] | ((prev: CustomerOrder[]) => CustomerOrder[])) => void
   handleCustomerOrderChange: (customerId: number, quantity: number) => void
   resetCustomerOrders: () => void
-  initializeCustomerOrders: () => CustomerOrderAction[]
-  calculateTotalCustomerOrderQuantity: (orders?: CustomerOrderAction[]) => number
+  initializeCustomerOrders: () => CustomerOrder[]
+  calculateTotalCustomerOrderQuantity: (orders?: CustomerOrder[]) => number
   getRemainingInventoryForCustomers: (customerId?: number) => number
   getCustomerProgressPercentage: (customerId: number) => number
   isDeliveryDueSoon: (customerId: number, day: number) => boolean
@@ -101,10 +100,8 @@ export interface DailyActionsProps {
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
   supplierOrders: SupplierOrder[]
   setSupplierOrders: (orders: SupplierOrder[] | ((prev: SupplierOrder[]) => SupplierOrder[])) => void
-  customerOrders: CustomerOrderAction[]
-  setCustomerOrders: (orders: CustomerOrderAction[] | ((prev: CustomerOrderAction[]) => CustomerOrderAction[])) => void
-  selectedDeliveryOption: number
-  setSelectedDeliveryOption: (option: number) => void
+  customerOrders: CustomerOrder[]
+  setCustomerOrders: (orders: CustomerOrder[] | ((prev: CustomerOrder[]) => CustomerOrder[])) => void
   isLoading: boolean
   gameEnded: boolean
   handleSupplierOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void

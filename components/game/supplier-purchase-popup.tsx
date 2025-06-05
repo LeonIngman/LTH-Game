@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { CheckCircle } from "lucide-react"
-import type { Supplier, SupplierOrder } from "@/types/game"
+import type { MaterialType, Supplier, SupplierOrder } from "@/types/game"
 import type { SupplierPurchasePopupProps } from "@/types/components"
 import { SupplierOrderForm } from "./ui/supplier-order-form"
 
@@ -16,9 +16,6 @@ export function SupplierPurchasePopup({
   onClose,
   supplier,
   supplierOrders,
-  deliveryOptions,
-  selectedDeliveryOption,
-  setSelectedDeliveryOption,
   handleSupplierOrderChange,
   isDisabled,
   getMaterialPriceForSupplier,
@@ -59,14 +56,14 @@ export function SupplierPurchasePopup({
     return (supplier.capacityPerGame && supplier.capacityPerGame[material]) ?? 0
   }
 
-  const getOrderedToday = (material: string) => {
+  const getOrderedToday = (material: MaterialType) => {
     return supplierOrders
       .filter((order) => order.supplierId === supplier.id)
       .reduce((sum, order) => sum + (order[`${material}Purchase`] || 0), 0)
   }
 
   // Remaining = capacityPerGame - deliveredSoFar - stagedOrder
-  const getRemainingCapacity = (material: string) => {
+  const getRemainingCapacity = (material: MaterialType) => {
     const deliveredSoFar =
       (gameState?.supplierDeliveries?.[supplier.id]?.[material]) || 0
     const stagedOrder = getOrderedToday(material)
@@ -114,8 +111,7 @@ export function SupplierPurchasePopup({
     MATERIALS.some((mat) => pendingOrder[`${mat}Purchase`] > 0)
 
   // --- Delivery Option ---
-  const deliveryOption = deliveryOptions.find((d) => d.id === selectedDeliveryOption)
-  const totalLeadTime = (deliveryOption?.daysToDeliver || 0) + (supplier.leadTime || 0)
+  const totalLeadTime = supplier.leadTime || 0
   const isImmediateDelivery = totalLeadTime === 0
 
   // --- Render ---
@@ -148,7 +144,7 @@ export function SupplierPurchasePopup({
             orderQuantities={getOrderQuantitiesForSupplier(supplier.id)}
             onOrderChange={handleLocalOrderChange}
             getMaterialPriceForSupplier={getMaterialPriceForSupplier}
-            getMaterialCapacity={(_supplier, material) => getRemainingCapacity(material)}
+            getMaterialCapacity={(_supplier, material) => getRemainingCapacity(material as MaterialType)}
             disabled={isDisabled}
             gameState={gameState}
           />

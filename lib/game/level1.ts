@@ -32,7 +32,7 @@ export const level1Config: LevelConfig = {
     {
       id: 1,
       name: "Pink Patty",
-      leadTime: 0,
+      leadTime: 1,
       capacityPerGame: { patty: 150, cheese: 500, bun: 200, potato: 0 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -51,7 +51,7 @@ export const level1Config: LevelConfig = {
     {
       id: 2,
       name: "Brown Sauce",
-      leadTime: 0,
+      leadTime: 2,
       capacityPerGame: { patty: 200, cheese: 0, bun: 200, potato: 850 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -70,7 +70,7 @@ export const level1Config: LevelConfig = {
     {
       id: 3,
       name: "Firehouse Foods",
-      leadTime: 0,
+      leadTime: 3,
       capacityPerGame: { patty: 0, cheese: 500, bun: 250, potato: 700 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -88,23 +88,13 @@ export const level1Config: LevelConfig = {
     },
   ],
 
-  // Single delivery option with constant 2-day lead time
-  deliveryOptions: [
-    {
-      id: 1,
-      name: "Standard Delivery",
-      leadTime: 2,
-      description: "Standard delivery (2 days)",
-    },
-  ],
-
   // Customers for Level 1 - with dynamically generated delivery schedules
   customers: [
     {
       id: 1,
       name: "Yummy Zone",
       description: "A local restaurant chain with specific delivery requirements.",
-      leadTime: 1,
+      leadTime: 2,
       totalRequirement: 80,
       deliverySchedule: [
         { day: 3, requiredAmount: 20 },
@@ -118,7 +108,7 @@ export const level1Config: LevelConfig = {
       id: 2,
       name: "Toast-to-go",
       description: "A quick-service restaurant requiring regular deliveries.",
-      leadTime: 1,
+      leadTime: 3,
       totalRequirement: 120,
       deliverySchedule: [
         { day: 6, requiredAmount: 40 },

@@ -16,7 +16,6 @@ export function QuickReference({
   getMaterialPriceForSupplier,
   currentDay,
   supplierOrders,
-  pendingOrders,
   gameState,
   onEnablePlanningMode,
   planningMode = false,

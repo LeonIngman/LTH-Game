@@ -88,16 +88,6 @@ export const level0Config: LevelConfig = {
     },
   ],
 
-  // Delivery options for Level 0 - only instant delivery
-  deliveryOptions: [
-    {
-      id: 1,
-      name: "Instant Delivery",
-      leadTime: 0, // No lead time - immediate delivery
-      description: "Immediate delivery with no waiting time",
-    },
-  ],
-
   // Customers for Level 0 - with custom delivery schedules
   customers: [
     {

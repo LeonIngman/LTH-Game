@@ -1,4 +1,5 @@
-import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrderAction, GameAction, PendingOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
+import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, PendingOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
+import { Dispatch, SetStateAction } from "react"
 import { Action } from "sonner"
 
 export interface CurrentOrdersProps {
@@ -60,14 +61,20 @@ export interface GameDialogsProps {
 
 export interface CustomerOrderFormProps {
   customer: Customer
-  order: CustomerOrderAction
+  totalDelivered: number
   customerProgress: number
-  isDeliveryDueSoon: (customerId: number, day: number) => boolean
-  isDeliveryOverdue: (customerId: number, day: number) => boolean
-  onOrderChange: (customerId: number, quantity: number) => void
-  disabled: boolean
-  deliveredAmount: number
-  finishedGoodsInventory: number
+  scheduleFollowed: boolean
+  activeDeliverySchedule: {
+    day: number,
+    requiredAmount: number
+  }[]
+  currentGameDay: number
+  formatCurrency: (amount: number) => string
+  pendingQuantity: number
+  setPendingQuantity: Dispatch<SetStateAction<number>>
+  setHasConfirmedOrder: Dispatch<SetStateAction<boolean>>
+  isDisabled: boolean
+  maxSales: number
 }
 
 export interface DailyOrderSummaryProps {
@@ -76,7 +83,7 @@ export interface DailyOrderSummaryProps {
   getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number
   production?: number
   productionCostPerUnit?: number
-  customerOrders?: CustomerOrderAction[]
+  customerOrders?: CustomerOrder[]
   customers?: Customer[]
   levelConfig?: LevelConfig
   onResetAllOrders?: () => void
@@ -94,8 +101,7 @@ export interface QuickReferenceProps {
   getMaterialPriceForSupplier: (supplierId: number, material: string) => number
   currentDay: number
   supplierOrders: SupplierOrder[]
-  pendingOrders: any[]
-  gameState: any
+  gameState: GameState
   onEnablePlanningMode?: () => void
   planningMode?: boolean
 }
@@ -217,7 +223,7 @@ export interface RestaurantSalesPopupProps {
   isOpen: boolean
   onClose: () => void
   customer: Customer | null
-  customerOrders: CustomerOrderAction[]
+  customerOrders: CustomerOrder[]
   handleCustomerOrderChange: (customerId: number, quantity: number) => void
   isDisabled: boolean
   gameState: GameState
@@ -230,9 +236,6 @@ export interface SupplierPurchasePopupProps {
   onClose: () => void
   supplier: Supplier | null
   supplierOrders: SupplierOrder[]
-  deliveryOptions: { id: number; name: string; costMultiplier: number; daysToDeliver: number }[]
-  selectedDeliveryOption: number
-  setSelectedDeliveryOption: (id: number) => void
   handleSupplierOrderChange: (supplierId: number, field: keyof SupplierOrder, value: number) => void
   isDisabled: boolean
   getMaterialPriceForSupplier: (supplierId: number, materialType: string) => number

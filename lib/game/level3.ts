@@ -31,7 +31,7 @@ export const level3Config: LevelConfig = {
     {
       id: 1,
       name: "Pink Patty",
-      leadTime: 0,
+      leadTime: 1,
       capacityPerGame: { patty: 150, cheese: 500, bun: 200, potato: 0 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -50,7 +50,7 @@ export const level3Config: LevelConfig = {
     {
       id: 2,
       name: "Brown Sauce",
-      leadTime: 0,
+      leadTime: 2,
       capacityPerGame: { patty: 200, cheese: 0, bun: 200, potato: 850 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -65,11 +65,13 @@ export const level3Config: LevelConfig = {
         cheese: { 50: 68, 100: 92, 200: 121 },
         potato: { 50: 102, 100: 139, 200: 139 },
       },
+      randomLeadTime: true,
+      leadTimeRange: [1, 2, 3]
     },
     {
       id: 3,
       name: "Firehouse Foods",
-      leadTime: 0,
+      leadTime: 3,
       capacityPerGame: { patty: 0, cheese: 500, bun: 250, potato: 700 },
       materials: ["patty", "cheese", "bun", "potato"],
       materialPrices: {
@@ -87,21 +89,12 @@ export const level3Config: LevelConfig = {
     },
   ],
 
-  deliveryOptions: [
-    {
-      id: 1,
-      name: "Standard Delivery",
-      leadTime: 2,
-      description: "Standard delivery (2 days)",
-    },
-  ],
-
   customers: [
     {
       id: 1,
       name: "Yummy Zone",
       description: "A local restaurant chain with specific delivery requirements.",
-      leadTime: 1,
+      leadTime: 2,
       totalRequirement: 80,
       deliverySchedule: [
         { day: 3, requiredAmount: 20 },
@@ -111,12 +104,14 @@ export const level3Config: LevelConfig = {
       pricePerUnit: 49,
       transportCosts: { 20: 134, 40: 179, 100: 204 },
       allowedShipmentSizes: [20, 40, 100],
+      randomLeadTime: true,
+      leadTimeRange: [1, 2, 3],
     },
     {
       id: 2,
       name: "Toast-to-go",
       description: "A quick-service restaurant requiring regular deliveries.",
-      leadTime: 1,
+      leadTime: 3,
       totalRequirement: 120,
       deliverySchedule: [
         { day: 6, requiredAmount: 40 },

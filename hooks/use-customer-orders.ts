@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useToast } from "@/components/ui/use-toast"
-import type { CustomerOrderAction } from "@/types/game"
+import type { CustomerOrder } from "@/types/game"
 import type { CustomerOrdersHook, CustomerOrdersParams } from "../types/hooks"
 
 /**
@@ -17,7 +17,7 @@ export function useCustomerOrders({
   const { toast } = useToast()
 
   // Initialize customer orders
-  const initializeCustomerOrders = useCallback((): CustomerOrderAction[] => {
+  const initializeCustomerOrders = useCallback((): CustomerOrder[] => {
     return (levelConfig.customers || []).map((customer) => ({
       customerId: customer.id,
       quantity: 0,
@@ -25,7 +25,7 @@ export function useCustomerOrders({
   }, [levelConfig.customers])
 
   // State for customer orders
-  const [customerOrders, setCustomerOrders] = useState<CustomerOrderAction[]>(initializeCustomerOrders)
+  const [customerOrders, setCustomerOrders] = useState<CustomerOrder[]>(initializeCustomerOrders)
 
   // Update action when customer orders change
   useEffect(() => {

@@ -19,7 +19,6 @@ export function useGameActions({
   setSupplierOrders,
   setCustomerOrders,
   setAction,
-  selectedDeliveryOption,
 }: GameActionsParams): GameActionsHook {
   const { toast } = useToast()
   const router = useRouter()
@@ -56,8 +55,6 @@ export function useGameActions({
       setAction({
         supplierOrders: newSupplierOrders,
         production: 0,
-        salesAttempt: 0,
-        deliveryOptionId: selectedDeliveryOption,
         customerOrders: newCustomerOrders,
       })
     } catch (error) {
@@ -70,7 +67,6 @@ export function useGameActions({
     setSupplierOrders,
     setCustomerOrders,
     setAction,
-    selectedDeliveryOption,
     handleApiError,
   ])
 
