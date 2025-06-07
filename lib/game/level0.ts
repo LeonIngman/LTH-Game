@@ -149,18 +149,16 @@ export const level0Config: LevelConfig = {
   },
 
   mapPositions: {
-    0: {
       mainFactory: { x: 515, y: 432 },
-      suppliers: {
-        1: { x: 61, y: 470, name: "Pink Patty" },
-        2: { x: 349, y: 259, name: "Brown Sauce" },
-        3: { x: 283, y: 635, name: "Firehouse Foods" },
-      },
-      restaurants: [
-        { x: 657, y: 625, name: "Yummy Zone", customerId: 1 },
-        { x: 760, y: 175, name: "Toast-to-go", customerId: 2 },
-        { x: 761, y: 417, name: "StudyFuel", customerId: 3 },
+      suppliers: [
+        { x: 61, y: 470, name: "Pink Patty", id: 1 },
+        { x: 349, y: 259, name: "Brown Sauce", id: 2 },
+        { x: 283, y: 635, name: "Firehouse Foods", id: 3 },
       ],
-    },
+      customers: [
+        { x: 657, y: 625, name: "Yummy Zone", id: 1 },
+        { x: 760, y: 175, name: "Toast-to-go", id: 2 },
+        { x: 761, y: 417, name: "StudyFuel", id: 3 },
+      ],
   },
 }

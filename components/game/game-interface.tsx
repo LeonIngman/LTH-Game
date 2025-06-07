@@ -25,7 +25,7 @@ import { CashflowChart } from "./cashflow-chart"
 import { SupplyChainMap } from "./supply-chain-map"
 import { SupplierPurchasePopup } from "./supplier-purchase-popup"
 import { ProductionPopup } from "./production-popup"
-import { RestaurantSalesPopup } from "./restaurant-sales-popup"
+import { CustomerSalesPopup } from "./customer-sales-popup"
 import { ObjectivesDialog } from "./objectives-dialog"
 import { GameOverDialog } from "./game-over-dialog"
 import { ForecastingDialog } from "./forecasting-dialog"
@@ -89,8 +89,8 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null)
   const [showSupplierPopup, setShowSupplierPopup] = useState<boolean>(false)
   const [showProductionPopup, setShowProductionPopup] = useState<boolean>(false)
-  const [selectedRestaurant, setSelectedRestaurant] = useState<Customer | null>(null)
-  const [showRestaurantPopup, setShowRestaurantPopup] = useState<boolean>(false)
+  const [selectedRestaurant, setSelectedCustomer] = useState<Customer | null>(null)
+  const [showRestaurantPopup, setShowCustomerPopup] = useState<boolean>(false)
   const [forecastData, setForecastData] = useState<Record<string, any> | null>(null)
 
   // Initialize game state and action
@@ -334,12 +334,12 @@ const getTodaysPlannedProduction = useCallback(() => {
     setShowProductionPopup(true)
   }, [])
 
-  const handleRestaurantClick = useCallback(
-    (restaurantIndex: number) => {
-      if (levelConfig.customers && levelConfig.customers.length > restaurantIndex) {
-        const customer = levelConfig.customers[restaurantIndex]
-        setSelectedRestaurant(customer)
-        setShowRestaurantPopup(true)
+  const handleCustomerClick = useCallback(
+    (customerId: number) => {
+      const customer = levelConfig.customers?.find((c) => c.id === customerId)
+      if (customer) {
+        setSelectedCustomer(customer)
+        setShowCustomerPopup(true)
       }
     },
     [levelConfig.customers],
@@ -462,7 +462,7 @@ const getPlannedProduction = useCallback(() => {
                   level={levelConfig.id}
                   onSupplierClick={handleSupplierClick}
                   onFactoryClick={handleFactoryClick}
-                  onRestaurantClick={handleRestaurantClick}
+                  onCustomerClick={handleCustomerClick}
                 />
               </div>
             </CardContent>
@@ -592,11 +592,11 @@ const getPlannedProduction = useCallback(() => {
         requiresForecasting={requiresForecasting}
       />
 
-      <RestaurantSalesPopup
+      <CustomerSalesPopup
         isOpen={showRestaurantPopup}
         onClose={() => {
-          setShowRestaurantPopup(false)
-          setSelectedRestaurant(null)
+          setShowCustomerPopup(false)
+          setSelectedCustomer(null)
         }}
         customer={selectedRestaurant}
         customerOrders={customerOrders}

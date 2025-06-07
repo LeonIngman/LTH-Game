@@ -17,7 +17,7 @@ export const MapDialog: React.FC<MapDialogProps> = ({
   levelConfig,
   onSupplierClick,
   onFactoryClick,
-  onRestaurantClick,
+  onCustomerClick: onRestaurantClick,
   level,
 }) => {
   return (
@@ -47,7 +47,7 @@ export const MapDialog: React.FC<MapDialogProps> = ({
           levelConfig={levelConfig}
           onSupplierClick={onSupplierClick}
           onFactoryClick={onFactoryClick}
-          onRestaurantClick={onRestaurantClick}
+          onCustomerClick={onRestaurantClick}
           level={level}
         />
       </DialogContent>

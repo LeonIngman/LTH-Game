@@ -164,6 +164,5 @@ export const level2Config: LevelConfig = {
         { x: 795, y: 125, name: "Toast-to-go", customerId: 2 },
         { x: 55, y: 610, name: "StudyFuel", customerId: 3 },
       ],
-    },
   },
 }

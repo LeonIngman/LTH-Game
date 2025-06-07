@@ -7,7 +7,7 @@ import type { MaterialType } from "../types/game"
 import { calculateHoldingCost, calculateOverstockCost } from "@/lib/game/inventory-management"
 
 /**
- * Hook for calculating game-related values like costs, production limits, etc.
+ * Hook for calculating inventory-related values
  */
 export function useGameCalculations({
   gameState,
@@ -51,7 +51,7 @@ export function useGameCalculations({
       if (!supplier || typeof supplier.capacityPerGame !== "object") continue
 
       // Initialize if not exists
-      const currentPurchases = gameState.cumulativePurchases[supplier.id] || {
+      const currentPurchases = gameState.supplierDeliveries[supplier.id] || {
         patty: 0, cheese: 0, bun: 0, potato: 0
       }
 

@@ -33,7 +33,7 @@ export interface InventoryOverstockCosts {
   finishedGoods: number
 }
 
-export interface PendingOrder {
+export interface MaterialOrder {
   materialType: MaterialType
   quantity: number
   daysRemaining: number
@@ -149,13 +149,13 @@ export interface MapPosition {
   x: number
   y: number
   name?: string
-  customerId?: number
+  id?: number
 }
 
 export interface MapPositions {
   mainFactory: MapPosition
-  suppliers: Record<number, MapPosition>
-  restaurants: MapPosition[]
+  suppliers: MapPosition[]
+  customers: MapPosition[]
 }
 
 interface OverstockRule {
@@ -187,7 +187,7 @@ export interface GameState {
   cash: number
   inventory: Inventory
   inventoryValue: InventoryValue
-  pendingSupplierOrders: PendingOrder[]
+  pendingSupplierOrders: MaterialOrder[]
   pendingCustomerOrders: CustomerOrder[]
   customerDeliveries: Record<number, number>
   supplierDeliveries: Record<number, Record<string, number>>
@@ -198,7 +198,6 @@ export interface GameState {
   latenessPenalties: LatenessPenalty[]
   overstockPenalties?: Array<{ day: number; penalty: number; details: Record<string, number> }>
   forecastData?: Record<string, any> | null
-  cumulativePurchases: Record<number, Record<MaterialType, number>> // supplierId -> materialType -> totalPurchased
 }
 
 export interface LevelConfig {
@@ -219,7 +218,7 @@ export interface LevelConfig {
   suppliers: Supplier[]
   customers: Customer[]
   maxScore: number
-  mapPositions: Record<number, MapPositions>
+  mapPositions: MapPositions
   overstock: OverstockConfig
   safetystock: SafetystockConfig
 }

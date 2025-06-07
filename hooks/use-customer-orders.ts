@@ -21,6 +21,10 @@ export function useCustomerOrders({
     return (levelConfig.customers || []).map((customer) => ({
       customerId: customer.id,
       quantity: 0,
+      daysRemaining: 0,
+      totalRevenue: 0,
+      transportCost: 0,
+      netRevenue: 0,
     }))
   }, [levelConfig.customers])
 

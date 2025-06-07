@@ -3,7 +3,7 @@ import type {
   GameAction,
   LevelConfig,
   DailyResult,
-  PendingOrder,
+  MaterialOrder,
   GameResult,
   Supplier,
   CustomerOrder,
@@ -51,7 +51,6 @@ export function initializeGameState(levelConfig: LevelConfig): GameState {
     gameOver: false,
     latenessPenalties: [],
     forecastData: null,
-    cumulativePurchases: {}
   }
 }
 
@@ -312,8 +311,8 @@ function canRecoverFromZeroCash(state: GameState): boolean {
  * Process any pending orders that are due to arrive
  */
 function processPendingSupplierOrders(state: GameState): void {
-  const arrivingOrders: PendingOrder[] = []
-  const remainingOrders: PendingOrder[] = []
+  const arrivingOrders: MaterialOrder[] = []
+  const remainingOrders: MaterialOrder[] = []
 
   const pendingOrders = state.pendingSupplierOrders ?? []
   for (const order of state.pendingSupplierOrders) {
@@ -432,15 +431,6 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
     for (const material of materials) {
       if (material.quantity > 0) {
         // Calculate unit cost including transport
-      if (!state.cumulativePurchases[supplier.id]) {
-        state.cumulativePurchases[supplier.id] = {
-          patty: 0,
-          cheese: 0,
-          bun: 0,
-          potato: 0
-        };
-      }
-        state.cumulativePurchases[supplier.id][material.type] += material.quantity
         const unitCost = calculateUnitCost(material.quantity, material.type, supplier)
         const totalCost = material.quantity * unitCost
 

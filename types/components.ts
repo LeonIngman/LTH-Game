@@ -1,10 +1,10 @@
-import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, PendingOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
+import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, MaterialOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
 import { Dispatch, SetStateAction } from "react"
 import { Action } from "sonner"
 
 export interface CurrentOrdersProps {
   levelConfig: LevelConfig
-  pendingOrders: PendingOrder[]
+  pendingOrders: MaterialOrder[]
   pendingCustomerOrders?: CustomerOrder[]
   onShowMap?: () => void
 }
@@ -91,7 +91,7 @@ export interface DailyOrderSummaryProps {
 }
 
 export interface PendingOrdersProps {
-  pendingOrders: PendingOrder[]
+  pendingOrders: MaterialOrder[]
   pendingCustomerOrders: CustomerOrder[]
   currentDay: number
 }
@@ -178,7 +178,7 @@ export interface InventoryChartProps {
 export interface MapDialogProps {
   open: boolean
   onClose: () => void
-  pendingOrders: PendingOrder[]
+  pendingOrders: MaterialOrder[]
   pendingCustomerOrders: CustomerOrder[]
   gameState: GameState
   suppliers: Supplier[]
@@ -186,7 +186,7 @@ export interface MapDialogProps {
   levelConfig: LevelConfig | undefined
   onSupplierClick: (supplier: Supplier) => void
   onFactoryClick: () => void
-  onRestaurantClick: () => void
+  onCustomerClick: () => void
   level?: number
 }
 
@@ -219,7 +219,7 @@ export interface ReplayWarningDialogProps {
   existingProfit: number
 }
 
-export interface RestaurantSalesPopupProps {
+export interface CostumerSalesPopupProps {
   isOpen: boolean
   onClose: () => void
   customer: Customer | null
@@ -247,7 +247,7 @@ export interface SupplierPurchasePopupProps {
 }
 
 export interface SupplyChainMapProps {
-  pendingOrders: PendingOrder[]
+  pendingOrders: MaterialOrder[]
   pendingCustomerOrders?: CustomerOrder[]
   onClose?: () => void
   gameState?: GameState
@@ -256,7 +256,7 @@ export interface SupplyChainMapProps {
   levelConfig?: LevelConfig
   onSupplierClick?: (supplierId: number) => void
   onFactoryClick?: () => void
-  onRestaurantClick?: (restaurantIndex: number) => void
+  onCustomerClick?: (customerId: number) => void
   level?: number // Add level prop
 }
 
