@@ -42,7 +42,7 @@ export const level2Config: LevelConfig = {
         potato: 0,
       },
       shipmentPrices: {
-        patty: { 50: 116, 100: 134},
+        patty: { 50: 116, 100: 134 },
         bun: { 50: 89, 100: 98, 200: 134 },
         cheese: { 50: 65, 100: 89, 200: 116 },
         potato: { 50: 98, 100: 134, 200: 134 },
@@ -144,14 +144,14 @@ export const level2Config: LevelConfig = {
     finishedGoods: { threshold: 50, penaltyPerUnit: 3 },
   },
   safetystock: {
-    patty: { threshold: 0},
-    bun: { threshold: 0},
-    cheese: { threshold: 0},
-    potato: { threshold: 0},
+    patty: { threshold: 0 },
+    bun: { threshold: 0 },
+    cheese: { threshold: 0 },
+    potato: { threshold: 0 },
   },
 
   // Map positions for Level 2
-    mapPositions: {
+  mapPositions: {
     1: {
       mainFactory: { x: 210, y: 495 },
       suppliers: {
@@ -164,5 +164,6 @@ export const level2Config: LevelConfig = {
         { x: 795, y: 125, name: "Toast-to-go", customerId: 2 },
         { x: 55, y: 610, name: "StudyFuel", customerId: 3 },
       ],
-  },
+    },
+  }
 }
