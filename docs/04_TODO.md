@@ -4,9 +4,36 @@
 
 ### Core Features
 
-- **CF1**: Overstock costs
-- **CF2**: Integrate player progress with the database so that it is stored for post-round analysis  
-  _(store only one game session per level — do this last)_
+- **CF1**: Oversto### B2. Teacher Performance Page Parameter Access
+
+- **URL:** `http://localhost:3000/dashboard/teacher/performance/0/user_t5u1hiin`
+- **File:** `app/dashboard/teacher/performance/[levelId]/[studentId]/page.tsx` (30:42) @ `TeacherStudentPerformancePage`
+- **Error:** _(Same as Bug #1)_
+- **Description:** When a teacher attempts to view a student's progress, this error appears, and the web application crashes.
+- **Blocks:**
+  - Potentially affects any teacher dashboard features relying on viewing student performance
+  - Could impact test planning for quiz tracking and performance metrics
+
+---
+
+### B3. Supplier Ingredient Depletion Causes Crash
+
+- **File:** `components/game/ui/supplier-order-form.tsx` (177:11) @ `eval`
+- **Error:**
+  > Each child in a list should have a unique "key" prop.
+  > Check the render method of div. It was passed a child from SupplierOrderForm. See https://react.dev/link/warning-keys for more information.
+- **Description:** When one of the suppliers runs out of an ingredient, the web application crashes instead of showing the user feedback (e.g., "Ingredient unavailable"). The crash is caused by missing unique key props in the list rendering inside SupplierOrderForm.
+- **Expected Behavior:**
+  - Show a clear and accessible feedback message when a supplier has no stock for an ingredient
+  - Ensure all children in the rendered list have unique key props to prevent React rendering errors
+- **Test Requirements:**
+  - Simulate a supplier running out of a specific ingredient
+  - Verify that the UI displays the "ingredient unavailable" message without crashing
+  - Confirm no console errors regarding missing key props occur during render
+
+---**CF2**: Integrate player progress with the database so that it is stored for post-round analysis  
+ _(store only one game session per level — do this last)_
+
 - **CF3**: Fix tutorial _(last for UI work)_
 - **CF4**: Implement safety stock (visual only)
 - **CF5**: Centralize more values (e.g., level names appear in multiple places)
