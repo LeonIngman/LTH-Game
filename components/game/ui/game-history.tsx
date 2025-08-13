@@ -112,11 +112,10 @@ export function GameHistory({ history }: GameHistoryProps) {
           <Button
             variant="ghost"
             size="sm"
-            className={`h-4 w-4 p-0 hover:bg-transparent ${
-              isSortActive(column, 'asc') 
-                ? 'text-primary' 
+            className={`h-4 w-4 p-0 hover:bg-transparent ${isSortActive(column, 'asc')
+                ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
             onClick={() => handleSort(column, 'asc')}
             aria-label={`Sort ${label} ascending`}
           >
@@ -128,11 +127,10 @@ export function GameHistory({ history }: GameHistoryProps) {
           <Button
             variant="ghost"
             size="sm"
-            className={`h-4 w-4 p-0 hover:bg-transparent ${
-              isSortActive(column, 'desc') 
-                ? 'text-primary' 
+            className={`h-4 w-4 p-0 hover:bg-transparent ${isSortActive(column, 'desc')
+                ? 'text-primary'
                 : 'text-muted-foreground hover:text-foreground'
-            }`}
+              }`}
             onClick={() => handleSort(column, 'desc')}
             aria-label={`Sort ${label} descending`}
           >

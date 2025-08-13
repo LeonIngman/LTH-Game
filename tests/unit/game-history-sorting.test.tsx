@@ -176,7 +176,7 @@ describe('GameHistory Sortable Columns - UX3', () => {
             // Check that rows are sorted by day (1, 2, 3)
             const tableCells = screen.getAllByTestId('table-cell')
             const dayCells = tableCells.filter((_, index) => index % 7 === 0) // First cell of each row
-            
+
             expect(dayCells[0]).toHaveTextContent('1')
             expect(dayCells[1]).toHaveTextContent('2')
             expect(dayCells[2]).toHaveTextContent('3')
@@ -196,7 +196,7 @@ describe('GameHistory Sortable Columns - UX3', () => {
             // Check that rows are sorted by day in reverse (3, 2, 1)
             const tableCells = screen.getAllByTestId('table-cell')
             const dayCells = tableCells.filter((_, index) => index % 7 === 0) // First cell of each row
-            
+
             expect(dayCells[0]).toHaveTextContent('3')
             expect(dayCells[1]).toHaveTextContent('2')
             expect(dayCells[2]).toHaveTextContent('1')
@@ -213,7 +213,7 @@ describe('GameHistory Sortable Columns - UX3', () => {
             // Check that rows are sorted by cash value (800.25, 1000.50, 1200.00)
             const tableCells = screen.getAllByTestId('table-cell')
             const cashCells = tableCells.filter((_, index) => index % 7 === 1) // Second cell of each row
-            
+
             expect(cashCells[0]).toHaveTextContent('800.25 kr')
             expect(cashCells[1]).toHaveTextContent('1000.50 kr')
             expect(cashCells[2]).toHaveTextContent('1200.00 kr')
@@ -230,7 +230,7 @@ describe('GameHistory Sortable Columns - UX3', () => {
             // Check that rows are sorted by score in descending order (92, 85, 78)
             const tableCells = screen.getAllByTestId('table-cell')
             const scoreCells = tableCells.filter((_, index) => index % 7 === 6) // Last cell of each row
-            
+
             expect(scoreCells[0]).toHaveTextContent('92')
             expect(scoreCells[1]).toHaveTextContent('85')
             expect(scoreCells[2]).toHaveTextContent('78')
@@ -247,12 +247,12 @@ describe('GameHistory Sortable Columns - UX3', () => {
             // Check that N/A values are at the bottom
             const tableCells = screen.getAllByTestId('table-cell')
             const cashCells = tableCells.filter((_, index) => index % 7 === 1) // Second cell of each row
-            
+
             // First three should be numeric values sorted
             expect(cashCells[0]).toHaveTextContent('800.25 kr')
             expect(cashCells[1]).toHaveTextContent('1000.50 kr')
             expect(cashCells[2]).toHaveTextContent('1200.00 kr')
-            
+
             // Last should be N/A
             expect(cashCells[3]).toHaveTextContent('N/A')
         })
@@ -318,13 +318,13 @@ describe('GameHistory Sortable Columns - UX3', () => {
             render(<GameHistory history={mockHistoryData} />)
 
             const dayAscButton = screen.getByLabelText('Sort Day ascending')
-            
+
             // Focus and activate with keyboard
             dayAscButton.focus()
             expect(dayAscButton).toHaveFocus()
-            
+
             await user.keyboard('{Enter}')
-            
+
             // Check that sorting was applied
             expect(screen.getByTestId('active-sort-indicator')).toBeInTheDocument()
         })
