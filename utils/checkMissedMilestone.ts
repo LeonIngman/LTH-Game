@@ -1,3 +1,5 @@
+// Utility function to check if a delivery milestone has been missed in the supply chain game.
+// Returns true if delivered amount is less than required by the last passed milestone.
 export function checkMissedMilestone(
   schedule: { day: number; requiredAmount: number }[] | undefined,
   delivered: number,
