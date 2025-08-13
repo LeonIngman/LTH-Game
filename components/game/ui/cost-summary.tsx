@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { CostSummaryProps } from "@/types/components"
-import { calculateHoldingCosts } from "@/lib/game/inventory-management"
+import { calculateHoldingCost } from "@/lib/game/inventory-management"
 
 export function CostSummary({
   gameState,
@@ -81,7 +81,7 @@ export function CostSummary({
   const annualRate = 0.25 * 100
 
   return (
-    <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary">
+    <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary" data-testid="cost-summary">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Purchase Cost</p>
@@ -112,7 +112,7 @@ export function CostSummary({
         </div>
       </div>
       <div className="mt-4 border-t pt-4 flex justify-between items-center">
-        <div className="grid grid-cols-3 gap-8 flex-1">
+        <div className="grid grid-cols-3 gap-4 flex-1">
           <div>
             <p className="text-sm font-medium">Total Cost</p>
             <p className="text-xl font-bold text-red-600">{totalCost.toFixed(2)} kr</p>
