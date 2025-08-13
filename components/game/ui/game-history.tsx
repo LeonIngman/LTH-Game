@@ -2,6 +2,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import type { GameHistoryProps } from "@/types/components"
 
+/**
+ * Safely formats a numeric value to a string with 2 decimal places
+ * Returns "N/A" if the value is null, undefined, or not a number
+ */
+function safeFormatCurrency(value: number | null | undefined): string {
+  if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+    return "N/A"
+  }
+  return `${value.toFixed(2)} kr`
+}
+
+/**
+ * Safely formats a numeric value to a string without currency
+ * Returns "N/A" if the value is null, undefined, or not a number
+ */
+function safeFormatNumber(value: number | null | undefined): string {
+  if (value === null || value === undefined || typeof value !== 'number' || isNaN(value)) {
+    return "N/A"
+  }
+  return value.toString()
+}
+
 export function GameHistory({ history }: GameHistoryProps) {
   // If there's no history yet, show a message
   if (history.length === 0) {
@@ -36,25 +58,37 @@ export function GameHistory({ history }: GameHistoryProps) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {history.map((entry, index) => (
-                <TableRow key={index}>
-                  <TableCell>{entry.day}</TableCell>
-                  <TableCell>{entry.cash.toFixed(2)} kr</TableCell>
-                  <TableCell>{entry.revenue.toFixed(2)} kr</TableCell>
-                  <TableCell>
-                    {typeof entry.costs === "number" ? entry.costs.toFixed(2) : entry.costs.total.toFixed(2)} kr
-                  </TableCell>
-                  <TableCell className={entry.profit >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}>
-                    {entry.profit.toFixed(2)} kr
-                  </TableCell>
-                  <TableCell
-                    className={entry.cumulativeProfit >= 0 ? "text-green-600 font-medium" : "text-red-600 font-medium"}
-                  >
-                    {entry.cumulativeProfit.toFixed(2)} kr
-                  </TableCell>
-                  <TableCell>{entry.score}</TableCell>
-                </TableRow>
-              ))}
+              {history.map((entry, index) => {
+                // Safely extract costs value
+                const costsValue = typeof entry.costs === "number" 
+                  ? entry.costs 
+                  : entry.costs?.total ?? null
+
+                // Determine profit styling classes with null safety
+                const profitClass = (entry.profit ?? 0) >= 0 
+                  ? "text-green-600 font-medium" 
+                  : "text-red-600 font-medium"
+                
+                const cumulativeProfitClass = (entry.cumulativeProfit ?? 0) >= 0 
+                  ? "text-green-600 font-medium" 
+                  : "text-red-600 font-medium"
+
+                return (
+                  <TableRow key={index}>
+                    <TableCell>{safeFormatNumber(entry.day)}</TableCell>
+                    <TableCell>{safeFormatCurrency(entry.cash)}</TableCell>
+                    <TableCell>{safeFormatCurrency(entry.revenue)}</TableCell>
+                    <TableCell>{safeFormatCurrency(costsValue)}</TableCell>
+                    <TableCell className={profitClass}>
+                      {safeFormatCurrency(entry.profit)}
+                    </TableCell>
+                    <TableCell className={cumulativeProfitClass}>
+                      {safeFormatCurrency(entry.cumulativeProfit)}
+                    </TableCell>
+                    <TableCell>{safeFormatNumber(entry.score)}</TableCell>
+                  </TableRow>
+                )
+              })}
             </TableBody>
           </Table>
         </div>
