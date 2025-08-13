@@ -30,13 +30,14 @@
 ### UI & UX
 
 - UX1: ✅ Add a loading screen - **COMPLETED** (2024-12-13)
-- **UX2**: Add padding to the Next day row table - align Total Cost (e.g., "2.18 kr") properly with the top row in the cost summary section
+- **UX2**: ✅ Add padding to the Next day row table - align Total Cost (e.g., "2.18 kr") properly with the top row in the cost summary section - **COMPLETED** (2024-12-13)
 - **UX3**: Implement sortable columns in the Game History table - Enhance the table UI by adding clickable up/down arrow icons next to each column header. Clicking an arrow should sort the table rows in ascending or descending order based on that column's values. For example, clicking the descending arrow on the Day column should reorder the table so the rows display Day 6, Day 5, Day 4, etc. Ensure sorting works for numeric values (Day, Cash, Revenue, Costs, Profit, Cum. Profit, Score) and handles N/A values gracefully by placing them at the bottom. Add a "currently sorted" indicator so the active sort direction arrow is visually highlighted (e.g., bold, filled, or accented color) to show the current sorting state. Styling for the arrows and indicators should follow Tailwind and match the project's design language from DEVELOPMENT_GUIDELINES.md
 - **UX4**: Show objectives pop-up upon entering a level, before forecasting
 - **UX5**: Make quizzes non-repeatable until the teacher fails or passes them **(⚠ Blocked by Bug #1)**
 - **UX6**: Display player name per quiz run **(⚠ Blocked by Bug #1)**
 - **UX7**: Make production instant in level 0 _(double-check requirements)_
 - **UX8**: Implement all desired performance metrics
+- **UX9**: Add a view password function when signing in, so that the user can choose to view what password they have written in
 
 ### Infrastructure & Cleanup
 
