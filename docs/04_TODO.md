@@ -4,24 +4,24 @@
 
 ### Core Features
 
-- Overstock costs
-- Integrate player progress with the database so that it is stored for post-round analysis  
+- **CF1**: Overstock costs
+- **CF2**: Integrate player progress with the database so that it is stored for post-round analysis  
   _(store only one game session per level — do this last)_
-- Fix tutorial _(last for UI work)_
-- Implement safety stock (visual only)
-- Centralize more values (e.g., level names appear in multiple places)
-- Implement quizzes **(⚠ Blocked by Bug #1)**
-- Per-player/team-member quiz tracking _(maybe postpone)_ **(⚠ Blocked by Bug #1)**
-- Implement most/all icons from the suggested UI _(maybe postpone/cancel)_
-- Ensure all numbers are correct _(game-testing)_
-- Make tables downloadable or add a button for the player to copy the full table into Excel
-- Forecasting should block production outside of the forecasting phase
-- Orders should appear immediately in the **Current Orders** widget when placed
-- Show ETA when purchasing and ETD when selling
+- **CF3**: Fix tutorial _(last for UI work)_
+- **CF4**: Implement safety stock (visual only)
+- **CF5**: Centralize more values (e.g., level names appear in multiple places)
+- **CF6**: Implement quizzes **(⚠ Blocked by Bug #1)**
+- **CF7**: Per-player/team-member quiz tracking _(maybe postpone)_ **(⚠ Blocked by Bug #1)**
+- **CF8**: Implement most/all icons from the suggested UI _(maybe postpone/cancel)_
+- **CF9**: Ensure all numbers are correct _(game-testing)_
+- **CF10**: Make tables downloadable or add a button for the player to copy the full table into Excel
+- **CF11**: Forecasting should block production outside of the forecasting phase
+- **CF12**: Orders should appear immediately in the **Current Orders** widget when placed
+- **CF13**: Show ETA when purchasing and ETD when selling
 
 ### Testing & Debugging
 
-- Game test level-by-level; take notes and debug:
+- **TD1**: Game test level-by-level; take notes and debug:
   - purchasing
   - holding cost
   - inventory
@@ -29,33 +29,36 @@
 
 ### UI & UX
 
-- Show objectives pop-up upon entering a level, before forecasting
-- Make quizzes non-repeatable until the teacher fails or passes them **(⚠ Blocked by Bug #1)**
-- Display player name per quiz run **(⚠ Blocked by Bug #1)**
-- Make production instant in level 0 _(double-check requirements)_
-- Implement all desired performance metrics
+- UX1: ✅ Add a loading screen - **COMPLETED** (2024-12-13)
+- **UX2**: Add padding to the Next day row table - align Total Cost (e.g., "2.18 kr") properly with the top row in the cost summary section
+- **UX3**: Implement sortable columns in the Game History table - Enhance the table UI by adding clickable up/down arrow icons next to each column header. Clicking an arrow should sort the table rows in ascending or descending order based on that column's values. For example, clicking the descending arrow on the Day column should reorder the table so the rows display Day 6, Day 5, Day 4, etc. Ensure sorting works for numeric values (Day, Cash, Revenue, Costs, Profit, Cum. Profit, Score) and handles N/A values gracefully by placing them at the bottom. Add a "currently sorted" indicator so the active sort direction arrow is visually highlighted (e.g., bold, filled, or accented color) to show the current sorting state. Styling for the arrows and indicators should follow Tailwind and match the project's design language from DEVELOPMENT_GUIDELINES.md
+- **UX4**: Show objectives pop-up upon entering a level, before forecasting
+- **UX5**: Make quizzes non-repeatable until the teacher fails or passes them **(⚠ Blocked by Bug #1)**
+- **UX6**: Display player name per quiz run **(⚠ Blocked by Bug #1)**
+- **UX7**: Make production instant in level 0 _(double-check requirements)_
+- **UX8**: Implement all desired performance metrics
 
 ### Infrastructure & Cleanup
 
-- _(Optional)_ Migrate to LTH server
-- Remove unused/bloat code:
+- **IC1**: _(Optional)_ Migrate to LTH server
+- **IC2**: Remove unused/bloat code:
   - daily demand
   - express delivery / deliveryOption
   - GameState attributes _(verify if needed)_
   - `inventoryTransactions: InventoryTransaction[]`
   - `finishedGoodsBatches: FinishedGoodsBatch[]`
   - `productionCapacity`
-- Centralize calculations _(optional)_:
+- **IC3**: Centralize calculations _(optional)_:
   - Move all calculations to `inventory-management/sale-calculations/purchase-calculations`
   - Import them into their respective hook files
   - **Alternatively**: move all calculations into the hook files and import hooks into `game-interface` instead of defining new functions
-- Merge `MaterialOrder` and `SupplierOrder`
+- **IC4**: Merge `MaterialOrder` and `SupplierOrder`
 
 ---
 
 ## Bugs
 
-### 1. Quiz Page Parameter Access
+### B1. Quiz Page Parameter Access
 
 - **URL:** `http://localhost:3000/quiz/0`
 - **File:** `app/quiz/[levelId]/page.tsx` (17:42) @ `QuizPage`
@@ -71,7 +74,7 @@
 
 ---
 
-### 2. Teacher Performance Page Parameter Access
+### B2. Teacher Performance Page Parameter Access
 
 - **URL:** `http://localhost:3000/dashboard/teacher/performance/0/user_t5u1hiin`
 - **File:** `app/dashboard/teacher/performance/[levelId]/[studentId]/page.tsx` (30:42) @ `TeacherStudentPerformancePage`
@@ -107,3 +110,10 @@
 - Removed buns from overstock threshold
 - Implemented variable lead times for level 3
 - **Fixed Bug #3**: Game History null property access crash - Added safe null handling to prevent crashes when displaying null values, game progress now preserved correctly
+
+---
+
+## Frågor till Gustav
+
+- **Q1**: Vad ska visas i fönstret "Current Orders"?
+- **Q2**: Vilken information får jag från fönstret "Quick reference"?
