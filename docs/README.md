@@ -10,19 +10,29 @@ This folder contains comprehensive documentation for the LTH-Game educational pl
 
 ### Core Documentation
 
-| Document                                                     | Purpose                                            | Audience              | Last Updated |
-| ------------------------------------------------------------ | -------------------------------------------------- | --------------------- | ------------ |
-| **[🏗️ Codebase Structure](./CODEBASE_STRUCTURE.md)**         | Architecture, tech stack, and file organization    | Developers, Technical | Aug 2025     |
-| **[📋 Development Guidelines](./DEVELOPMENT_GUIDELINES.md)** | Coding standards, workflow, and best practices     | Developers            | Aug 2025     |
-| **[🎯 Project Goals](./PROJECT_GOALS.md)**                   | Objectives, roadmap, and success metrics           | All stakeholders      | Aug 2025     |
-| **[✅ TODO](./TODO.md)**                                     | Task priorities, technical debt, and feature ideas | Developers, PM        | Aug 2025     |
+| Document | Purpose | Audience | Last Updated |
+|----------|---------|----------|--------------|
+| **[🏗️ Codebase Structure](./CODEBASE_STRUCTURE.md)** | Architecture, tech stack, and file organization | Developers, Technical | Aug 2025 |
+| **[📋 Development Guidelines](./DEVELOPMENT_GUIDELINES.md)** | Coding standards, workflow, and best practices | Developers | Aug 2025 |
+| **[🎯 Project Goals](./PROJECT_GOALS.md)** | Objectives, roadmap, and success metrics | All stakeholders | Aug 2025 |
+| **[✅ TODO](./TODO.md)** | Task priorities, technical debt, and feature ideas | Developers, PM | Aug 2025 |
+| **[🏛️ Project Structure](./PROJECT_STRUCTURE.md)** | Detailed project organization and rationale | Developers, Technical | Aug 2025 |
 
 ### Getting Started
 
-| Document                                       | Purpose                              | Audience            | Last Updated |
-| ---------------------------------------------- | ------------------------------------ | ------------------- | ------------ |
-| **[🚀 Onboarding](./ONBOARDING.md)**           | Quick start guide for new developers | New team members    | Aug 2025     |
-| **[🔧 Troubleshooting](./TROUBLESHOOTING.md)** | Common issues and solutions          | Developers, Support | Aug 2025     |
+| Document | Purpose | Audience | Last Updated |
+|----------|---------|----------|--------------|
+| **[🚀 Onboarding](./ONBOARDING.md)** | Quick start guide for new developers | New team members | Aug 2025 |
+| **[🔧 Troubleshooting](./TROUBLESHOOTING.md)** | Common issues and solutions | Developers, Support | Aug 2025 |
+
+### Implementation Documentation
+
+| Document | Purpose | Audience | Last Updated |
+|----------|---------|----------|--------------|
+| **[🔒 Enhanced Login Summary](./ENHANCED-LOGIN-SUMMARY.md)** | Accessible login implementation details | Developers, QA | Aug 2025 |
+| **[🧪 Authentication Testing Summary](./AUTHENTICATION_TESTING_SUMMARY.md)** | Testing strategy and results overview | Developers, QA | Aug 2025 |
+| **[✅ Authentication Testing Completed](./AUTHENTICATION_TESTING_COMPLETED.md)** | Comprehensive testing completion report | Developers, PM | Aug 2025 |
+| **[🔍 Test Login Experience](./test-login-experience.md)** | Manual testing procedures and checklists | QA, Developers | Aug 2025 |
 
 ## 🎯 Quick Navigation
 
@@ -30,14 +40,23 @@ This folder contains comprehensive documentation for the LTH-Game educational pl
 
 1. Start with **[Onboarding](./ONBOARDING.md)** to get your environment set up
 2. Read **[Codebase Structure](./CODEBASE_STRUCTURE.md)** to understand the architecture
-3. Review **[Development Guidelines](./DEVELOPMENT_GUIDELINES.md)** for coding standards
-4. Check **[TODO](./TODO.md)** for tasks to work on
+3. Review **[Project Structure](./PROJECT_STRUCTURE.md)** for detailed organization
+4. Review **[Development Guidelines](./DEVELOPMENT_GUIDELINES.md)** for coding standards
+5. Check **[TODO](./TODO.md)** for tasks to work on
 
 ### For Project Managers
 
 1. Review **[Project Goals](./PROJECT_GOALS.md)** for strategic direction
 2. Check **[TODO](./TODO.md)** for current priorities and timeline
 3. Reference **[Development Guidelines](./DEVELOPMENT_GUIDELINES.md)** for workflow understanding
+4. Check **[Authentication Testing Completed](./AUTHENTICATION_TESTING_COMPLETED.md)** for recent achievements
+
+### For QA and Testing
+
+1. Start with **[Authentication Testing Summary](./AUTHENTICATION_TESTING_SUMMARY.md)** for testing overview
+2. Use **[Test Login Experience](./test-login-experience.md)** for manual testing procedures
+3. Reference **[Enhanced Login Summary](./ENHANCED-LOGIN-SUMMARY.md)** for implementation details
+4. Check **[Troubleshooting](./TROUBLESHOOTING.md)** for known issues and solutions
 
 ### For Troubleshooting
 
