@@ -20,8 +20,10 @@ This document contains solutions to common issues encountered during development
 ### Node.js and Package Management
 
 #### ❌ **Problem**: `npm ERR! peer dep missing` errors
+
 **Symptoms**: Installation fails with peer dependency warnings
 **Solution**:
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -38,8 +40,10 @@ pnpm install
 ```
 
 #### ❌ **Problem**: TypeScript compilation errors after update
+
 **Symptoms**: `Property does not exist on type` errors
 **Solution**:
+
 ```bash
 # Check TypeScript version compatibility
 npm list typescript
@@ -55,8 +59,10 @@ npx tsc --build --clean
 ```
 
 #### ❌ **Problem**: Hot reload not working
+
 **Symptoms**: Changes don't reflect in browser, need manual refresh
 **Solution**:
+
 ```bash
 # Check if running on correct port
 lsof -i :3000
@@ -74,8 +80,10 @@ npm run dev
 ### VS Code Setup Issues
 
 #### ❌ **Problem**: Extensions not working properly
+
 **Symptoms**: No IntelliSense, formatting not working
 **Solution**:
+
 ```json
 // .vscode/settings.json
 {
@@ -97,8 +105,10 @@ npm run dev
 ### Connection Problems
 
 #### ❌ **Problem**: `Connection refused` to PostgreSQL
+
 **Symptoms**: Database queries fail, connection timeout errors
 **Solution**:
+
 ```bash
 # Check if PostgreSQL is running
 brew services list | grep postgresql  # macOS
@@ -116,8 +126,10 @@ psql $DATABASE_URL
 ```
 
 #### ❌ **Problem**: `relation does not exist` errors
+
 **Symptoms**: SQL queries fail with table not found
 **Solution**:
+
 ```bash
 # Check if tables exist
 npm run db:status
@@ -130,8 +142,10 @@ npm run db:setup
 ```
 
 #### ❌ **Problem**: Neon database connection timeout
+
 **Symptoms**: Slow queries, connection drops in production
 **Solution**:
+
 ```javascript
 // lib/db.ts - Add connection pooling
 const sql = neon(process.env.DATABASE_URL!, {
@@ -144,8 +158,10 @@ const sql = neon(process.env.DATABASE_URL!, {
 ### Migration Issues
 
 #### ❌ **Problem**: Schema drift between environments
+
 **Symptoms**: Database inconsistencies between dev/prod
 **Solution**:
+
 ```bash
 # Export current schema
 pg_dump --schema-only $DATABASE_URL > schema.sql
@@ -167,8 +183,10 @@ pg_dump $DATABASE_URL > backup.sql
 ### Login Issues
 
 #### ❌ **Problem**: "Invalid credentials" for correct password
+
 **Symptoms**: Login fails despite correct username/password
 **Solution**:
+
 ```bash
 # Check password hashing consistency
 # Bcrypt rounds should match between creation and verification
@@ -181,8 +199,10 @@ npm run db:query "SELECT username, password FROM \"User\" WHERE username = 'your
 ```
 
 #### ❌ **Problem**: Session cookies not persisting
+
 **Symptoms**: User gets logged out on page refresh
 **Solution**:
+
 ```javascript
 // app/api/auth/login/route.ts
 cookieStore.set("auth_session", sessionId, {
@@ -190,15 +210,17 @@ cookieStore.set("auth_session", sessionId, {
   secure: process.env.NODE_ENV === "production", // False in development
   sameSite: "lax", // Not "strict" for development
   maxAge: 60 * 60 * 24 * 7, // 7 days
-  path: "/"
-})
+  path: "/",
+});
 
 // Check browser dev tools → Application → Cookies
 ```
 
 #### ❌ **Problem**: CORS issues with authentication
+
 **Symptoms**: Auth requests fail with CORS errors
 **Solution**:
+
 ```javascript
 // next.config.mjs
 /** @type {import('next').NextConfig} */
@@ -206,29 +228,34 @@ const nextConfig = {
   async headers() {
     return [
       {
-        source: '/api/:path*',
+        source: "/api/:path*",
         headers: [
-          { key: 'Access-Control-Allow-Credentials', value: 'true' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-          { key: 'Access-Control-Allow-Methods', value: 'GET,DELETE,PATCH,POST,PUT' },
-        ]
-      }
-    ]
-  }
-}
+          { key: "Access-Control-Allow-Credentials", value: "true" },
+          { key: "Access-Control-Allow-Origin", value: "*" },
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET,DELETE,PATCH,POST,PUT",
+          },
+        ],
+      },
+    ];
+  },
+};
 ```
 
 ### Permission Issues
 
 #### ❌ **Problem**: Middleware blocking legitimate requests
+
 **Symptoms**: Authenticated users can't access protected routes
 **Solution**:
+
 ```javascript
 // middleware.ts - Debug session validation
 export async function middleware(request: NextRequest) {
-  const sessionCookie = request.cookies.get('auth_session')
-  console.log('Session cookie:', sessionCookie) // Debug line
-  
+  const sessionCookie = request.cookies.get("auth_session");
+  console.log("Session cookie:", sessionCookie); // Debug line
+
   // Check session validation logic
   // Ensure database query is correct
 }
@@ -241,73 +268,84 @@ export async function middleware(request: NextRequest) {
 ### Game State Issues
 
 #### ❌ **Problem**: Game progress not saving
+
 **Symptoms**: Student progress resets on page refresh
 **Solution**:
+
 ```javascript
 // hooks/use-game-state.ts
 useEffect(() => {
   // Auto-save game state periodically
   const saveInterval = setInterval(() => {
     if (gameState.hasChanges) {
-      saveGameState(gameState)
+      saveGameState(gameState);
     }
-  }, 30000) // Every 30 seconds
+  }, 30000); // Every 30 seconds
 
-  return () => clearInterval(saveInterval)
-}, [gameState])
+  return () => clearInterval(saveInterval);
+}, [gameState]);
 ```
 
 #### ❌ **Problem**: Inventory calculations incorrect
+
 **Symptoms**: Numbers don't add up, negative inventory
 **Solution**:
+
 ```javascript
 // lib/game/engine.ts - Add validation
 function updateInventory(current: number, change: number): number {
-  const result = current + change
+  const result = current + change;
   if (result < 0) {
-    console.warn(`Inventory would go negative: ${current} + ${change} = ${result}`)
-    return 0 // Or throw error based on game rules
+    console.warn(
+      `Inventory would go negative: ${current} + ${change} = ${result}`
+    );
+    return 0; // Or throw error based on game rules
   }
-  return result
+  return result;
 }
 ```
 
 #### ❌ **Problem**: Game freezes during complex calculations
+
 **Symptoms**: UI becomes unresponsive, browser tab crashes
 **Solution**:
+
 ```javascript
 // Use Web Workers for heavy calculations
 // lib/game/worker.ts
-self.onmessage = function(e) {
-  const { gameState, action } = e.data
-  const result = performComplexCalculation(gameState, action)
-  self.postMessage(result)
-}
+self.onmessage = function (e) {
+  const { gameState, action } = e.data;
+  const result = performComplexCalculation(gameState, action);
+  self.postMessage(result);
+};
 
 // In component
-const worker = new Worker('/game-worker.js')
-worker.postMessage({ gameState, action })
+const worker = new Worker("/game-worker.js");
+worker.postMessage({ gameState, action });
 worker.onmessage = (e) => {
-  setGameState(e.data)
-}
+  setGameState(e.data);
+};
 ```
 
 ### Level Progression Issues
 
 #### ❌ **Problem**: Students can't advance to next level
+
 **Symptoms**: Next level button disabled despite completion
 **Solution**:
+
 ```javascript
 // Check completion criteria
 const isLevelComplete = useMemo(() => {
-  return gameState.objectives.every(objective => 
-    objective.completed && objective.score >= objective.requiredScore
-  )
-}, [gameState.objectives])
+  return gameState.objectives.every(
+    (objective) =>
+      objective.completed && objective.score >= objective.requiredScore
+  );
+}, [gameState.objectives]);
 
 // Debug completion status
-console.log('Objectives status:', gameState.objectives)
-console.log('Level complete:', isLevelComplete)
+console.log("Objectives status:", gameState.objectives);
+console.log("Level complete:", isLevelComplete);
 ```
 
 ---
@@ -317,8 +355,10 @@ console.log('Level complete:', isLevelComplete)
 ### Styling Problems
 
 #### ❌ **Problem**: Tailwind classes not applying
+
 **Symptoms**: Styling doesn't work, classes appear in DOM but no effects
 **Solution**:
+
 ```bash
 # Check if Tailwind CSS is properly imported
 # app/globals.css should have:
@@ -335,19 +375,21 @@ rm -rf .next
 ```
 
 #### ❌ **Problem**: Dark mode not switching correctly
+
 **Symptoms**: Some components stay light/dark when switching
 **Solution**:
+
 ```javascript
 // components/theme-provider.tsx
 useEffect(() => {
   // Force re-render of all components
-  const root = document.documentElement
-  if (theme === 'dark') {
-    root.classList.add('dark')
+  const root = document.documentElement;
+  if (theme === "dark") {
+    root.classList.add("dark");
   } else {
-    root.classList.remove('dark')
+    root.classList.remove("dark");
   }
-}, [theme])
+}, [theme]);
 
 // Check CSS selectors use .dark: prefix correctly
 // bg-white dark:bg-gray-900
@@ -356,8 +398,10 @@ useEffect(() => {
 ### Accessibility Issues
 
 #### ❌ **Problem**: Screen reader not announcing errors
+
 **Symptoms**: Error messages not accessible to assistive technology
 **Solution**:
+
 ```javascript
 // Ensure proper ARIA attributes
 <div
@@ -374,8 +418,10 @@ useEffect(() => {
 ```
 
 #### ❌ **Problem**: Keyboard navigation broken
+
 **Symptoms**: Can't tab through form elements, focus indicators missing
 **Solution**:
+
 ```css
 /* Add focus indicators */
 .focus\:ring-2:focus {
@@ -394,8 +440,10 @@ useEffect(() => {
 ### Slow Loading
 
 #### ❌ **Problem**: Large bundle size causing slow initial load
+
 **Symptoms**: Long white screen, slow First Contentful Paint
 **Solution**:
+
 ```bash
 # Analyze bundle size
 npm run build
@@ -416,8 +464,10 @@ ANALYZE=true npm run build
 ```
 
 #### ❌ **Problem**: Database queries taking too long
+
 **Symptoms**: API responses > 1 second, UI freezing during data loads
 **Solution**:
+
 ```javascript
 // Add query logging
 console.time('user-query')
@@ -430,9 +480,9 @@ CREATE INDEX idx_session_expires ON "Session"(expires_at);
 
 // Use LIMIT for large datasets
 const recentUsers = await sql`
-  SELECT * FROM "User" 
+  SELECT * FROM "User"
   WHERE "lastActive" > NOW() - INTERVAL '30 days'
-  ORDER BY "lastActive" DESC 
+  ORDER BY "lastActive" DESC
   LIMIT 100
 `
 ```
@@ -440,25 +490,29 @@ const recentUsers = await sql`
 ### Memory Issues
 
 #### ❌ **Problem**: Memory leaks in React components
+
 **Symptoms**: Browser memory usage keeps increasing
 **Solution**:
+
 ```javascript
 // Clean up useEffect properly
 useEffect(() => {
   const interval = setInterval(() => {
     // Some periodic task
-  }, 1000)
+  }, 1000);
 
   // Always clean up!
-  return () => clearInterval(interval)
-}, [])
+  return () => clearInterval(interval);
+}, []);
 
 // Remove event listeners
 useEffect(() => {
-  const handleResize = () => { /* ... */ }
-  window.addEventListener('resize', handleResize)
-  return () => window.removeEventListener('resize', handleResize)
-}, [])
+  const handleResize = () => {
+    /* ... */
+  };
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
 ```
 
 ---
@@ -468,8 +522,10 @@ useEffect(() => {
 ### Test Failures
 
 #### ❌ **Problem**: Tests failing in CI but passing locally
+
 **Symptoms**: GitHub Actions tests fail, local tests pass
 **Solution**:
+
 ```bash
 # Check Node.js versions match
 node --version  # Local
@@ -485,39 +541,46 @@ cd /app && npm test
 ```
 
 #### ❌ **Problem**: Flaky tests that sometimes pass/fail
+
 **Symptoms**: Intermittent test failures, timing issues
 **Solution**:
+
 ```javascript
 // Use waitFor for async operations
-import { waitFor } from '@testing-library/react'
+import { waitFor } from "@testing-library/react";
 
-await waitFor(() => {
-  expect(screen.getByText('Loading complete')).toBeInTheDocument()
-}, { timeout: 5000 })
+await waitFor(
+  () => {
+    expect(screen.getByText("Loading complete")).toBeInTheDocument();
+  },
+  { timeout: 5000 }
+);
 
 // Mock timers for consistent testing
-jest.useFakeTimers()
+jest.useFakeTimers();
 // ... test code
-jest.runAllTimers()
-jest.useRealTimers()
+jest.runAllTimers();
+jest.useRealTimers();
 ```
 
 ### Mock Issues
 
 #### ❌ **Problem**: Database mocking not working in tests
+
 **Symptoms**: Tests try to connect to real database
 **Solution**:
+
 ```javascript
 // jest.setup.js
-jest.mock('@/lib/db', () => ({
+jest.mock("@/lib/db", () => ({
   sql: jest.fn().mockImplementation((strings, ...values) => {
     // Return mock data based on query
     if (strings[0].includes('SELECT * FROM "User"')) {
-      return Promise.resolve([{ id: 1, username: 'test' }])
+      return Promise.resolve([{ id: 1, username: "test" }]);
     }
-    return Promise.resolve([])
-  })
-}))
+    return Promise.resolve([]);
+  }),
+}));
 ```
 
 ---
@@ -527,8 +590,10 @@ jest.mock('@/lib/db', () => ({
 ### Vercel Deployment Issues
 
 #### ❌ **Problem**: Build failing on Vercel
+
 **Symptoms**: Deployment fails with TypeScript or dependency errors
 **Solution**:
+
 ```bash
 # Check build locally first
 npm run build
@@ -542,8 +607,10 @@ npm run build
 ```
 
 #### ❌ **Problem**: Database connection timeouts in production
+
 **Symptoms**: 500 errors in production, database connection issues
 **Solution**:
+
 ```javascript
 // Increase connection timeout for production
 const sql = neon(process.env.DATABASE_URL!, {
@@ -568,8 +635,10 @@ async function queryWithRetry(queryFn: () => Promise<any>, retries = 3) {
 ### Environment Variables
 
 #### ❌ **Problem**: Environment variables not working in production
+
 **Symptoms**: Undefined environment variables, config errors
 **Solution**:
+
 ```javascript
 // next.config.mjs - Expose client-side variables
 const nextConfig = {
@@ -577,15 +646,15 @@ const nextConfig = {
     CUSTOM_KEY: process.env.CUSTOM_KEY,
   },
   // Or use NEXT_PUBLIC_ prefix for client-side access
-}
+};
 
 // Validate environment variables
-const requiredEnvVars = ['DATABASE_URL', 'NEXTAUTH_SECRET']
-requiredEnvVars.forEach(envVar => {
+const requiredEnvVars = ["DATABASE_URL", "NEXTAUTH_SECRET"];
+requiredEnvVars.forEach((envVar) => {
   if (!process.env[envVar]) {
-    throw new Error(`Missing required environment variable: ${envVar}`)
+    throw new Error(`Missing required environment variable: ${envVar}`);
   }
-})
+});
 ```
 
 ---
@@ -603,12 +672,13 @@ requiredEnvVars.forEach(envVar => {
 ### Useful Debugging Tools
 
 #### Browser DevTools
+
 ```javascript
 // Add breakpoints in code
 debugger;
 
 // Log with context
-console.log('User data:', { user, timestamp: new Date() })
+console.log("User data:", { user, timestamp: new Date() });
 
 // Network tab: Check request/response details
 // Application tab: Inspect cookies, localStorage, sessionStorage
@@ -616,6 +686,7 @@ console.log('User data:', { user, timestamp: new Date() })
 ```
 
 #### VS Code Debugging
+
 ```json
 // .vscode/launch.json
 {
@@ -656,12 +727,12 @@ console.log('User data:', { user, timestamp: new Date() })
 ## Related Documentation
 
 - [Development Guidelines](./DEVELOPMENT_GUIDELINES.md) - Best practices and workflows
-- [Codebase Structure](./CODEBASE_STRUCTURE.md) - Understanding the architecture  
+- [Codebase Structure](./CODEBASE_STRUCTURE.md) - Understanding the architecture
 - [Onboarding](./ONBOARDING.md) - Getting started guide
 - [Project Goals](./PROJECT_GOALS.md) - Strategic context
 - [TODO](./TODO.md) - Known issues and planned improvements
 
 ---
 
-*Last updated: August 2025*  
-*If you encounter an issue not covered here, please add it after resolving it.*
+_Last updated: August 2025_  
+_If you encounter an issue not covered here, please add it after resolving it._

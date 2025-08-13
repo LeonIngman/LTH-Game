@@ -9,50 +9,50 @@
 ```typescript
 // ✅ Good: Explicit interfaces for props
 interface SignInFormProps {
-  onSuccess?: (user: User) => void
-  redirectPath?: string
-  className?: string
+  onSuccess?: (user: User) => void;
+  redirectPath?: string;
+  className?: string;
 }
 
 // ❌ Bad: Using any
-function handleSubmit(data: any) { }
+function handleSubmit(data: any) {}
 
 // ✅ Good: Proper typing
-function handleSubmit(data: FormData) { }
+function handleSubmit(data: FormData) {}
 ```
 
 #### Naming Conventions
 
-| Type | Convention | Example |
-|------|------------|---------|
-| **Components** | PascalCase | `SignInForm`, `GameInterface` |
-| **Functions** | camelCase | `validateInput`, `calculateScore` |
-| **Constants** | UPPER_SNAKE_CASE | `AUTH_COOKIE_NAME`, `MAX_RETRY_ATTEMPTS` |
-| **Files** | kebab-case | `sign-in-form.tsx`, `auth-utils.ts` |
-| **Types/Interfaces** | PascalCase | `User`, `AuthError`, `GameState` |
-| **Enums** | PascalCase | `AuthErrorType`, `GameLevel` |
+| Type                 | Convention       | Example                                  |
+| -------------------- | ---------------- | ---------------------------------------- |
+| **Components**       | PascalCase       | `SignInForm`, `GameInterface`            |
+| **Functions**        | camelCase        | `validateInput`, `calculateScore`        |
+| **Constants**        | UPPER_SNAKE_CASE | `AUTH_COOKIE_NAME`, `MAX_RETRY_ATTEMPTS` |
+| **Files**            | kebab-case       | `sign-in-form.tsx`, `auth-utils.ts`      |
+| **Types/Interfaces** | PascalCase       | `User`, `AuthError`, `GameState`         |
+| **Enums**            | PascalCase       | `AuthErrorType`, `GameLevel`             |
 
 #### File Organization
 
 ```typescript
 // File structure within components
-import { /* external imports */ } from 'library'
-import { /* internal imports */ } from '@/lib/utils'
+import /* external imports */ "library";
+import /* internal imports */ "@/lib/utils";
 
 // Types and interfaces
-interface ComponentProps { }
-type ComponentState = { }
+interface ComponentProps {}
+type ComponentState = {};
 
 // Component implementation
 export function ComponentName(props: ComponentProps) {
   // Hooks first
-  const [state, setState] = useState()
-  
+  const [state, setState] = useState();
+
   // Event handlers
-  const handleClick = () => { }
-  
+  const handleClick = () => {};
+
   // Render
-  return <div>...</div>
+  return <div>...</div>;
 }
 ```
 
@@ -63,22 +63,18 @@ export function ComponentName(props: ComponentProps) {
 ```typescript
 // ✅ Good: Functional components with proper hooks
 export function GameInterface({ levelId }: GameInterfaceProps) {
-  const { user, loading } = useAuth()
-  const gameState = useGameState(levelId)
-  
+  const { user, loading } = useAuth();
+  const gameState = useGameState(levelId);
+
   // Early returns for loading/error states
-  if (loading) return <LoadingSpinner />
-  if (!user) return <Redirect to="/auth/signin" />
-  
-  return (
-    <div className="game-interface">
-      {/* Component JSX */}
-    </div>
-  )
+  if (loading) return <LoadingSpinner />;
+  if (!user) return <Redirect to="/auth/signin" />;
+
+  return <div className="game-interface">{/* Component JSX */}</div>;
 }
 
 // ❌ Bad: Class components (avoid unless necessary)
-class GameInterface extends React.Component { }
+class GameInterface extends React.Component {}
 ```
 
 #### Hooks Guidelines
@@ -86,24 +82,24 @@ class GameInterface extends React.Component { }
 ```typescript
 // ✅ Good: Custom hooks for shared logic
 function useGameActions(levelId: string) {
-  const [actions, setActions] = useState<GameAction[]>([])
-  
+  const [actions, setActions] = useState<GameAction[]>([]);
+
   const addAction = useCallback((action: GameAction) => {
-    setActions(prev => [...prev, action])
-  }, [])
-  
-  return { actions, addAction }
+    setActions((prev) => [...prev, action]);
+  }, []);
+
+  return { actions, addAction };
 }
 
 // ✅ Good: Dependencies array for useEffect
 useEffect(() => {
-  fetchUserData(userId)
-}, [userId]) // Include all dependencies
+  fetchUserData(userId);
+}, [userId]); // Include all dependencies
 
 // ❌ Bad: Missing dependencies
 useEffect(() => {
-  fetchUserData(userId)
-}, []) // Missing userId dependency
+  fetchUserData(userId);
+}, []); // Missing userId dependency
 ```
 
 ### Accessibility Standards
@@ -203,43 +199,43 @@ const buttonVariants = {
 
 ```typescript
 // ✅ Good: Descriptive test organization
-describe('SignInForm', () => {
-  describe('when user enters valid credentials', () => {
-    it('should call onSuccess with user data', async () => {
+describe("SignInForm", () => {
+  describe("when user enters valid credentials", () => {
+    it("should call onSuccess with user data", async () => {
       // Arrange
-      const onSuccess = jest.fn()
-      render(<SignInForm onSuccess={onSuccess} />)
-      
+      const onSuccess = jest.fn();
+      render(<SignInForm onSuccess={onSuccess} />);
+
       // Act
-      await userEvent.type(screen.getByLabelText(/username/i), 'testuser')
-      await userEvent.type(screen.getByLabelText(/password/i), 'password123')
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
-      
+      await userEvent.type(screen.getByLabelText(/username/i), "testuser");
+      await userEvent.type(screen.getByLabelText(/password/i), "password123");
+      await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
       // Assert
       expect(onSuccess).toHaveBeenCalledWith(
-        expect.objectContaining({ username: 'testuser' })
-      )
-    })
-  })
-  
-  describe('accessibility', () => {
-    it('should announce errors to screen readers', async () => {
-      render(<SignInForm />)
-      
+        expect.objectContaining({ username: "testuser" })
+      );
+    });
+  });
+
+  describe("accessibility", () => {
+    it("should announce errors to screen readers", async () => {
+      render(<SignInForm />);
+
       // Submit invalid form
-      await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
-      
+      await userEvent.click(screen.getByRole("button", { name: /sign in/i }));
+
       // Check for alert role
-      expect(screen.getByRole('alert')).toBeInTheDocument()
-    })
-  })
-})
+      expect(screen.getByRole("alert")).toBeInTheDocument();
+    });
+  });
+});
 ```
 
 ### Testing Priorities
 
 1. **Happy Path**: Test the primary user workflows
-2. **Error Handling**: Test validation and error states  
+2. **Error Handling**: Test validation and error states
 3. **Accessibility**: Test keyboard navigation and screen readers
 4. **Edge Cases**: Test boundary conditions and unusual inputs
 5. **Integration**: Test component interactions and API calls
@@ -260,30 +256,30 @@ Follow the [Conventional Commits](https://www.conventionalcommits.org/) specific
 
 #### Types
 
-| Type | Usage |
-|------|-------|
-| `feat` | New feature |
-| `fix` | Bug fix |
-| `docs` | Documentation changes |
-| `style` | Code style changes (formatting, etc.) |
+| Type       | Usage                                    |
+| ---------- | ---------------------------------------- |
+| `feat`     | New feature                              |
+| `fix`      | Bug fix                                  |
+| `docs`     | Documentation changes                    |
+| `style`    | Code style changes (formatting, etc.)    |
 | `refactor` | Code refactoring without feature changes |
-| `test` | Adding or modifying tests |
-| `chore` | Build process, dependencies, etc. |
-| `perf` | Performance improvements |
-| `ci` | CI/CD configuration changes |
+| `test`     | Adding or modifying tests                |
+| `chore`    | Build process, dependencies, etc.        |
+| `perf`     | Performance improvements                 |
+| `ci`       | CI/CD configuration changes              |
 
 #### Scopes
 
-| Scope | Usage |
-|-------|-------|
-| `auth` | Authentication system |
-| `game` | Game mechanics and interface |
-| `ui` | User interface components |
-| `api` | API routes and endpoints |
-| `db` | Database schema or queries |
-| `a11y` | Accessibility improvements |
-| `security` | Security enhancements |
-| `test` | Testing infrastructure |
+| Scope      | Usage                        |
+| ---------- | ---------------------------- |
+| `auth`     | Authentication system        |
+| `game`     | Game mechanics and interface |
+| `ui`       | User interface components    |
+| `api`      | API routes and endpoints     |
+| `db`       | Database schema or queries   |
+| `a11y`     | Accessibility improvements   |
+| `security` | Security enhancements        |
+| `test`     | Testing infrastructure       |
 
 #### Examples
 
@@ -332,12 +328,12 @@ main (production)
 
 #### Branch Types
 
-| Type | Purpose | Base | Merge To |
-|------|---------|------|----------|
-| `main` | Production code | - | - |
-| `develop` | Integration branch | `main` | `main` |
-| `feature/` | New features | `develop` | `develop` |
-| `hotfix/` | Critical fixes | `main` | `main` & `develop` |
+| Type       | Purpose             | Base      | Merge To           |
+| ---------- | ------------------- | --------- | ------------------ |
+| `main`     | Production code     | -         | -                  |
+| `develop`  | Integration branch  | `main`    | `main`             |
+| `feature/` | New features        | `develop` | `develop`          |
+| `hotfix/`  | Critical fixes      | `main`    | `main` & `develop` |
 | `release/` | Release preparation | `develop` | `main` & `develop` |
 
 #### Branch Naming
@@ -362,30 +358,35 @@ updates
 ### Review Checklist
 
 #### Functionality
+
 - [ ] Code works as intended
 - [ ] Edge cases are handled
 - [ ] Error handling is appropriate
 - [ ] Performance considerations addressed
 
 #### Code Quality
+
 - [ ] Follows naming conventions
 - [ ] TypeScript types are correct
 - [ ] No unused imports or variables
 - [ ] Functions are reasonably sized
 
 #### Accessibility
+
 - [ ] ARIA attributes are correct
 - [ ] Keyboard navigation works
 - [ ] Color contrast meets WCAG AA
 - [ ] Screen reader compatibility
 
 #### Testing
+
 - [ ] Tests cover new functionality
 - [ ] Tests are meaningful and well-named
 - [ ] Test coverage is adequate
 - [ ] No flaky or brittle tests
 
 #### Security
+
 - [ ] Input validation is present
 - [ ] No secrets in code
 - [ ] Authentication is properly handled
@@ -479,5 +480,5 @@ npm run type-check    # TypeScript validation
 
 ---
 
-*Last updated: August 2025*  
-*These guidelines evolve with the project - suggest improvements via PR.*
+_Last updated: August 2025_  
+_These guidelines evolve with the project - suggest improvements via PR._

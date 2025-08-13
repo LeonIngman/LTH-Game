@@ -11,7 +11,7 @@ LTH-Game is a Next.js-based educational supply chain management game built with 
 **Database**: PostgreSQL with custom SQL queries (no ORM by choice)  
 **Styling**: Tailwind CSS with Radix UI components  
 **Authentication**: Custom session-based auth (not NextAuth)  
-**State Management**: React Context + custom hooks  
+**State Management**: React Context + custom hooks
 
 ### Why These Choices?
 
@@ -61,32 +61,32 @@ LTH-Game/
 
 ### Frontend Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Next.js** | 15.4.6 | React framework with SSR/SSG |
-| **React** | 19.0.0 | UI component library |
-| **TypeScript** | 5.6.3 | Type-safe JavaScript |
-| **Tailwind CSS** | 3.4.15 | Utility-first CSS framework |
-| **Radix UI** | Various | Accessible component primitives |
-| **Lucide React** | Latest | Icon library |
+| Technology       | Version | Purpose                         |
+| ---------------- | ------- | ------------------------------- |
+| **Next.js**      | 15.4.6  | React framework with SSR/SSG    |
+| **React**        | 19.0.0  | UI component library            |
+| **TypeScript**   | 5.6.3   | Type-safe JavaScript            |
+| **Tailwind CSS** | 3.4.15  | Utility-first CSS framework     |
+| **Radix UI**     | Various | Accessible component primitives |
+| **Lucide React** | Latest  | Icon library                    |
 
 ### Backend Stack
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **PostgreSQL** | Latest | Primary database |
-| **@neondatabase/serverless** | Latest | Database connection |
-| **bcryptjs** | 2.4.3 | Password hashing |
-| **crypto** | Built-in | Session token generation |
+| Technology                   | Version  | Purpose                  |
+| ---------------------------- | -------- | ------------------------ |
+| **PostgreSQL**               | Latest   | Primary database         |
+| **@neondatabase/serverless** | Latest   | Database connection      |
+| **bcryptjs**                 | 2.4.3    | Password hashing         |
+| **crypto**                   | Built-in | Session token generation |
 
 ### Development Tools
 
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| **Jest** | 29.7.0 | Testing framework |
+| Technology          | Version | Purpose           |
+| ------------------- | ------- | ----------------- |
+| **Jest**            | 29.7.0  | Testing framework |
 | **Testing Library** | Various | Component testing |
-| **ESLint** | 8.57.1 | Code linting |
-| **Prettier** | Latest | Code formatting |
+| **ESLint**          | 8.57.1  | Code linting      |
+| **Prettier**        | Latest  | Code formatting   |
 
 ## Key Patterns
 
@@ -129,15 +129,15 @@ LTH-Game/
 
 ## Configuration Files
 
-| File | Purpose |
-|------|---------|
-| `next.config.mjs` | Next.js configuration |
+| File                 | Purpose                    |
+| -------------------- | -------------------------- |
+| `next.config.mjs`    | Next.js configuration      |
 | `tailwind.config.ts` | Tailwind CSS customization |
-| `tsconfig.json` | TypeScript configuration |
-| `jest.config.js` | Testing configuration |
-| `package.json` | Dependencies and scripts |
-| `middleware.ts` | Request middleware |
-| `components.json` | Shadcn UI configuration |
+| `tsconfig.json`      | TypeScript configuration   |
+| `jest.config.js`     | Testing configuration      |
+| `package.json`       | Dependencies and scripts   |
+| `middleware.ts`      | Request middleware         |
+| `components.json`    | Shadcn UI configuration    |
 
 ## Environment Setup
 
@@ -167,7 +167,7 @@ NODE_ENV=development
 ```
 tests/
 ├── unit/           # Individual function/component tests
-├── integration/    # API endpoint and flow tests  
+├── integration/    # API endpoint and flow tests
 ├── e2e/           # End-to-end user journey tests
 ```
 
@@ -206,7 +206,7 @@ graph TD
 ### Security Measures
 
 - Input validation on all endpoints
-- SQL injection prevention with parameterized queries  
+- SQL injection prevention with parameterized queries
 - Password hashing with bcrypt
 - Session tokens with crypto.randomBytes
 - Rate limiting and audit logging
@@ -232,12 +232,12 @@ graph TD
 ## Related Documentation
 
 - [Development Guidelines](./DEVELOPMENT_GUIDELINES.md) - Coding standards and processes
-- [Project Goals](./PROJECT_GOALS.md) - Objectives and milestones  
+- [Project Goals](./PROJECT_GOALS.md) - Objectives and milestones
 - [Onboarding](./ONBOARDING.md) - Quick start guide
 - [Troubleshooting](./TROUBLESHOOTING.md) - Common issues and solutions
 - [TODO](./TODO.md) - Pending tasks and improvements
 
 ---
 
-*Last updated: August 2025*  
-*For questions about architecture decisions, see the development team or check commit history for rationale.*
+_Last updated: August 2025_  
+_For questions about architecture decisions, see the development team or check commit history for rationale._
