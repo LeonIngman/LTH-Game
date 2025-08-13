@@ -1,6 +1,19 @@
+import { useState } from "react"
+import { ChevronUp, ChevronDown } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Button } from "@/components/ui/button"
 import type { GameHistoryProps } from "@/types/components"
+import type { DailyResult } from "@/types/game"
+
+// Define sort types
+type SortColumn = 'day' | 'cash' | 'revenue' | 'costs' | 'profit' | 'cumulativeProfit' | 'score'
+type SortDirection = 'asc' | 'desc'
+
+interface SortState {
+  column: SortColumn | null
+  direction: SortDirection
+}
 
 /**
  * Safely formats a numeric value to a string with 2 decimal places
@@ -25,6 +38,111 @@ function safeFormatNumber(value: number | null | undefined): string {
 }
 
 export function GameHistory({ history }: GameHistoryProps) {
+  // Sort state
+  const [sortState, setSortState] = useState<SortState>({
+    column: null,
+    direction: 'asc'
+  })
+
+  /**
+   * Get value for sorting from a DailyResult entry
+   */
+  const getSortValue = (entry: DailyResult, column: SortColumn): number | null => {
+    switch (column) {
+      case 'day':
+        return entry.day ?? null
+      case 'cash':
+        return entry.cash ?? null
+      case 'revenue':
+        return entry.revenue ?? null
+      case 'costs':
+        return typeof entry.costs === 'number' ? entry.costs : entry.costs?.total ?? null
+      case 'profit':
+        return entry.profit ?? null
+      case 'cumulativeProfit':
+        return entry.cumulativeProfit ?? null
+      case 'score':
+        return entry.score ?? null
+      default:
+        return null
+    }
+  }
+
+  /**
+   * Sort history data based on current sort state
+   */
+  const sortedHistory = [...history].sort((a, b) => {
+    if (!sortState.column) return 0
+
+    const valueA = getSortValue(a, sortState.column)
+    const valueB = getSortValue(b, sortState.column)
+
+    // Handle N/A values - always put them at the bottom
+    if (valueA === null && valueB === null) return 0
+    if (valueA === null) return 1
+    if (valueB === null) return -1
+
+    // Normal numeric comparison
+    const comparison = valueA - valueB
+    return sortState.direction === 'asc' ? comparison : -comparison
+  })
+
+  /**
+   * Handle sort button click
+   */
+  const handleSort = (column: SortColumn, direction: SortDirection) => {
+    setSortState({ column, direction })
+  }
+
+  /**
+   * Check if a sort button is currently active
+   */
+  const isSortActive = (column: SortColumn, direction: SortDirection): boolean => {
+    return sortState.column === column && sortState.direction === direction
+  }
+
+  /**
+   * Render sort arrows for a column header
+   */
+  const renderSortArrows = (column: SortColumn, label: string) => {
+    return (
+      <div className="flex items-center justify-between w-full">
+        <span>{label}</span>
+        <div className="flex flex-col ml-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-4 w-4 p-0 hover:bg-transparent ${isSortActive(column, 'asc')
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+              }`}
+            onClick={() => handleSort(column, 'asc')}
+            aria-label={`Sort ${label} ascending`}
+          >
+            <ChevronUp className="h-3 w-3" />
+            {isSortActive(column, 'asc') && (
+              <span className="sr-only" data-testid="active-sort-indicator">Currently sorted ascending</span>
+            )}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-4 w-4 p-0 hover:bg-transparent ${isSortActive(column, 'desc')
+                ? 'text-primary'
+                : 'text-muted-foreground hover:text-foreground'
+              }`}
+            onClick={() => handleSort(column, 'desc')}
+            aria-label={`Sort ${label} descending`}
+          >
+            <ChevronDown className="h-3 w-3" />
+            {isSortActive(column, 'desc') && (
+              <span className="sr-only" data-testid="active-sort-indicator">Currently sorted descending</span>
+            )}
+          </Button>
+        </div>
+      </div>
+    )
+  }
   // If there's no history yet, show a message
   if (history.length === 0) {
     return (
@@ -48,29 +166,43 @@ export function GameHistory({ history }: GameHistoryProps) {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Day</TableHead>
-                <TableHead>Cash</TableHead>
-                <TableHead>Revenue</TableHead>
-                <TableHead>Costs</TableHead>
-                <TableHead>Profit</TableHead>
-                <TableHead>Cum. Profit</TableHead>
-                <TableHead>Score</TableHead>
+                <TableHead className="min-w-[120px]">
+                  {renderSortArrows('day', 'Day')}
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  {renderSortArrows('cash', 'Cash')}
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  {renderSortArrows('revenue', 'Revenue')}
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  {renderSortArrows('costs', 'Costs')}
+                </TableHead>
+                <TableHead className="min-w-[120px]">
+                  {renderSortArrows('profit', 'Profit')}
+                </TableHead>
+                <TableHead className="min-w-[140px]">
+                  {renderSortArrows('cumulativeProfit', 'Cum. Profit')}
+                </TableHead>
+                <TableHead className="min-w-[100px]">
+                  {renderSortArrows('score', 'Score')}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {history.map((entry, index) => {
+              {sortedHistory.map((entry, index) => {
                 // Safely extract costs value
-                const costsValue = typeof entry.costs === "number" 
-                  ? entry.costs 
+                const costsValue = typeof entry.costs === "number"
+                  ? entry.costs
                   : entry.costs?.total ?? null
 
                 // Determine profit styling classes with null safety
-                const profitClass = (entry.profit ?? 0) >= 0 
-                  ? "text-green-600 font-medium" 
+                const profitClass = (entry.profit ?? 0) >= 0
+                  ? "text-green-600 font-medium"
                   : "text-red-600 font-medium"
-                
-                const cumulativeProfitClass = (entry.cumulativeProfit ?? 0) >= 0 
-                  ? "text-green-600 font-medium" 
+
+                const cumulativeProfitClass = (entry.cumulativeProfit ?? 0) >= 0
+                  ? "text-green-600 font-medium"
                   : "text-red-600 font-medium"
 
                 return (
