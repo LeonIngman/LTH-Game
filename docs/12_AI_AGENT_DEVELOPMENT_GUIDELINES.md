@@ -15,6 +15,17 @@ These guidelines ensure that changes are implemented cleanly, fully tested, and 
 
 ---
 
+## 🚨 IMPORTANT: Single Branch Workflow
+
+**ALL DEVELOPMENT MUST BE DONE ON THE `leon/cleanup` BRANCH ONLY.**
+
+- **DO NOT** create separate feature branches, fix branches, or any other branches
+- **DO NOT** create pull requests - commit directly to `leon/cleanup`
+- **DO NOT** merge branches - all work goes directly to `leon/cleanup`
+- This maintains a linear history and avoids unnecessary branching complexity
+
+---
+
 ## Step-by-Step Workflow
 
 ### 1. Receive the Assignment
@@ -30,16 +41,13 @@ These guidelines ensure that changes are implemented cleanly, fully tested, and 
 ### 2. Set Up Context
 
 - Pull the latest code from the repository.
-- Ensure the correct branch is checked out:
-  - If working on a bug or feature, create a branch named in the format:
-    ```
-    type/scope-short-description
-    ```
-    Example:
-    ```
-    fix/bug-3-game-history-null
-    feat/auth-error-handling
-    ```
+- **IMPORTANT: Always work directly on the `leon/cleanup` branch. DO NOT create separate feature or fix branches.**
+- Ensure you are on the `leon/cleanup` branch:
+  ```bash
+  git checkout leon/cleanup
+  git pull origin leon/cleanup
+  ```
+- **Never create branches** for individual features, bugs, or tasks. All development work should be committed directly to `leon/cleanup`.
 - Review related documentation:
   - `DEVELOPMENT_GUIDELINES.md` for coding style, Tailwind usage, and file structure.
   - `TODO.md` and `Bugs` section for current issues and dependencies.
@@ -129,13 +137,17 @@ These guidelines ensure that changes are implemented cleanly, fully tested, and 
 
 ---
 
-### 9. Push and Document
+### 9. Commit and Push
 
-- Push the branch to the remote repository.
-- Open a pull request with:
-  - A clear title matching the main commit message.
-  - A description referencing the task or bug number.
-  - A summary of changes, tests added, and verification steps.
+- **All work is committed directly to `leon/cleanup`** - no pull requests or branch merging required.
+- Push commits to the remote `leon/cleanup` branch:
+  ```bash
+  git push origin leon/cleanup
+  ```
+- Update relevant documentation files:
+  - Update `TODO.md` to mark completed tasks.
+  - Add completion notes with dates for tracking.
+  - Document any breaking changes or new dependencies.
 
 ---
 
