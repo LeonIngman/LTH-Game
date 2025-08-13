@@ -128,7 +128,8 @@ export function validateAffordability(
 }
 
 /**
- * Check for missed customer milestones and calculate penalties
+ * Check for missed customer milestones and calculate penalties.
+ * Returns an array of penalties for each missed delivery milestone for all customers.
  */
 function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): LatenessPenalty[] {
   const penalties: LatenessPenalty[] = []
@@ -176,7 +177,7 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
 }
 
 /**
- * Process production and update cash and inventory value
+ * Process production: updates cash and inventory based on production actions.
  */
 function processProduction(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
   if (action.production <= 0) return
@@ -190,7 +191,7 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
   }
 
   if (targetProduction <= 0) return
-  
+
   // Calculate maximum possible production
   const maxProductionByPatty = Math.floor(state.inventory.patty / PATTIES_PER_MEAL)
   const maxProductionByCheese = Math.floor(state.inventory.cheese / CHEESE_PER_MEAL)
@@ -207,7 +208,7 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
 
   if (maxProduction > 0) {
     // Calculate production cost
-     const productionCost = maxProduction * levelConfig.productionCostPerUnit
+    const productionCost = maxProduction * levelConfig.productionCostPerUnit
 
     // Remove materials and decrease their inventory values
     removeInventoryValue(state, "patty", maxProduction * PATTIES_PER_MEAL)
@@ -224,7 +225,8 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
 }
 
 /**
- * Process a single day of gameplay based on player actions
+ * Main game loop: processes a single day of gameplay based on player actions.
+ * Returns the updated game state after all actions and events are processed.
  */
 export function processDay(state: GameState, action: GameAction, levelConfig: LevelConfig): GameState {
   // Create a copy of the current state to modify
@@ -300,15 +302,15 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
 }
 
 /**
- * Check if player can recover from zero cash
- * (they can recover if they have finished goods to sell)
+ * Check if player can recover from zero cash.
+ * Returns true if the player has finished goods to sell, allowing recovery.
  */
 function canRecoverFromZeroCash(state: GameState): boolean {
   return state.inventory.finishedGoods > 0
 }
 
 /**
- * Process any pending orders that are due to arrive
+ * Process any pending supplier orders that are due to arrive today.
  */
 function processPendingSupplierOrders(state: GameState): void {
   const arrivingOrders: MaterialOrder[] = []
@@ -327,13 +329,13 @@ function processPendingSupplierOrders(state: GameState): void {
   }
 
   for (const order of arrivingOrders) {
-      // Add to inventory with value
-      addInventoryValue(
-        state, 
-        order.materialType, 
-        order.quantity, 
-        order.totalCost
-      )
+    // Add to inventory with value
+    addInventoryValue(
+      state,
+      order.materialType,
+      order.quantity,
+      order.totalCost
+    )
   }
 
   state.pendingSupplierOrders = remainingOrders
@@ -638,7 +640,7 @@ function recordDailyResults(
     day: state.day,
     cash: state.cash,
     inventory: { ...state.inventory },
-    inventoryValue: { ...state.inventoryValue},
+    inventoryValue: { ...state.inventoryValue },
     holdingCosts: holdingCosts,
     overstockCosts: overstockCosts,
     pattyPurchased: totalPattyPurchased,
