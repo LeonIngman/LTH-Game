@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage"
   },
   "dependencies": {
     "@auth/core": "latest",
@@ -53,7 +56,7 @@
     "crypto": "latest",
     "d3": "latest",
     "date-fns": "^2.28.0",
-    "dns": "latest",
+    "dns": "^0.1.2",
     "dotenv": "latest",
     "embla-carousel-react": "8.5.1",
     "fs": "latest",
@@ -61,7 +64,7 @@
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
     "next": "^15.3.3",
-    "next-auth": "latest",
+    "next-auth": "^4.24.7",
     "next-themes": "^0.4.4",
     "nodemailer": "latest",
     "path": "latest",
@@ -83,10 +86,20 @@
     "zod": "latest"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/d3": "^7.4.3",
+    "@types/jest": "^30.0.0",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "eslint": "^9.33.0",
+    "eslint-config-next": "15.4.6",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^30.0.5",
+    "msw": "^2.10.4",
+    "node-mocks-http": "^1.17.2",
     "postcss": "^8",
     "tailwindcss": "^3.4.17",
     "typescript": "^5"
