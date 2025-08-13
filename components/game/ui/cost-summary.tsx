@@ -113,15 +113,15 @@ export function CostSummary({
       </div>
       <div className="mt-4 border-t pt-4 flex justify-between items-center">
         <div className="grid grid-cols-3 gap-4 flex-1">
-          <div>
+          <div className="text-center">
             <p className="text-sm font-medium">Total Cost</p>
             <p className="text-xl font-bold text-red-600">{totalCost.toFixed(2)} kr</p>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-sm font-medium">Revenue</p>
             <p className="text-xl font-bold text-green-600">{revenue.toFixed(2)} kr</p>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-sm font-medium">Profit</p>
             <p className={`text-xl font-bold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
               {profit.toFixed(2)} kr
