@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { PerformanceSummary } from "@/components/performance/performance-summary"
 import { StudentSelector } from "@/components/performance/student-selector"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { getAllStudents } from "@/lib/actions/user-actions"
 import { getPerformanceData } from "@/lib/actions/performance-actions"
 
@@ -57,7 +58,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
   }
 
   if (loading || isLoading || !user) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+    return <LoadingScreen message="Loading performance data..." description="Analyzing student progress for this level" />
   }
 
   // Pick a student to show summary for (e.g. the first one with data)

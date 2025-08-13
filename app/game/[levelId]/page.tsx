@@ -1,6 +1,6 @@
 import { Suspense } from "react"
 import { GameInterface } from "@/components/game/game-interface"
-import { Skeleton } from "@/components/ui/skeleton"
+import { GameLoadingScreen } from "@/components/ui/loading-screen"
 
 interface GamePageProps {
   params: Promise<{ levelId: string }>
@@ -12,7 +12,7 @@ export default async function GamePage({ params }: GamePageProps) {
 
   return (
     <div className="container mx-auto py-6">
-      <Suspense fallback={<Skeleton className="h-[600px] w-full" />}>
+      <Suspense fallback={<GameLoadingScreen />}>
         <GameInterface levelId={parsedLevelId} />
       </Suspense>
     </div>

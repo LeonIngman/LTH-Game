@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { LoadingScreen, InlineLoadingScreen } from "@/components/ui/loading-screen"
 import { getQuizResults } from "@/lib/actions/quiz-actions"
 import { ArrowLeft } from "lucide-react"
 
@@ -45,7 +46,7 @@ export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
   }
 
   if (loading || !user) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+    return <LoadingScreen message="Loading quiz results..." description="Fetching student submissions and answers" />
   }
 
   return (
@@ -60,7 +61,7 @@ export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center">Loading quiz results...</div>
+        <InlineLoadingScreen message="Loading quiz results..." size="lg" />
       ) : quizResults.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
