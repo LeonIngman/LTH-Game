@@ -34,7 +34,7 @@ import { QuickReference } from "./ui/quick-reference"
 import { TutorialOverlay } from "./tutorial-overlay"
 
 // Import our custom hooks
-import { useGameState } from "@/hooks/use-game-state"
+import { usePersistedGameState } from "@/hooks/use-persisted-game-state"
 import { useGameActions } from "@/hooks/use-game-actions"
 import { useGameCalculations } from "@/hooks/use-game-calculations"
 import { useSupplierOrders } from "@/hooks/use-supplier-orders"
@@ -94,7 +94,17 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const [forecastData, setForecastData] = useState<Record<string, any> | null>(null)
 
   // Initialize game state and action
-  const { gameState, setGameState, isLastDay } = useGameState(levelConfig)
+  const {
+    gameState,
+    setGameState,
+    isLastDay,
+    isLoadingState,
+    isSaving,
+    lastSaved,
+    isDirty,
+    saveGameState,
+    resetLevelState
+  } = usePersistedGameState(levelConfig)
   const [action, setAction] = useState<GameAction>({
     supplierOrders: [],
     production: 0,
@@ -209,16 +219,16 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const calculateRevenue = useCallback(() => {
     let totalRevenue = 0
 
-    // Revenue from direct sales attempts
-    const salesPrice = levelConfig.sellingPricePerUnit || 25
-    totalRevenue += salesPrice
+    // Revenue from direct sales attempts  
+    const defaultSalesPrice = 25
+    totalRevenue += defaultSalesPrice
 
     // Revenue from customer orders
     if (action.customerOrders) {
       for (const customerOrder of action.customerOrders) {
         const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
         if (customer && customerOrder.quantity > 0) {
-          const pricePerUnit = (customer as any).pricePerUnit || salesPrice
+          const pricePerUnit = (customer as any).pricePerUnit || defaultSalesPrice
           totalRevenue += customerOrder.quantity * pricePerUnit
         }
       }
@@ -235,25 +245,25 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   }, [gameState.day, isLastDay, levelConfig.daysToComplete])
 
   // Handle forecasting completion
-const handleForecastingComplete = useCallback(
-  (forecasts: Record<string, any>) => {
-    setForecastingCompleted(true)
-    setShowForecasting(false)
-    setForecastData(forecasts)
+  const handleForecastingComplete = useCallback(
+    (forecasts: Record<string, any>) => {
+      setForecastingCompleted(true)
+      setShowForecasting(false)
+      setForecastData(forecasts)
 
-    toast({
-      title: "Forecasting Complete",
-      description: "You can now start the level with your forecasts.",
-    })
-  },
-  [toast],
-)
+      toast({
+        title: "Forecasting Complete",
+        description: "You can now start the level with your forecasts.",
+      })
+    },
+    [toast],
+  )
 
-// Get today's planned production
-const getTodaysPlannedProduction = useCallback(() => {
-  if (!forecastData?.productionRates) return undefined
-  return forecastData.productionRates[gameState.day] || 0 // ← NEW: Get current day's production
-}, [forecastData, gameState.day])
+  // Get today's planned production
+  const getTodaysPlannedProduction = useCallback(() => {
+    if (!forecastData?.productionRates) return undefined
+    return forecastData.productionRates[gameState.day] || 0 // ← NEW: Get current day's production
+  }, [forecastData, gameState.day])
 
   // Handle objectives completion
   const handleObjectivesComplete = useCallback(() => {
@@ -358,30 +368,30 @@ const getTodaysPlannedProduction = useCallback(() => {
     [],
   )
 
-// Added function to render dialogs
-const renderDialogs = () => (
-  <>
-    <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
+  // Added function to render dialogs
+  const renderDialogs = () => (
+    <>
+      <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
 
-    {requiresForecasting && (
-      <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
-    )}
-  </>
-)
+      {requiresForecasting && (
+        <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
+      )}
+    </>
+  )
 
-// Added function to calculate planned production
-const getPlannedProduction = useCallback(() => {
-  if (!forecastData) return undefined
+  // Added function to calculate planned production
+  const getPlannedProduction = useCallback(() => {
+    if (!forecastData) return undefined
 
-  if (forecastData.productionRates) {
-    // Sum up the production rates for all days
-    console.log(forecastData.productionRates)
-    return Object.values(forecastData.productionRates)//.reduce((sum: number, rate: number) => sum + rate, 0)
-  } else {
-    // Sum up the customer forecasts
-    return (forecastData["yummy-zone"] || 0) + (forecastData["toast-to-go"] || 0) + (forecastData["study-fuel"] || 0)
-  }
-}, [forecastData])
+    if (forecastData.productionRates) {
+      // Sum up the production rates for all days
+      console.log(forecastData.productionRates)
+      return Object.values(forecastData.productionRates)//.reduce((sum: number, rate: number) => sum + rate, 0)
+    } else {
+      // Sum up the customer forecasts
+      return (forecastData["yummy-zone"] || 0) + (forecastData["toast-to-go"] || 0) + (forecastData["study-fuel"] || 0)
+    }
+  }, [forecastData])
 
   const lastDayPenalty =
     gameState.overstockPenalties && gameState.overstockPenalties.length > 0
@@ -390,12 +400,20 @@ const getPlannedProduction = useCallback(() => {
 
   return (
     <div className="space-y-6">
-      {renderDialogs()} 
+      {renderDialogs()}
       <GameHeader
         levelId={levelConfig.id}
         levelConfig={levelConfig}
         onShowObjectives={() => setShowObjectives(true)}
         onShowTutorial={() => setShowTutorial(true)}
+        saveStatus={{
+          isSaving,
+          lastSaved,
+          isLoadingState,
+          isDirty
+        }}
+        onSave={saveGameState}
+        onResetLevel={resetLevelState}
       />
 
       <StatusBar gameState={gameState} levelConfig={levelConfig} />
@@ -540,7 +558,6 @@ const getPlannedProduction = useCallback(() => {
         setGameEnded={setGameEnded}
         onSubmitLevel={handleSubmitLevel}
         isSubmitting={isLoading}
-        level={levelConfig.id}
       />
 
       <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
