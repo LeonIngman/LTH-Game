@@ -1,6 +1,19 @@
 # Project To-Do List
 
-## Pending Tasks
+## Pending ### Core Features
+
+- **CF1**: Overstock costs should be calculated and displayed daily for level 1, and from the beginning for levels 2 and 3 _(requires game-testing)_
+- **CF3**: Fix tutorial _(last for UI work)_
+- **CF4**: Implement safety stock (visual only)
+- **CF5**: Centralize more values (e.g., level names appear in multiple places)
+- **CF6**: Implement quizzes **(⚠ Blocked by Bug #1)**
+- **CF7**: Per-player/team-member quiz tracking _(maybe postpone)_ **(⚠ Blocked by Bug #1)**
+- **CF8**: Implement most/all icons from the suggested UI _(maybe postpone/cancel)_
+- **CF9**: Ensure all numbers are correct _(game-testing)_
+- **CF10**: Make tables downloadable or add a button for the player to copy the full table into Excel
+- **CF11**: Forecasting should block production outside of the forecasting phase
+- **CF12**: Orders should appear immediately in the **Current Orders** widget when placed
+- **CF13**: Show ETA when purchasing and ETD when sellingsks
 
 ### Core Features
 
@@ -138,6 +151,7 @@
 - Removed buns from overstock threshold
 - Implemented variable lead times for level 3
 - **Fixed Bug #3**: Game History null property access crash - Added safe null handling to prevent crashes when displaying null values, game progress now preserved correctly
+- **CF2**: ✅ **COMPLETED** (2024-12-13) - Integrated player progress with the database for persistent storage and post-round analysis. Implemented comprehensive manual save system with keyboard shortcut (Cmd/Ctrl+S), visual save status indicators, and accessible UI. Removed auto-save functionality in favor of user-controlled manual saves with clear dirty state tracking. Game sessions are uniquely stored per user and level, enabling complete progress restoration across browser refreshes and sessions.
 
 ---
 
@@ -145,3 +159,11 @@
 
 - **Q1**: Vad ska visas i fönstret "Current Orders"?
 - **Q2**: Vilken information får jag från fönstret "Quick reference"?
+
+---
+
+## Questions for Gustav
+
+- **Q3**: Have you implemented any finishing logic? For example, what happens when the user completes a level?
+- **Q4**: Have you implemented revenue?
+- **Q5**: Have you implemented the leaderboard or is it just UI?
