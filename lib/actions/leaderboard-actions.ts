@@ -60,9 +60,9 @@ const mockLeaderboardData = [
   },
 ]
 
-export async function getLeaderboard() {
+export async function getLeaderboard(): Promise<any[]> {
   try {
-    console.log('🔍 [LEADERBOARD DEBUG] Starting getLeaderboard query...')
+    // Query to get leaderboard data
 
     // Get all user-level combinations from both Performance records AND GameSession records
     const rows = await sql`
@@ -159,11 +159,6 @@ export async function getLeaderboard() {
       ORDER BY ul.level_id ASC, ul.cumulative_profit DESC, ul."lastActive" DESC;
     `
 
-    console.log('📊 [LEADERBOARD DEBUG] Raw database results:', rows.length, 'rows')
-    rows.forEach((row, index) => {
-      console.log(`📋 [LEADERBOARD DEBUG] Row ${index + 1}: User=${row.username}, Level=${row.level}, Profit=${row.profit}, Day=${row.day}, Source=${row.source}`)
-    })
-
     const result = rows.map((r) => ({
       id: `${r.id}-${r.level}`, // Unique key per user-level combination
       userId: r.id,
@@ -176,15 +171,10 @@ export async function getLeaderboard() {
       day: r.day ?? 0,
     }))
 
-    console.log('✅ [LEADERBOARD DEBUG] Processed results:', result.length, 'entries')
-    result.forEach((entry, index) => {
-      console.log(`📋 [LEADERBOARD DEBUG] Entry ${index + 1}: ID=${entry.id}, User=${entry.username}, Level=${entry.level}, Profit=${entry.profit}, Day=${entry.day}`)
-    })
-
     return result
   } catch (error) {
-    console.error("❌ [LEADERBOARD DEBUG] Error getting leaderboard:", error)
-    console.log("🔄 [LEADERBOARD DEBUG] Falling back to mock leaderboard data due to database error")
+    console.error("Error getting leaderboard:", error)
+    // Fallback to mock data due to database error
     // Expand mock data to have multiple level entries per user
     return mockLeaderboardData.flatMap((d) => [
       { ...d, id: `${d.id}-${d.level}`, userId: d.id, day: d.progress },
@@ -233,7 +223,7 @@ export async function getLeaderboard() {
     }))
   } catch (error) {
     console.error(`Error getting leaderboard for level ${levelId}:`, error)
-    console.log(`Falling back to mock leaderboard data for level ${levelId} due to database error`)
+    // Fallback to mock data due to database error
     return mockLeaderboardData.filter((user) => user.level === levelId).map((d) => ({
       ...d,
       id: `${d.id}-${levelId}`,

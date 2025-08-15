@@ -1,8 +1,7 @@
 // Reproduction test for Bug #3: Game History Null Property Access
 // This simulates the exact scenario described in the TODO.md
 
-console.log("🔍 Testing Bug #3 - Game History Null Property Access");
-console.log("==================================================");
+// Bug #3 verification script - Testing Game History Null Property Access fix
 
 // Simulate the original bug scenario
 console.log("\n1. Original bug scenario:");

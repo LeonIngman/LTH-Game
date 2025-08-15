@@ -192,7 +192,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [router])
 
   // Debugging: Log the AuthContext values
-  console.log("AuthContext: user", user, "loading", loading)
+  // Debug logging in development only
+  if (process.env.NODE_ENV === 'development') {
+    console.log("AuthContext: user", user, "loading", loading)
+  }
 
   return <AuthContext.Provider value={{ user, loading, login, logout }}>{children}</AuthContext.Provider>
 }

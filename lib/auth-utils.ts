@@ -171,7 +171,9 @@ export function logAuthEvent(event: string, details: { userId?: string; ip?: str
     }
 
     // In production, this should write to a secure log file or database
-    console.log('[AUTH_AUDIT]', JSON.stringify(logEntry))
+    if (process.env.NODE_ENV === 'development') {
+        console.log('[AUTH_AUDIT]', JSON.stringify(logEntry))
+    }
 }
 
 // Environment Configuration

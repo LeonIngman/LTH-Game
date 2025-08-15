@@ -12,7 +12,9 @@ export function useSupplierOrders({ levelConfig, action, setAction }: SupplierOr
   const initializeSupplierOrders = useCallback((): SupplierOrder[] => {
     // Safety check: ensure suppliers array exists
     if (!levelConfig.suppliers || !Array.isArray(levelConfig.suppliers)) {
-      console.warn("levelConfig.suppliers is undefined or not an array. Using empty array instead.")
+      if (process.env.NODE_ENV === 'development') {
+        console.warn("levelConfig.suppliers is undefined or not an array. Using empty array instead.")
+      }
       return []
     }
 

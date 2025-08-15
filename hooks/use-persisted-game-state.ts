@@ -47,7 +47,6 @@ export function usePersistedGameState(levelConfig: LevelConfig): GameStateHook &
                 }
 
                 if (data.success && data.hasSession && data.gameState) {
-                    console.log("Loaded saved game state for level", levelConfig.id)
                     setGameStateInternal(data.gameState)
                     setLastSaved(new Date())
                     setIsDirty(false)
@@ -60,7 +59,7 @@ export function usePersistedGameState(levelConfig: LevelConfig): GameStateHook &
                         duration: 3000,
                     })
                 } else {
-                    console.log("No saved game state found, using initial state")
+                    // No saved game state found, using initial state
                     hasLoadedInitialState.current = true
                 }
             } catch (error) {
@@ -107,7 +106,6 @@ export function usePersistedGameState(levelConfig: LevelConfig): GameStateHook &
             if (data.success) {
                 setLastSaved(new Date())
                 setIsDirty(false)
-                console.log("Game state saved successfully")
 
                 toast({
                     title: "Progress Saved",
@@ -128,9 +126,7 @@ export function usePersistedGameState(levelConfig: LevelConfig): GameStateHook &
         } finally {
             setIsSaving(false)
         }
-    }, [user, levelConfig.id, gameState, isSaving, toast])
-
-    // Enhanced setGameState that tracks dirty state
+    }, [user, levelConfig.id, gameState, isSaving, toast])    // Enhanced setGameState that tracks dirty state
     const setGameState = useCallback((newState: GameState) => {
         setGameStateInternal(newState)
 
