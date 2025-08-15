@@ -19,7 +19,7 @@ interface TeacherQuizPageProps {
 export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
-  
+
   // Unwrap params using React.use() for Next.js 15+ compatibility
   const { levelId: levelIdParam } = use(params)
   const levelId = Number.parseInt(levelIdParam, 10)

@@ -15,7 +15,7 @@ interface QuizPageProps {
 export default function QuizPage({ params }: QuizPageProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
-  
+
   // Unwrap params using React.use() for Next.js 15+ compatibility
   const { levelId: levelIdParam } = use(params)
   const levelId = Number.parseInt(levelIdParam, 10)
@@ -27,7 +27,7 @@ export default function QuizPage({ params }: QuizPageProps) {
         <div className="text-center space-y-4">
           <h1 className="text-2xl font-bold text-red-600">Invalid Level</h1>
           <p className="text-gray-600">The level ID "{levelIdParam}" is not valid.</p>
-          <button 
+          <button
             onClick={() => router.push("/dashboard/student")}
             className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
             aria-label="Return to student dashboard"
@@ -68,7 +68,7 @@ export default function QuizPage({ params }: QuizPageProps) {
             <div className="text-center space-y-4">
               <h1 className="text-2xl font-bold mb-4">Quiz Not Available</h1>
               <p className="text-gray-600">Quiz for Level {levelId} is not yet available.</p>
-              <button 
+              <button
                 onClick={() => router.push("/dashboard/student")}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 aria-label="Return to student dashboard"
