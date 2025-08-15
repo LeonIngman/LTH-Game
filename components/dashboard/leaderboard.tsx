@@ -9,12 +9,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 
 interface LeaderboardData {
   id: string
+  userId?: string  // Original user ID for currentUser comparison
   username: string
   progress: number
   profit: number
   level: number
   lastActive: string
-  levelCompletedDate?: string
+  levelCompletedDate?: string | null
+  day?: number // aktuell dag (timestampNumber)
 }
 
 interface LeaderboardProps {
@@ -22,9 +24,11 @@ interface LeaderboardProps {
   currentUser?: string
 }
 
-// Format currency in Swedish style (spaces as thousands separators)
+// Format currency with exactly 2 decimal places (Swedish style)
+// Convert from öre (database stores in smallest currency unit) to krona
 function formatCurrency(amount: number): string {
-  return amount.toLocaleString("sv-SE").replace(/,/g, " ") + " kr"
+  const krona = amount / 100
+  return krona.toFixed(2).replace(".", ",") + " kr"
 }
 
 export function Leaderboard({ data, currentUser }: LeaderboardProps) {
@@ -46,6 +50,9 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
 
   // Sort by profit (highest first)
   const sortedData = [...filteredData].sort((a, b) => b.profit - a.profit)
+
+  // Show level column only when viewing all levels
+  const showLevelColumn = selectedLevel === "all"
 
   // Determine the date column header based on selected level
   const dateColumnHeader = selectedLevel === "all" ? "Last Active" : "Completion Date"
@@ -85,29 +92,43 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
           <TableHeader>
             <TableRow className="border-b border-[#4d94ff]">
               <TableHead className="w-12">Rank</TableHead>
-              <TableHead>Username</TableHead>
-              <TableHead>Profit</TableHead>
+              <TableHead>Användare</TableHead>
+              {showLevelColumn && <TableHead>Nivå</TableHead>}
+              <TableHead>Dag</TableHead>
+              <TableHead>Resultat</TableHead>
               <TableHead className="hidden md:table-cell">{dateColumnHeader}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {sortedData.map((user, index) => (
-              <TableRow key={user.id} className={currentUser === user.id ? "bg-blue-50" : ""}>
-                <TableCell className="font-medium">{index + 1}</TableCell>
-                <TableCell>
-                  {user.username}
-                  {currentUser === user.id && " (You)"}
-                </TableCell>
-                <TableCell className="font-mono">{formatCurrency(user.profit)}</TableCell>
-                <TableCell className="hidden md:table-cell">
-                  {selectedLevel === "all" ? user.lastActive : user.levelCompletedDate || "In progress"}
-                </TableCell>
-              </TableRow>
-            ))}
+            {sortedData.map((user, index) => {
+              const day = user.day ?? user.progress ?? 0
+              const isCurrentUser = currentUser === (user.userId || user.id)
+              const isNegativeProfit = user.profit < 0
+
+              return (
+                <TableRow key={user.id} className={isCurrentUser ? "bg-blue-50" : ""}>
+                  <TableCell className="font-medium">{index + 1}</TableCell>
+                  <TableCell>
+                    {user.username}
+                    {isCurrentUser && " (du)"}
+                  </TableCell>
+                  {showLevelColumn && (
+                    <TableCell className="font-mono">{user.level}</TableCell>
+                  )}
+                  <TableCell className="font-mono">{day}</TableCell>
+                  <TableCell className={`font-mono ${isNegativeProfit ? "text-red-600" : ""}`}>
+                    {formatCurrency(user.profit)}
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">
+                    {selectedLevel === "all" ? user.lastActive : user.levelCompletedDate || "Pågående"}
+                  </TableCell>
+                </TableRow>
+              )
+            })}
             {sortedData.length === 0 && (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-4 text-gray-500">
-                  No data available for this level
+                <TableCell colSpan={showLevelColumn ? 6 : 5} className="text-center py-4 text-gray-500">
+                  Ingen data tillgänglig för detta filter
                 </TableCell>
               </TableRow>
             )}

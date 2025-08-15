@@ -62,72 +62,104 @@ const mockLeaderboardData = [
 
 export async function getLeaderboard() {
   try {
-    const users = await sql`
+    // Get latest performance per student per level + timestamp info
+    const rows = await sql`
+      WITH latest_performance_per_level AS (
+        SELECT DISTINCT ON (p."userId", p."levelId")
+          p."userId" as user_id,
+          p."levelId" as level_id,
+          p."cumulativeProfit" as cumulative_profit,
+          p."timestampId" as timestamp_id,
+          p."createdAt" as created_at
+        FROM "Performance" p
+        ORDER BY p."userId", p."levelId", p."createdAt" DESC
+      )
       SELECT 
-        id, 
-        username, 
-        progress, 
-        0 as profit,
-        progress as level,
-        "lastActive",
-        NULL as "levelCompletedDate"
-      FROM "User"
-      WHERE role = 'student'
-      ORDER BY progress DESC, "lastActive" DESC
+        u.id,
+        u.username,
+        u.progress,
+        COALESCE(lp.cumulative_profit, 0) AS profit,
+        COALESCE(lp.level_id, 0) AS level,
+        u."lastActive",
+        COALESCE(ts."timestampNumber", 0) AS day,
+        NULL AS "levelCompletedDate"
+      FROM "User" u
+          LEFT JOIN latest_performance_per_level lp ON lp.user_id = u.id
+          LEFT JOIN "TimeStamp" ts ON ts.id = lp.timestamp_id
+          WHERE u.role = 'student'
+      ORDER BY lp.level_id ASC, lp.cumulative_profit DESC, u."lastActive" DESC;
     `
 
-    return users.map((user) => ({
-      ...user,
-      profit: user.profit || 0,
-      level: user.level || 0,
-      lastActive: new Date(user.lastActive).toLocaleDateString(),
-      levelCompletedDate: user.levelCompletedDate || null,
+    return rows.map((r) => ({
+      id: `${r.id}-${r.level}`, // Unique key per user-level combination
+      userId: r.id,
+      username: r.username,
+      progress: r.progress ?? 0,
+      profit: typeof r.profit === "string" ? parseFloat(r.profit) : (r.profit ?? 0),
+      level: r.level ?? 0,
+      lastActive: new Date(r.lastActive).toLocaleDateString("sv-SE"),
+      levelCompletedDate: r.levelCompletedDate || null,
+      day: r.day ?? 0,
     }))
   } catch (error) {
     console.error("Error getting leaderboard:", error)
-    // Return mock data as fallback when database query fails
     console.log("Falling back to mock leaderboard data due to database error")
-    return mockLeaderboardData
+    // Expand mock data to have multiple level entries per user
+    return mockLeaderboardData.flatMap((d) => [
+      { ...d, id: `${d.id}-${d.level}`, userId: d.id, day: d.progress },
+    ])
   }
 }
 
 export async function getLeaderboardByLevel(levelId: number) {
   try {
-    const users = await sql`
+    const rows = await sql`
+      WITH level_perf AS (
+        SELECT DISTINCT ON (p."userId")
+          p."userId" as user_id,
+          p."levelId" as level_id,
+          p."cumulativeProfit" as cumulative_profit,
+          p."timestampId" as timestamp_id,
+          p."createdAt" as created_at
+        FROM "Performance" p
+        WHERE p."levelId" = ${levelId}
+        ORDER BY p."userId", p."createdAt" DESC
+      )
       SELECT 
-        u.id, 
-        u.username, 
-        u.progress, 
-        COALESCE(p.profit, 0) as profit,
-        p.level_id as level,
+        u.id,
+        u.username,
+        u.progress,
+        COALESCE(lp.cumulative_profit, 0) AS profit,
+        COALESCE(lp.level_id, ${levelId}) AS level,
         u."lastActive",
-        TO_CHAR(p.completed_at, 'YYYY-MM-DD') as "levelCompletedDate"
+        COALESCE(ts."timestampNumber", 0) AS day,
+        NULL AS "levelCompletedDate"
       FROM "User" u
-      JOIN (
-        SELECT 
-          user_id, 
-          level_id, 
-          MAX(cumulative_profit) as profit,
-          MAX(created_at) as completed_at
-        FROM "Performance"
-        WHERE level_id = ${levelId}
-        GROUP BY user_id, level_id
-      ) p ON u.id = p.user_id
-      WHERE u.role = 'student' 
-      ORDER BY p.profit DESC, u."lastActive" DESC
+          LEFT JOIN level_perf lp ON lp.user_id = u.id
+          LEFT JOIN "TimeStamp" ts ON ts.id = lp.timestamp_id
+          WHERE u.role = 'student' AND (lp.level_id = ${levelId} OR lp.level_id IS NULL)
+      ORDER BY lp.cumulative_profit DESC, u."lastActive" DESC;
     `
 
-    return users.map((user) => ({
-      ...user,
-      profit: user.profit || 0,
-      level: user.level || 0,
-      lastActive: new Date(user.lastActive).toLocaleDateString(),
-      levelCompletedDate: user.levelCompletedDate || null,
+    return rows.map((r) => ({
+      id: `${r.id}-${levelId}`,
+      userId: r.id,
+      username: r.username,
+      progress: r.progress ?? 0,
+      profit: typeof r.profit === "string" ? parseFloat(r.profit) : (r.profit ?? 0),
+      level: r.level ?? levelId,
+      lastActive: new Date(r.lastActive).toLocaleDateString("sv-SE"),
+      levelCompletedDate: r.levelCompletedDate || null,
+      day: r.day ?? 0,
     }))
   } catch (error) {
     console.error(`Error getting leaderboard for level ${levelId}:`, error)
-    // Return filtered mock data as fallback when database query fails
     console.log(`Falling back to mock leaderboard data for level ${levelId} due to database error`)
-    return mockLeaderboardData.filter((user) => user.level === levelId)
+    return mockLeaderboardData.filter((user) => user.level === levelId).map((d) => ({
+      ...d,
+      id: `${d.id}-${levelId}`,
+      userId: d.id,
+      day: d.progress
+    }))
   }
 }

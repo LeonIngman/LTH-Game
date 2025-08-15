@@ -14,19 +14,23 @@ import { getAllStudents } from "@/lib/actions/user-actions"
 const initialLeaderboardData = [
   {
     id: "loading-1",
-    username: "Loading...",
+    userId: "loading-1",
+    username: "Laddar...",
     progress: 0,
     profit: 0,
     level: 0,
-    lastActive: "Loading...",
+    lastActive: "Laddar...",
+    day: 0,
   },
   {
     id: "loading-2",
-    username: "Loading...",
+    userId: "loading-2",
+    username: "Laddar...",
     progress: 0,
     profit: 0,
     level: 0,
-    lastActive: "Loading...",
+    lastActive: "Laddar...",
+    day: 0,
   },
 ]
 

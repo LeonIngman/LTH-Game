@@ -96,11 +96,11 @@
 - **UX1**: ✅ Laddningsskärm
 - **UX2**: ✅ Justerad padding i “Next day”-rad
 - **UX3**: ✅ Sorterbara kolumner i Game History
- - **B1**: ✅ Quiz-sida – parameteråtkomst löst (dynamic params unwrap med React.use(); blockerande status borttagen för CF6, CF7, UX5, UX6)
+- **B1**: ✅ Quiz-sida – parameteråtkomst löst (dynamic params unwrap med React.use(); blockerande status borttagen för CF6, CF7, UX5, UX6)
 
 ---
 
 ## Frågor till Gustav
 
 Q1: Kan jag ta bort alternativet att producera 0 hamburgare? Nuvarande: 0,10,20,30 → Förslag: 10,20,30 (alternativt 10,20,30,40?). Vad önskas av kunden?
-Q2: 
+Q2:
