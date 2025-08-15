@@ -146,13 +146,12 @@ export function GameLevels({
                 className={`flex items-center gap-4 rounded-lg border ${isLocked ? "border-gray-200" : "border-[#4d94ff]"} p-4 ${isLocked ? "opacity-60" : ""}`}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full ${
-                    isCompleted
-                      ? "bg-green-100 text-green-600"
-                      : isLocked
-                        ? "bg-gray-100 text-gray-400"
-                        : "bg-blue-100 text-blue-600"
-                  }`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${isCompleted
+                    ? "bg-green-100 text-green-600"
+                    : isLocked
+                      ? "bg-gray-100 text-gray-400"
+                      : "bg-blue-100 text-blue-600"
+                    }`}
                 >
                   {isCompleted ? (
                     <CheckCircle className="h-5 w-5" />
