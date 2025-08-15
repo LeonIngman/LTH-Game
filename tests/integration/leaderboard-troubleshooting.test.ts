@@ -3,8 +3,11 @@ import { sql } from '@/lib/db'
 /**
  * Troubleshooting test to diagnose leaderboard data issues
  * This test connects to the actual database to verify data state
+ * 
+ * NOTE: This test contains extensive console logging for debugging purposes.
+ * It should only be run when troubleshooting specific database issues.
  */
-describe('Leaderboard Database Troubleshooting', () => {
+describe.skip('Leaderboard Database Troubleshooting', () => {
     it('should show all Performance records in the database', async () => {
         try {
             const performances = await sql`
