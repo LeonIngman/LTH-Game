@@ -219,16 +219,12 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const calculateRevenue = useCallback(() => {
     let totalRevenue = 0
 
-    // Revenue from direct sales attempts  
-    const defaultSalesPrice = 25
-    totalRevenue += defaultSalesPrice
-
-    // Revenue from customer orders
+    // Revenue only from actual customer orders (no phantom baseline)
     if (action.customerOrders) {
       for (const customerOrder of action.customerOrders) {
         const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
         if (customer && customerOrder.quantity > 0) {
-          const pricePerUnit = (customer as any).pricePerUnit || defaultSalesPrice
+          const pricePerUnit = (customer as any).pricePerUnit
           totalRevenue += customerOrder.quantity * pricePerUnit
         }
       }

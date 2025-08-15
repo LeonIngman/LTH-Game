@@ -290,7 +290,7 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   // 12. Check if player is bankrupt (cash <= 0)
   if (newState.cash <= 0 && !canRecoverFromZeroCash(newState)) {
     newState.gameOver = true
-    console.log("GAME OVER: Player is bankrupt with cash:", newState.cash)
+    // Game over: Player is bankrupt with cash: newState.cash
   }
 
   // 13. Advance to next day (only if not game over)
@@ -615,8 +615,11 @@ function recordDailyResults(
   // Calculate revenue from customer orders
   const customerDeliveries: Record<number, { quantity: number; revenue: number }> = {}
   let revenue = 0
+  let totalTransportCost = 0
+  
   for (const customerOrder of action.customerOrders || []) {
     const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
+    
     if (!customer) continue
 
     if (!customerDeliveries[customer.id]) {
@@ -626,15 +629,29 @@ function recordDailyResults(
       }
     }
 
-    // Only count immediate revenue (lead time = 0)
-    if (customer.leadTime === 0) {
-      const orderRevenue =
-        customerOrder.quantity * customer.pricePerUnit - customer.transportCosts[customerOrder.quantity]
-      customerDeliveries[customer.id].quantity += customerOrder.quantity
-      customerDeliveries[customer.id].revenue += orderRevenue
-      revenue += orderRevenue
+    // Skip orders with zero quantity to avoid NaN issues
+    if (customerOrder.quantity <= 0) {
+      continue
     }
+
+    const transportCost = customer.transportCosts[customerOrder.quantity] || 0
+    // Revenue = gross sales value (no costs subtracted)
+    const orderRevenue = customerOrder.quantity * customer.pricePerUnit
+
+    customerDeliveries[customer.id].quantity += customerOrder.quantity
+    customerDeliveries[customer.id].revenue += orderRevenue
+    revenue += orderRevenue
+    totalTransportCost += transportCost
   }
+
+  // Ensure revenue is never NaN - treat as 0 if corrupted
+  if (isNaN(revenue)) {
+    revenue = 0
+  }
+
+  // Calculate proper profit: Revenue - Total Costs  
+  const totalCosts = totalPurchaseCost + totalProductionCost + totalHoldingCost + totalTransportCost
+  const calculatedProfit = revenue - totalCosts
 
   const dailyResult: DailyResult = {
     day: state.day,
@@ -654,9 +671,10 @@ function recordDailyResults(
       purchases: totalPurchaseCost,
       production: totalProductionCost,
       holding: totalHoldingCost,
-      total: totalPurchaseCost + totalProductionCost + totalHoldingCost,
+      transport: totalTransportCost,
+      total: totalPurchaseCost + totalProductionCost + totalHoldingCost + totalTransportCost,
     },
-    profit: dailyProfit,
+    profit: calculatedProfit,
     cumulativeProfit: state.cumulativeProfit,
     score: state.score,
     customerDeliveries: Object.keys(customerDeliveries).length > 0 ? customerDeliveries : undefined,

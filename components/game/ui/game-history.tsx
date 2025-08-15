@@ -27,6 +27,32 @@ function safeFormatCurrency(value: number | null | undefined): string {
 }
 
 /**
+ * Safely format revenue values, treating null/undefined as 0 (no sales = 0 revenue)
+ * This is different from other currency fields where null might indicate missing data
+ */
+function safeFormatRevenue(value: number | null | undefined): string {
+  // For revenue, null/undefined means no sales, which equals 0.00 kr
+  if (value === null || value === undefined) {
+    return "0.00 kr"
+  }
+
+  // Handle non-number values (including strings and NaN)
+  if (typeof value !== 'number' || isNaN(value)) {
+    // Try to recover from string numbers
+    if (typeof value === 'string' && (value as string).trim() !== '') {
+      const parsed = parseFloat(value as string)
+      if (!isNaN(parsed)) {
+        return `${parsed.toFixed(2)} kr`
+      }
+    }
+
+    // If we can't parse it, treat as no sales (including NaN values)
+    return "0.00 kr"
+  }
+
+  const result = `${value.toFixed(2)} kr`
+  return result
+}/**
  * Safely formats a numeric value to a string without currency
  * Returns "N/A" if the value is null, undefined, or not a number
  */
@@ -113,8 +139,8 @@ export function GameHistory({ history }: GameHistoryProps) {
             variant="ghost"
             size="sm"
             className={`h-4 w-4 p-0 hover:bg-transparent ${isSortActive(column, 'asc')
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              ? 'text-primary'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
             onClick={() => handleSort(column, 'asc')}
             aria-label={`Sort ${label} ascending`}
@@ -128,8 +154,8 @@ export function GameHistory({ history }: GameHistoryProps) {
             variant="ghost"
             size="sm"
             className={`h-4 w-4 p-0 hover:bg-transparent ${isSortActive(column, 'desc')
-                ? 'text-primary'
-                : 'text-muted-foreground hover:text-foreground'
+              ? 'text-primary'
+              : 'text-muted-foreground hover:text-foreground'
               }`}
             onClick={() => handleSort(column, 'desc')}
             aria-label={`Sort ${label} descending`}
@@ -209,7 +235,7 @@ export function GameHistory({ history }: GameHistoryProps) {
                   <TableRow key={index}>
                     <TableCell>{safeFormatNumber(entry.day)}</TableCell>
                     <TableCell>{safeFormatCurrency(entry.cash)}</TableCell>
-                    <TableCell>{safeFormatCurrency(entry.revenue)}</TableCell>
+                    <TableCell>{safeFormatRevenue(entry.revenue)}</TableCell>
                     <TableCell>{safeFormatCurrency(costsValue)}</TableCell>
                     <TableCell className={profitClass}>
                       {safeFormatCurrency(entry.profit)}
