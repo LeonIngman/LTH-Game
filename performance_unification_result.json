@@ -1,0 +1,31 @@
+{
+  "analysis_timestamp": "2025-08-16T14:23:19Z",
+  "database_state": {
+    "total_performance_records": 2,
+    "total_gamedailydata_records": 0,
+    "total_gamesession_records": 2
+  },
+  "backfill_results": {
+    "performance_exact_matches": UPDATE1,
+    "performance_fallback_matches": UPDATE1,
+    "performance_total_matched": 0,
+    "performance_orphaned": 2,
+    "gamedailydata_linked": 0,
+    "gamedailydata_orphaned": 0
+  },
+  "constraints_applied": {
+    "performance_sessionid_not_null": false,
+    "gamedailydata_sessionid_not_null": false
+  },
+  "success_metrics": {
+    "performance_success_rate": "0%",
+    "gamedailydata_success_rate": "N/A%"
+  },
+  "unification_status": "partially_unified",
+  "recommendations": [
+    "Handle 2 orphaned Performance records",
+    "All GameDailyData records successfully linked",
+    "Update application code to use sessionId references",
+    "Consider deprecating legacy reference patterns"
+  ]
+}
