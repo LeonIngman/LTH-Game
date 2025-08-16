@@ -25,7 +25,7 @@ This document summarizes the complete database migration process for the Supply 
 - **Baseline Documentation**: Row counts recorded for all tables (35 total rows)
 - **Branch Management**: Dedicated migration branch with proper isolation
 
-### 3. Lean Schema Migrations (4 Files)
+### 3. Lean Schema Migrations (5 Files)
 
 #### Migration 001: GameSession Enhancement
 
@@ -76,7 +76,44 @@ This document summarizes the complete database migration process for the Supply 
 --   - Index created for query performance
 ```
 
-### 4. Supplier Cardinality Analysis
+#### Migration 005: Performance SessionId Link
+
+```sql
+-- File: sql/migrations/005_add_sessionid_to_performance.sql
+-- Status: ✅ COMPLETED
+-- Changes Applied:
+--   - Added nullable sessionId FK to GameSession(id)
+--   - Proper foreign key constraints and indexing
+--   - Enables Performance-GameSession unification
+--   - Safe for existing Performance records
+```
+
+### 4. Performance-GameSession Unification
+
+#### Unification Analysis: `unify_performance_gamesession_fixed.sh`
+- **Purpose**: Link existing Performance records to appropriate GameSession records
+- **Strategy**: Intelligent matching based on (userId, levelId) with timestamp proximity
+- **Status**: ✅ COMPLETED WITH PARTIAL SUCCESS
+
+#### Unification Results
+```json
+{
+  "performance_records": {
+    "total": 2,
+    "linked": 1,
+    "orphaned": 1,
+    "success_rate": "50.0%"
+  },
+  "linked_records": [
+    "Performance ID 2 (user_t5u1hiin, level 0) → GameSession 33"
+  ],
+  "orphaned_records": [
+    "Performance ID 3 (user_eurl6rx6, level 0) - No GameSession exists"
+  ]
+}
+```
+
+### 5. Supplier Cardinality Analysis
 
 #### Analysis Script: `analyze_supplier_cardinality_working.sh`
 
@@ -149,15 +186,16 @@ ALTER TABLE "Supplier" ALTER COLUMN "productId" DROP NOT NULL;
 ```
 sql/migrations/
 ├── 001_update_gamesession.sql          ✅ Applied
-├── 002_add_sessionid_to_gamedailydata.sql  ✅ Applied
+├── 002_add_sessionid_to_gamedailydata.sql  ✅ Applied  
 ├── 003_add_sessionid_to_order.sql      ✅ Applied
-└── 004_add_productid_to_supplier.sql   ✅ Applied
+├── 004_add_productid_to_supplier.sql   ✅ Applied
+└── 005_add_sessionid_to_performance.sql    ✅ Applied
 
 analyze_supplier_cardinality_working.sh ✅ Complete
+unify_performance_gamesession_fixed.sh  ✅ Complete
 supplier_analysis_result.json          ✅ Generated
-```
-
-## Production Deployment Checklist
+performance_unification_result.json    ✅ Generated
+```## Production Deployment Checklist
 
 ### Pre-Deployment
 
@@ -169,10 +207,11 @@ supplier_analysis_result.json          ✅ Generated
 ### Deployment Steps
 
 1. Create production database backup
-2. Apply migrations in order (001 → 002 → 003 → 004)
+2. Apply migrations in order (001 → 002 → 003 → 004 → 005)
 3. Verify row counts match expectations
 4. Run supplier cardinality analysis on production data
-5. Update application code to use SupplierProduct table
+5. Run performance unification analysis
+6. Update application code to use SupplierProduct table and sessionId references
 
 ### Post-Deployment
 
@@ -213,5 +252,5 @@ supplier_analysis_result.json          ✅ Generated
 
 **Migration completed successfully on August 16, 2025**  
 **Database: supply_chain_game**  
-**Total Changes: 4 migration files + cardinality analysis**  
-**Recommendation: Use SupplierProduct table as canonical source**
+**Total Changes: 5 migration files + cardinality analysis + performance unification**  
+**Recommendations: Use SupplierProduct table as canonical source + leverage Performance.sessionId for GameSession relationships**
