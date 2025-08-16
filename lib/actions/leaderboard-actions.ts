@@ -101,29 +101,35 @@ export async function getLeaderboard(): Promise<any[]> {
           AND gs.game_state::json->>'cumulativeProfit' IS NOT NULL
       ),
       combined_data AS (
-        -- Get Performance records first (they take priority)
-        SELECT 
+        -- Prioritize GameSession data when it's more recent than Performance data
+        -- This ensures that reset levels show fresh data instead of stale performance data
+        SELECT DISTINCT ON (user_id, level_id)
           user_id,
           level_id,
           cumulative_profit,
           timestamp_id,
           created_at,
           source
-        FROM latest_performance_per_level
-        UNION ALL
-        -- Add GameSession records only where no Performance record exists
-        SELECT DISTINCT
-          gsd.user_id,
-          gsd.level_id,
-          gsd.cumulative_profit,
-          NULL::integer as timestamp_id,
-          gsd.created_at,
-          gsd.source
-        FROM game_session_data gsd
-        WHERE NOT EXISTS (
-          SELECT 1 FROM latest_performance_per_level lp 
-          WHERE lp.user_id = gsd.user_id AND lp.level_id = gsd.level_id
-        )
+        FROM (
+          SELECT 
+            user_id,
+            level_id,
+            cumulative_profit,
+            timestamp_id,
+            created_at,
+            source
+          FROM latest_performance_per_level
+          UNION ALL
+          SELECT DISTINCT
+            gsd.user_id,
+            gsd.level_id,
+            gsd.cumulative_profit,
+            NULL::integer as timestamp_id,
+            gsd.created_at,
+            gsd.source
+          FROM game_session_data gsd
+        ) all_data
+        ORDER BY user_id, level_id, created_at DESC
       ),
       user_levels AS (
         SELECT DISTINCT
@@ -183,31 +189,89 @@ export async function getLeaderboard(): Promise<any[]> {
 } export async function getLeaderboardByLevel(levelId: number) {
   try {
     const rows = await sql`
-      WITH level_perf AS (
+      WITH latest_performance AS (
         SELECT DISTINCT ON (p."userId")
           p."userId" as user_id,
           p."levelId" as level_id,
           p."cumulativeProfit" as cumulative_profit,
           p."timestampId" as timestamp_id,
-          p."createdAt" as created_at
+          p."createdAt" as created_at,
+          'performance'::text as source
         FROM "Performance" p
         WHERE p."levelId" = ${levelId}
         ORDER BY p."userId", p."createdAt" DESC
+      ),
+      game_session_data AS (
+        SELECT DISTINCT
+          gs.user_id,
+          gs.level_id,
+          COALESCE(
+            CASE 
+              WHEN gs.game_state::json->>'cumulativeProfit' ~ '^-?\d+$' 
+              THEN CAST(gs.game_state::json->>'cumulativeProfit' AS INTEGER)
+              ELSE CAST(ROUND(CAST(gs.game_state::json->>'cumulativeProfit' AS NUMERIC) * 100) AS INTEGER)
+            END,
+            0
+          ) as cumulative_profit,
+          COALESCE(
+            CAST(gs.game_state::json->>'day' AS INTEGER),
+            1
+          ) as day_number,
+          gs.updated_at as created_at,
+          'game_session'::text as source
+        FROM "GameSession" gs
+        WHERE gs.level_id = ${levelId}
+          AND gs.game_state IS NOT NULL 
+          AND gs.game_state::json->>'cumulativeProfit' IS NOT NULL
+      ),
+      combined_data AS (
+        -- Prioritize most recent data (GameSession over Performance if GameSession is newer)
+        SELECT DISTINCT ON (user_id)
+          user_id,
+          level_id,
+          cumulative_profit,
+          timestamp_id,
+          created_at,
+          source,
+          day_number
+        FROM (
+          SELECT 
+            user_id,
+            level_id,
+            cumulative_profit,
+            timestamp_id,
+            created_at,
+            source,
+            NULL::integer as day_number
+          FROM latest_performance
+          UNION ALL
+          SELECT 
+            user_id,
+            level_id,
+            cumulative_profit,
+            NULL::integer as timestamp_id,
+            created_at,
+            source,
+            day_number
+          FROM game_session_data
+        ) all_data
+        ORDER BY user_id, created_at DESC
       )
       SELECT 
         u.id,
         u.username,
         u.progress,
-        COALESCE(lp.cumulative_profit, 0) AS profit,
-        COALESCE(lp.level_id, ${levelId}) AS level,
+        COALESCE(cd.cumulative_profit, 0) AS profit,
+        COALESCE(cd.level_id, ${levelId}) AS level,
         u."lastActive",
-        COALESCE(ts."timestampNumber", 0) AS day,
-        NULL AS "levelCompletedDate"
+        COALESCE(ts."timestampNumber", cd.day_number, 0) AS day,
+        NULL AS "levelCompletedDate",
+        cd.source
       FROM "User" u
-          LEFT JOIN level_perf lp ON lp.user_id = u.id
-          LEFT JOIN "TimeStamp" ts ON ts.id = lp.timestamp_id
-          WHERE u.role = 'student' AND (lp.level_id = ${levelId} OR lp.level_id IS NULL)
-      ORDER BY lp.cumulative_profit DESC, u."lastActive" DESC;
+          LEFT JOIN combined_data cd ON cd.user_id = u.id
+          LEFT JOIN "TimeStamp" ts ON ts.id = cd.timestamp_id
+          WHERE u.role = 'student' AND (cd.level_id = ${levelId} OR cd.level_id IS NULL)
+      ORDER BY cd.cumulative_profit DESC, u."lastActive" DESC;
     `
 
     return rows.map((r) => ({
