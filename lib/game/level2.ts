@@ -138,7 +138,7 @@ export const level2Config: LevelConfig = {
 
   overstock: {
     patty: { threshold: 100, penaltyPerUnit: 2 },
-    bun: { threshold: Infinity, penaltyPerUnit: 1 },
+    bun: { threshold: 150, penaltyPerUnit: 1 },
     cheese: { threshold: 250, penaltyPerUnit: 1 },
     potato: { threshold: 300, penaltyPerUnit: 0.5 },
     finishedGoods: { threshold: 50, penaltyPerUnit: 3 },
@@ -150,20 +150,18 @@ export const level2Config: LevelConfig = {
     potato: { threshold: 0 },
   },
 
-  // Map positions for Level 2
+  // Map positions for Level 2 - corrected structure
   mapPositions: {
-    1: {
-      mainFactory: { x: 210, y: 495 },
-      suppliers: {
-        1: { x: 30, y: 360, name: "Pink Patty" },
-        2: { x: 460, y: 150, name: "Brown Sauce" },
-        3: { x: 970, y: 325, name: "Firehouse Foods" },
-      },
-      restaurants: [
-        { x: 590, y: 750, name: "Yummy Zone", customerId: 1 },
-        { x: 795, y: 125, name: "Toast-to-go", customerId: 2 },
-        { x: 55, y: 610, name: "StudyFuel", customerId: 3 },
-      ],
-    },
-  }
+    mainFactory: { x: 210, y: 495 },
+    suppliers: [
+      { x: 30, y: 360, name: "Pink Patty", id: 1 },
+      { x: 460, y: 150, name: "Brown Sauce", id: 2 },
+      { x: 970, y: 325, name: "Firehouse Foods", id: 3 },
+    ],
+    customers: [
+      { x: 590, y: 750, name: "Yummy Zone", id: 1 },
+      { x: 795, y: 125, name: "Toast-to-go", id: 2 },
+      { x: 55, y: 610, name: "StudyFuel", id: 3 },
+    ],
+  },
 }

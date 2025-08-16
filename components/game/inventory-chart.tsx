@@ -7,7 +7,7 @@ import type { InventoryChartProps } from "@/types/components"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 
 
-export function InventoryChart({ data, width = 800, height = 300, currentInventory, overstock, safetystock }: InventoryChartProps) {
+export function InventoryChart({ data, width = 900, height = 400, currentInventory, overstock, safetystock }: InventoryChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)
 
   // Define inventory types and colors - moved outside useEffect for reuse
@@ -27,7 +27,7 @@ export function InventoryChart({ data, width = 800, height = 300, currentInvento
     finishedGoods: "#22c55e", // green-500
   }
 
-  // Define overstock thresholds
+  // Define overstock thresholds - use level-specific database values
   const overstockThresholds = {
     patty: overstock?.patty?.threshold ?? 200,
     cheese: overstock?.cheese?.threshold ?? 400,
@@ -99,7 +99,7 @@ export function InventoryChart({ data, width = 800, height = 300, currentInvento
 
     const yScale = d3
       .scaleLinear()
-      .domain([0, 500]) // Fixed y-axis from 0 to 500 units
+      .domain([0, 600]) // Increased y-axis range to 600 units for better readability
       .range([innerHeight, 0])
 
     // Add grid lines for better readability
@@ -191,31 +191,31 @@ export function InventoryChart({ data, width = 800, height = 300, currentInvento
           .text(`${overstockThreshold}`)
       }
 
-    // Add safetystock threshold line if applicable
-    if (safetystockThreshold && safetystockThreshold !== Infinity && safetystockThreshold !== 0) {
-      svg
-        .append("line")
-        .attr("x1", x)
-        .attr("x2", x + barWidth)
-        .attr("y1", yScale(safetystockThreshold))
-        .attr("y2", yScale(safetystockThreshold))
-        .attr("stroke", "#3b82f6")
-        .attr("stroke-width", 1.5)
-        .attr("stroke-dasharray", "5,3")
-        .attr("opacity", 0.7)
+      // Add safetystock threshold line if applicable
+      if (safetystockThreshold && safetystockThreshold !== Infinity && safetystockThreshold !== 0) {
+        svg
+          .append("line")
+          .attr("x1", x)
+          .attr("x2", x + barWidth)
+          .attr("y1", yScale(safetystockThreshold))
+          .attr("y2", yScale(safetystockThreshold))
+          .attr("stroke", "#3b82f6")
+          .attr("stroke-width", 1.5)
+          .attr("stroke-dasharray", "5,3")
+          .attr("opacity", 0.7)
 
-      // Add small threshold indicator
-      svg
-        .append("text")
-        .attr("x", x + barWidth + 5)
-        .attr("y", yScale(safetystockThreshold))
-        .attr("fill", "#3b82f6")
-        .attr("text-anchor", "start")
-        .attr("dominant-baseline", "middle")
-        .attr("font-size", "10px")
-        .text(`${safetystockThreshold}`)
-    }
-  })
+        // Add small threshold indicator
+        svg
+          .append("text")
+          .attr("x", x + barWidth + 5)
+          .attr("y", yScale(safetystockThreshold))
+          .attr("fill", "#3b82f6")
+          .attr("text-anchor", "start")
+          .attr("dominant-baseline", "middle")
+          .attr("font-size", "10px")
+          .text(`${safetystockThreshold}`)
+      }
+    })
 
     // Add tooltip
     const tooltip = d3
@@ -256,11 +256,10 @@ export function InventoryChart({ data, width = 800, height = 300, currentInvento
               </td>
               <td style="padding: 2px 0; text-align: right; font-weight: 500;">
                 ${value} units
-                ${
-                  isOverstock
-                    ? `<span style="color: #ef4444; margin-left: 5px;">(Over threshold: ${threshold})</span>`
-                    : ""
-                }
+                ${isOverstock
+            ? `<span style="color: #ef4444; margin-left: 5px;">(Over threshold: ${threshold})</span>`
+            : ""
+          }
               </td>
             </tr>
           </table>
@@ -293,14 +292,14 @@ export function InventoryChart({ data, width = 800, height = 300, currentInvento
 
   return (
     <Card className="w-full" data-tutorial="inventory-chart">
-      <CardHeader className="pb-2">
+      <CardHeader className="pb-3">
         <CardTitle>Current Inventory</CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm leading-tight">
           Dashed black lines represent overstock thresholds. Keeping inventory below these levels helps minimize holding
-          costs. Dashed blue lines represent safteystock thresholds.
+          costs. Dashed blue lines represent safetystock thresholds.
         </CardDescription>
       </CardHeader>
-      <CardContent>
+      <CardContent className="pt-0">
         <div className="w-full overflow-x-auto">
           <svg ref={svgRef} className="mx-auto" />
         </div>

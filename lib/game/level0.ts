@@ -42,7 +42,7 @@ export const level0Config: LevelConfig = {
         potato: 0,
       },
       shipmentPrices: {
-        patty: { 50: 116, 100: 134},
+        patty: { 50: 116, 100: 134 },
         bun: { 50: 89, 100: 98, 200: 134 },
         cheese: { 50: 65, 100: 89, 200: 116 },
         potato: { 50: 98, 100: 134, 200: 134 },
@@ -136,29 +136,29 @@ export const level0Config: LevelConfig = {
 
   overstock: {
     patty: { threshold: 100, penaltyPerUnit: 2.5 },
-    bun: { threshold: Infinity, penaltyPerUnit: 2.5 },
+    bun: { threshold: 150, penaltyPerUnit: 2.5 },
     cheese: { threshold: 250, penaltyPerUnit: 2.5 },
     potato: { threshold: 300, penaltyPerUnit: 2.5 },
     finishedGoods: { threshold: 50, penaltyPerUnit: 2.5 },
   },
   safetystock: {
-    patty: { threshold: 0},
-    bun: { threshold: 0},
-    cheese: { threshold: 0},
-    potato: { threshold: 0},
+    patty: { threshold: 0 },
+    bun: { threshold: 0 },
+    cheese: { threshold: 0 },
+    potato: { threshold: 0 },
   },
 
   mapPositions: {
-      mainFactory: { x: 515, y: 432 },
-      suppliers: [
-        { x: 61, y: 470, name: "Pink Patty", id: 1 },
-        { x: 349, y: 259, name: "Brown Sauce", id: 2 },
-        { x: 283, y: 635, name: "Firehouse Foods", id: 3 },
-      ],
-      customers: [
-        { x: 657, y: 625, name: "Yummy Zone", id: 1 },
-        { x: 760, y: 175, name: "Toast-to-go", id: 2 },
-        { x: 761, y: 417, name: "StudyFuel", id: 3 },
-      ],
+    mainFactory: { x: 515, y: 432 },
+    suppliers: [
+      { x: 61, y: 470, name: "Pink Patty", id: 1 },
+      { x: 349, y: 259, name: "Brown Sauce", id: 2 },
+      { x: 283, y: 635, name: "Firehouse Foods", id: 3 },
+    ],
+    customers: [
+      { x: 657, y: 625, name: "Yummy Zone", id: 1 },
+      { x: 760, y: 175, name: "Toast-to-go", id: 2 },
+      { x: 761, y: 417, name: "StudyFuel", id: 3 },
+    ],
   },
 }
