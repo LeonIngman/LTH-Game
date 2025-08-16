@@ -109,4 +109,124 @@ describe('QuickReference - Delivery Schedule Display', () => {
         // No "Due Today" badge should be present on day 15
         expect(screen.queryByText('Due Today')).not.toBeInTheDocument()
     })
+
+    it('should show "On track" green badge when delivery requirement is met', () => {
+        // Test scenario: Day 3, user has delivered 20 units (meeting the Day 3 requirement)
+        const propsOnTrack = {
+            ...mockProps,
+            currentDay: 3,
+            gameState: { 
+                ...mockGameState, 
+                day: 3,
+                customerDeliveries: { 1: 20, 2: 0, 3: 0 } // 20 units delivered to Yummy Zone (customer id 1)
+            }
+        }
+
+        render(<QuickReference {...propsOnTrack} />)
+
+        // Switch to customers tab
+        const customersTab = screen.getByRole('tab', { name: /customers/i })
+        customersTab.click()
+
+        // Should show "On track" badge instead of "Due Today"
+        expect(screen.getByText('On track')).toBeInTheDocument()
+        expect(screen.queryByText('Due Today')).not.toBeInTheDocument()
+        
+        // Should still show the delivery requirement
+        expect(screen.getByText('Day 3: 20 units')).toBeInTheDocument()
+        
+        // Should show delivered status
+        expect(screen.getByText('Delivered: 20 / 20 units')).toBeInTheDocument()
+    })
+
+    it('should show "Due Today" orange badge when delivery requirement is not met', () => {
+        // Test scenario: Day 3, user has delivered only 10 units (below Day 3 requirement of 20)
+        const propsBehind = {
+            ...mockProps,
+            currentDay: 3,
+            gameState: { 
+                ...mockGameState, 
+                day: 3,
+                customerDeliveries: { 1: 10, 2: 0, 3: 0 } // Only 10 units delivered to Yummy Zone
+            }
+        }
+
+        render(<QuickReference {...propsBehind} />)
+
+        // Switch to customers tab
+        const customersTab = screen.getByRole('tab', { name: /customers/i })
+        customersTab.click()
+
+        // Should show "Due Today" badge since requirement not met
+        expect(screen.getByText('Due Today')).toBeInTheDocument()
+        expect(screen.queryByText('On track')).not.toBeInTheDocument()
+        
+        // Should still show the delivery requirement
+        expect(screen.getByText('Day 3: 20 units')).toBeInTheDocument()
+    })
+
+    it('should handle cumulative delivery requirements correctly', () => {
+        // Test scenario: Day 20, user needs cumulative 80 units (20 from Day 3 + 60 from Day 20)
+        const propsCumulative = {
+            ...mockProps,
+            currentDay: 20,
+            gameState: { 
+                ...mockGameState, 
+                day: 20,
+                customerDeliveries: { 1: 80, 2: 0, 3: 0 } // 80 units total delivered
+            }
+        }
+
+        render(<QuickReference {...propsCumulative} />)
+
+        // Switch to customers tab
+        const customersTab = screen.getByRole('tab', { name: /customers/i })
+        customersTab.click()
+
+        // Should show "On track" for meeting cumulative requirement
+        expect(screen.getByText('On track')).toBeInTheDocument()
+        expect(screen.getByText('Day 20: 60 units')).toBeInTheDocument()
+        expect(screen.getByText('Delivered: 80 / 80 units')).toBeInTheDocument()
+    })
+
+    it('should update badge color and status based on database values', () => {
+        // Test that the badge reflects real-time database state
+        const initialProps = {
+            ...mockProps,
+            currentDay: 3,
+            gameState: { 
+                ...mockGameState, 
+                day: 3,
+                customerDeliveries: { 1: 0, 2: 0, 3: 0 } // No deliveries initially
+            }
+        }
+
+        const { rerender } = render(<QuickReference {...initialProps} />)
+
+        // Switch to customers tab
+        const customersTab = screen.getByRole('tab', { name: /customers/i })
+        customersTab.click()
+
+        // Initially should show "Due Today"
+        expect(screen.getByText('Due Today')).toBeInTheDocument()
+
+        // Update game state to reflect completed delivery
+        const updatedProps = {
+            ...initialProps,
+            gameState: { 
+                ...initialProps.gameState,
+                customerDeliveries: { 1: 20, 2: 0, 3: 0 } // Delivery completed
+            }
+        }
+
+        rerender(<QuickReference {...updatedProps} />)
+
+        // Switch to customers tab again after rerender
+        const customersTabAfter = screen.getByRole('tab', { name: /customers/i })
+        customersTabAfter.click()
+
+        // Should now show "On track"
+        expect(screen.getByText('On track')).toBeInTheDocument()
+        expect(screen.queryByText('Due Today')).not.toBeInTheDocument()
+    })
 })

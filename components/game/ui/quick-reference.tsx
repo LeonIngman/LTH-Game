@@ -192,30 +192,56 @@ export function QuickReference({
                               const isFuture = milestone.day > currentDay
 
                               if (isCurrent) {
-                                // Special formatting for current day with proper orange highlighting
+                                // Calculate cumulative required amount up to current day
+                                const cumulativeRequired = customer.deliverySchedule
+                                  .filter((item) => item.day <= currentDay)
+                                  .reduce((sum, curr) => sum + curr.requiredAmount, 0)
+                                
+                                // Get total delivered to date from database
+                                const totalDelivered = gameState.customerDeliveries?.[customer.id] || 0
+                                
+                                // Check if user is on track
+                                const isOnTrack = totalDelivered >= cumulativeRequired
+                                
+                                // Special formatting for current day with dynamic badge based on delivery status
                                 return (
                                   <div
-                                    key={index}
-                                    className="bg-orange-50 border border-orange-200 rounded-md p-2 text-xs"
+                                    key={`current-${milestone.day}`}
+                                    className={`${
+                                      isOnTrack 
+                                        ? "bg-green-50 border border-green-200" 
+                                        : "bg-orange-50 border border-orange-200"
+                                    } rounded-md p-2 text-xs`}
                                   >
                                     <div className="flex items-center gap-1 mb-1">
                                       <Badge
                                         variant="outline"
-                                        className="text-xs bg-orange-100 text-orange-700 border-orange-300"
+                                        className={`text-xs ${
+                                          isOnTrack 
+                                            ? "bg-green-100 text-green-700 border-green-300"
+                                            : "bg-orange-100 text-orange-700 border-orange-300"
+                                        }`}
                                       >
-                                        Due Today
+                                        {isOnTrack ? "On track" : "Due Today"}
                                       </Badge>
                                     </div>
-                                    <div className="text-orange-800 font-medium">
+                                    <div className={`font-medium ${
+                                      isOnTrack ? "text-green-800" : "text-orange-800"
+                                    }`}>
                                       Day {milestone.day}: {milestone.requiredAmount} units
                                     </div>
+                                    {isOnTrack && (
+                                      <div className="text-green-700 text-xs mt-1">
+                                        Delivered: {totalDelivered} / {cumulativeRequired} units
+                                      </div>
+                                    )}
                                   </div>
                                 )
                               }
 
                               return (
                                 <div
-                                  key={index}
+                                  key={`milestone-${milestone.day}`}
                                   className={`flex justify-between items-center text-xs ${isPast ? "text-gray-500" : "text-gray-700"
                                     }`}
                                 >
