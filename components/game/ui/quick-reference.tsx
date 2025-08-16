@@ -167,67 +167,66 @@ export function QuickReference({
                         {gameState.customerDeliveries?.[customer.id] || 0} units
                       </div>
                       <div>Lead Time:</div>
-                        <div className="text-right">
-                          {customer.leadTime} day{customer.leadTime !== 1 ? "s" : ""}
-                          {customer.randomLeadTime && customer.leadTimeRange && (
-                            <Badge variant="outline" className="ml-1 text-xs">
-                              Random: {customer.leadTimeRange.join("-")} days
-                            </Badge>
-                          )}
-                        </div>
-                        {customer.allowedShipmentSizes && (
-                          <>
-                            <div>Allowed Shipments:</div>
-                            <div className="text-right">{customer.allowedShipmentSizes.join(", ")} units</div>
-                          </>
+                      <div className="text-right">
+                        {customer.leadTime} day{customer.leadTime !== 1 ? "s" : ""}
+                        {customer.randomLeadTime && customer.leadTimeRange && (
+                          <Badge variant="outline" className="ml-1 text-xs">
+                            Random: {customer.leadTimeRange.join("-")} days
+                          </Badge>
                         )}
-                        {/* Add delivery schedule section if it exists */}
-                        {customer.deliverySchedule && customer.deliverySchedule.length > 0 && (
-                          <div className="mt-2 pt-2 border-t">
-                            <div className="font-medium text-xs mb-1 text-blue-700">Delivery Schedule:</div>
-                            <div className="space-y-1">
-                              {customer.deliverySchedule.map((milestone, index) => {
-                                const isPast = milestone.day < currentDay
-                                const isCurrent = milestone.day === currentDay
-                                const isFuture = milestone.day > currentDay
+                      </div>
+                      {customer.allowedShipmentSizes && (
+                        <>
+                          <div>Allowed Shipments:</div>
+                          <div className="text-right">{customer.allowedShipmentSizes.join(", ")} units</div>
+                        </>
+                      )}
+                      {/* Add delivery schedule section if it exists */}
+                      {customer.deliverySchedule && customer.deliverySchedule.length > 0 && (
+                        <div className="mt-2 pt-2 border-t">
+                          <div className="font-medium text-xs mb-1 text-blue-700">Delivery Schedule:</div>
+                          <div className="space-y-1">
+                            {customer.deliverySchedule.map((milestone, index) => {
+                              const isPast = milestone.day < currentDay
+                              const isCurrent = milestone.day === currentDay
+                              const isFuture = milestone.day > currentDay
 
-                                if (isCurrent) {
-                                  // Special formatting for current day with proper orange highlighting
-                                  return (
-                                    <div
-                                      key={index}
-                                      className="bg-orange-50 border border-orange-200 rounded-md p-2 text-xs"
-                                    >
-                                      <div className="flex items-center gap-1 mb-1">
-                                        <Badge
-                                          variant="outline"
-                                          className="text-xs bg-orange-100 text-orange-700 border-orange-300"
-                                        >
-                                          Due Today
-                                        </Badge>
-                                      </div>
-                                      <div className="text-orange-800 font-medium">
-                                        Day {milestone.day}: {milestone.requiredAmount} units
-                                      </div>
-                                    </div>
-                                  )
-                                }
-
+                              if (isCurrent) {
+                                // Special formatting for current day with proper orange highlighting
                                 return (
                                   <div
                                     key={index}
-                                    className={`flex justify-between items-center text-xs ${
-                                      isPast ? "text-gray-500" : "text-gray-700"
-                                    }`}
+                                    className="bg-orange-50 border border-orange-200 rounded-md p-2 text-xs"
                                   >
-                                    <span>Day {milestone.day}:</span>
-                                    <span>{milestone.requiredAmount} units</span>
+                                    <div className="flex items-center gap-1 mb-1">
+                                      <Badge
+                                        variant="outline"
+                                        className="text-xs bg-orange-100 text-orange-700 border-orange-300"
+                                      >
+                                        Due Today
+                                      </Badge>
+                                    </div>
+                                    <div className="text-orange-800 font-medium">
+                                      Day {milestone.day}: {milestone.requiredAmount} units
+                                    </div>
                                   </div>
                                 )
-                              })}
-                            </div>
+                              }
+
+                              return (
+                                <div
+                                  key={index}
+                                  className={`flex justify-between items-center text-xs ${isPast ? "text-gray-500" : "text-gray-700"
+                                    }`}
+                                >
+                                  <span>Day {milestone.day}:</span>
+                                  <span>{milestone.requiredAmount} units</span>
+                                </div>
+                              )
+                            })}
                           </div>
-                        )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
