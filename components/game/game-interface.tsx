@@ -381,7 +381,6 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
     if (forecastData.productionRates) {
       // Sum up the production rates for all days
-      console.log(forecastData.productionRates)
       return Object.values(forecastData.productionRates)//.reduce((sum: number, rate: number) => sum + rate, 0)
     } else {
       // Sum up the customer forecasts
@@ -516,7 +515,12 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
           />
         </div>
         <div className="md:col-span-8">
-          <CashflowChart data={gameState.history} height={300} profitThreshold={1500} />
+          <CashflowChart
+            data={gameState.history}
+            height={300}
+            profitThreshold={1500}
+            currentDay={gameState.day}
+          />
         </div>
       </div>
 

@@ -135,8 +135,6 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange, levelI
         onTabChange(currentTabToActivate)
       }
 
-      console.log(`Attempt ${retryCount + 1}: Looking for element: ${targetSelector}`, targetElement)
-
       if (targetElement) {
         // Only add highlight if not already highlighted
         if (!targetElement.classList.contains("tutorial-highlight")) {
@@ -185,7 +183,6 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange, levelI
         if (top < 20) top = 20
         if (top + tooltipHeight > viewportHeight - 20) top = viewportHeight - tooltipHeight - 20
 
-        console.log(`Positioning tooltip at: top=${top}, left=${left}`)
         setTooltipPosition({ top, left })
 
         // Scroll element into view if needed
@@ -198,7 +195,6 @@ export function TutorialOverlay({ steps, onComplete, isOpen, onTabChange, levelI
         }
       } else if (retryCount < 10) {
         // Retry after a short delay if element not found (up to 10 times)
-        console.log(`Element not found, retrying in ${100 * (retryCount + 1)}ms...`)
         timeoutRef.current = setTimeout(() => findAndHighlightElement(retryCount + 1), 100 * (retryCount + 1))
       } else {
         console.warn(`Tutorial target element not found after 10 attempts: ${targetSelector}`)
