@@ -2,7 +2,8 @@
 
 import { useEffect, useRef, useState } from "react"
 import * as d3 from "d3"
-import type { CashflowChartProps } from "@/types/components" 
+import type { CashflowChartProps } from "@/types/components"
+import type { DailyResult } from "@/types/game"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 
 export function CashflowChart({
@@ -35,21 +36,64 @@ export function CashflowChart({
   useEffect(() => {
     if (!svgRef.current) return
 
-    // Create initial data for day 0 if no data exists
+    // Create comprehensive chart data starting from day 0
     let chartData = [...data]
-    if (chartData.length === 0) {
-      chartData = [
-        {
-          day: 0,
-          totalCost: 0,
-          revenue: 0,
-          profit: 0,
-          inventory: {},
-          supplierOrders: [],
-          customerOrders: [],
-          productionAmount: 0,
+
+    // Always ensure Day 0 exists as the starting point with zero values
+    const hasDay0 = chartData.some(d => d.day === 0)
+    if (!hasDay0) {
+      const day0Entry = {
+        day: 0,
+        cash: 5000, // Starting cash
+        inventory: {
+          patty: 0,
+          bun: 0,
+          cheese: 0,
+          potato: 0,
+          finishedGoods: 0
         },
-      ]
+        inventoryValue: {
+          patty: 0,
+          bun: 0,
+          cheese: 0,
+          potato: 0,
+          finishedGoods: 0
+        },
+        holdingCosts: {
+          patty: 0,
+          bun: 0,
+          cheese: 0,
+          potato: 0,
+          finishedGoods: 0
+        },
+        overstockCosts: {
+          patty: 0,
+          bun: 0,
+          cheese: 0,
+          potato: 0,
+          finishedGoods: 0
+        },
+        pattyPurchased: 0,
+        cheesePurchased: 0,
+        bunPurchased: 0,
+        potatoPurchased: 0,
+        production: 0,
+        sales: 0,
+        revenue: 0,
+        costs: {
+          purchases: 0,
+          production: 0,
+          holding: 0,
+          transport: 0,
+          total: 0
+        },
+        profit: 0,
+        cumulativeProfit: 0,
+        score: 0,
+        customerDeliveries: {},
+        latenessPenalties: []
+      }
+      chartData = [day0Entry, ...chartData]
     }
 
     // Clear any existing chart
@@ -81,13 +125,16 @@ export function CashflowChart({
     const minDay = 0
     const maxDay = Math.max(20, d3.max(sortedData, (d) => d.day) || 0, currentDay || 0)
 
-    // Create x scale
-    const xScale = d3.scaleLinear().domain([minDay, maxDay]).range([0, innerWidth]).nice()
+    // Create x scale with better spacing control
+    const xScale = d3.scaleLinear()
+      .domain([minDay, maxDay])
+      .range([0, innerWidth])
+      .clamp(true)
 
     // Calculate min and max values for y-axis
     const minValue = Math.min(-500, d3.min(sortedData, (d) => d.profit || 0) || 0)
     const maxValue = Math.max(
-      d3.max(sortedData, (d) => d.totalCost || 0) || 0,
+      d3.max(sortedData, (d) => d.costs?.total || 0) || 0,
       d3.max(sortedData, (d) => d.revenue || 0) || 0,
       d3.max(sortedData, (d) => d.profit || 0) || 0,
       profitThreshold || 0,
@@ -100,8 +147,12 @@ export function CashflowChart({
     // Create y scale
     const yScale = d3.scaleLinear().domain([yMin, yMax]).nice().range([innerHeight, 0])
 
-    // Create axes
-    const xAxis = d3.axisBottom(xScale).ticks(Math.min(maxDay, 8)).tickFormat(d3.format("d"))
+    // Create axes with better tick formatting for days
+    const xAxis = d3.axisBottom(xScale)
+      .ticks(Math.min(maxDay + 1, 10))
+      .tickFormat(d3.format("d"))
+      .tickValues(d3.range(0, maxDay + 1).filter(d => d % Math.max(1, Math.floor((maxDay + 1) / 8)) === 0))
+
     const yAxis = d3
       .axisLeft(yScale)
       .ticks(6)
@@ -182,9 +233,9 @@ export function CashflowChart({
     // Create line generators
     const costLine = d3
       .line<DailyResult>()
-      .defined((d) => d.totalCost !== undefined && !isNaN(d.totalCost))
+      .defined((d) => d.costs?.total !== undefined && !isNaN(d.costs?.total || 0))
       .x((d) => xScale(d.day))
-      .y((d) => yScale(d.totalCost || 0))
+      .y((d) => yScale(d.costs?.total || 0))
       .curve(d3.curveMonotoneX)
 
     const revenueLine = d3
@@ -204,7 +255,7 @@ export function CashflowChart({
     // Add the line paths
     svg
       .append("path")
-      .datum(sortedData.filter((d) => d.totalCost !== undefined && !isNaN(d.totalCost)))
+      .datum(sortedData.filter((d) => d.costs?.total !== undefined && !isNaN(d.costs?.total || 0)))
       .attr("fill", "none")
       .attr("stroke", "#ef4444")
       .attr("stroke-width", 2)
@@ -229,12 +280,12 @@ export function CashflowChart({
     // Add dots for each data point
     svg
       .selectAll(".cost-dot")
-      .data(sortedData.filter((d) => d.totalCost !== undefined && !isNaN(d.totalCost)))
+      .data(sortedData.filter((d) => d.costs?.total !== undefined && !isNaN(d.costs?.total || 0)))
       .enter()
       .append("circle")
       .attr("class", "cost-dot")
       .attr("cx", (d) => xScale(d.day))
-      .attr("cy", (d) => yScale(d.totalCost || 0))
+      .attr("cy", (d) => yScale(d.costs?.total || 0))
       .attr("r", 3)
       .attr("fill", "#ef4444")
       .attr("stroke", "#fff")
@@ -346,15 +397,16 @@ export function CashflowChart({
     svg
       .selectAll("circle")
       .on("mouseover", function (event, d) {
+        const dailyData = d as DailyResult
         d3.select(this).attr("r", 5)
         tooltip
           .style("opacity", 1)
           .html(
             `<div>
-              <div><strong>Day:</strong> ${d.day}</div>
-              <div><strong>Cost:</strong> ${formatCurrency(d.totalCost || 0)}</div>
-              <div><strong>Revenue:</strong> ${formatCurrency(d.revenue || 0)}</div>
-              <div><strong>Profit:</strong> ${formatCurrency(d.profit || 0)}${d.profit < 0 ? " (Loss)" : ""}</div>
+              <div><strong>Day:</strong> ${dailyData.day}</div>
+              <div><strong>Cost:</strong> ${formatCurrency(dailyData.costs?.total || 0)}</div>
+              <div><strong>Revenue:</strong> ${formatCurrency(dailyData.revenue || 0)}</div>
+              <div><strong>Profit:</strong> ${formatCurrency(dailyData.profit || 0)}${dailyData.profit < 0 ? " (Loss)" : ""}</div>
             </div>`,
           )
           .style("left", `${event.pageX + 10}px`)

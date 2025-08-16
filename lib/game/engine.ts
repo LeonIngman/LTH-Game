@@ -616,10 +616,10 @@ function recordDailyResults(
   const customerDeliveries: Record<number, { quantity: number; revenue: number }> = {}
   let revenue = 0
   let totalTransportCost = 0
-  
+
   for (const customerOrder of action.customerOrders || []) {
     const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
-    
+
     if (!customer) continue
 
     if (!customerDeliveries[customer.id]) {
