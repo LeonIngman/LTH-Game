@@ -174,7 +174,7 @@ export function SupplierOrderForm({
           )
           /* Show "No capacity" message if material is available but capacity is 0 */
         if (checkMaterialAvailability(supplier.id, key, supplier) && getRemainingCapacity(key) === 0) return (
-          <div className="space-y-2">
+          <div className="space-y-2" key={`${key}-no-capacity`}>
             <div className="flex justify-between items-center">
               <Label className="text-gray-400">
                 {label} ({getMaterialPriceForSupplier(supplier.id, key).toFixed(2)} kr/unit)
@@ -186,8 +186,10 @@ export function SupplierOrderForm({
             </div>
           </div>
           )
-        }
-      )}
+        
+        /* Return null if material is not available or no conditions are met */
+        return null
+      })}
 
       <div className="text-right">
         Total for {supplier.name}: {calculateSupplierOrderTotal()} kr
