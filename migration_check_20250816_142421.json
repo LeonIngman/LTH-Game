@@ -1,0 +1,22 @@
+{
+  "migration_verification": {
+    "timestamp": "2025-08-16T12:24:21Z",
+    "database": "supply_chain_game",
+    "baseline_file": "migration_baseline_20250816_142151.json",
+    "current_counts": {
+      "User": 3,
+      "Session": 22,
+      "GameLevel": 3,
+      "GameSession": 2,
+      "Performance": 2,
+      "GameDailyData": 0,
+      "TimeStamp": 2,
+      "Product": 0,
+      "Supplier": 0,
+      "SupplierProduct": 0,
+      "Order": 0,
+      "QuizSubmission": 1
+    },
+    "comparison_status": "counts_match"
+  }
+}
