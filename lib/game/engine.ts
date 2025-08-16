@@ -20,9 +20,13 @@ import {
   addInventoryValue,
   removeInventoryValue,
   calculateOverstockCost,
-  getOverstockCostBreakdown
+  getOverstockCostBreakdown,
+  calculateTransportationCost,
+  PATTIES_PER_MEAL,
+  CHEESE_PER_MEAL,
+  BUNS_PER_MEAL,
+  POTATOES_PER_MEAL
 } from "@/lib/game/inventory-management"
-import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/game/inventory-management"
 
 
 /**
@@ -101,8 +105,11 @@ export function validateAffordability(
   // Calculate production cost
   const productionCost = action.production * levelConfig.productionCostPerUnit
 
+  // Calculate transportation cost
+  const transportationCost = calculateTransportationCost(action, levelConfig)
+
   // Calculate total action cost
-  const totalActionCost = totalPurchaseCost + productionCost
+  const totalActionCost = totalPurchaseCost + productionCost + transportationCost
 
   // Calculate holding cost
   const holdingCost = calculateHoldingCost(gameState)

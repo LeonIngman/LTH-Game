@@ -4,7 +4,8 @@ import type {
   Supplier,
   MaterialType,
   InventoryHoldingCosts,
-  InventoryOverstockCosts
+  InventoryOverstockCosts,
+  GameAction
 } from "@/types/game"
 
 // Production constants
@@ -50,7 +51,7 @@ function calculateAverageCost(
 ): number {
   const quantity = gameState.inventory[materialType]
   const totalValue = gameState.inventoryValue[materialType]
-  
+
   return quantity > 0 ? totalValue / quantity : 0
 }
 
@@ -137,7 +138,7 @@ export function addInventoryValue(
 ): void {
   // Add to inventory quantity
   gameState.inventory[materialType] += quantity
-  
+
   // Add to inventory value
   gameState.inventoryValue[materialType] += totalCost
 }
@@ -153,10 +154,41 @@ export function removeInventoryValue(
   // Calculate value to remove (average cost × quantity)
   const averageCost = calculateAverageCost(materialType, gameState)
   const valueToRemove = averageCost * quantity
-  
+
   // Remove from inventory quantity
   gameState.inventory[materialType] -= quantity
-  
+
   // Remove from inventory value
   gameState.inventoryValue[materialType] -= valueToRemove
+}
+
+/**
+ * Calculate transportation cost for supplier orders
+ */
+export function calculateTransportationCost(
+  action: GameAction,
+  levelConfig: LevelConfig
+): number {
+  let total = 0
+
+  for (const order of action.supplierOrders) {
+    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+    if (!supplier?.shipmentPrices) continue
+
+    // For each material, find the closest shipment size and add its price
+    for (const material of ["patty", "cheese", "bun", "potato"] as const) {
+      const amount = order[`${material}Purchase`]
+      if (amount > 0 && supplier.shipmentPrices[material]) {
+        const sizes = Object.keys(supplier.shipmentPrices[material]).map(Number)
+        // Find the closest shipment size (or the largest not exceeding the amount)
+        const closest = sizes.reduce((prev, curr) =>
+          Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev,
+          sizes[0]
+        )
+        total += supplier.shipmentPrices[material][closest]
+      }
+    }
+  }
+
+  return total
 }

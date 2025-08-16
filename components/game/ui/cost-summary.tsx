@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { CostSummaryProps } from "@/types/components"
-import { calculateHoldingCost } from "@/lib/game/inventory-management"
 
 export function CostSummary({
   gameState,
@@ -23,7 +22,7 @@ export function CostSummary({
   calculateRevenue,
   isNextDayButtonDisabled,
   getNextDayDisabledReason,
-}: CostSummaryProps) {
+}: Readonly<CostSummaryProps>) {
   // Calculate individual cost components
   const purchaseCost = calculateMaterialPurchaseCost()
   const productionCost = calculateProductionCost()
@@ -40,8 +39,8 @@ export function CostSummary({
   // Calculate revenue from both direct sales and customer orders
   const revenue = calculateRevenue()
 
-  // Calculate total cost as sum of all components
-  const totalCost = purchaseCost + productionCost + holdingCost + overstockCost
+  // Calculate total cost as sum of all components (including transportation cost)
+  const totalCost = purchaseCost + transportationCost + productionCost + holdingCost + overstockCost
   const profit = revenue - totalCost
 
   // Check if the player is only attempting sales (no purchases or production)
@@ -54,7 +53,7 @@ export function CostSummary({
         order.potatoPurchase === 0,
     )
 
-    const hasCustomerOrders = action.customerOrders && action.customerOrders.some((order) => order.quantity > 0)
+    const hasCustomerOrders = action.customerOrders?.some((order) => order.quantity > 0)
     return noOrders && action.production === 0 && (hasCustomerOrders)
   }
 
@@ -76,9 +75,6 @@ export function CostSummary({
 
     return getNextDayDisabledReason()
   }
-
-  // Calculate annual holding cost rate (25%)
-  const annualRate = 0.25 * 100
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary" data-testid="cost-summary">

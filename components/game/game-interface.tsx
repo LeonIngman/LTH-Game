@@ -5,6 +5,7 @@ import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import type { Supplier, Customer, LevelConfig, GameAction, GameState } from "@/types/game"
 import type { GameInterfaceProps } from "@/types/components"
+import { calculateTransportationCost as calculateTransportationCostUtil } from "@/lib/game/inventory-management"
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
@@ -194,26 +195,13 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
   // Calculates only the transportation cost (shipment/delivery)
   const calculateTransportationCost = useCallback(() => {
-    let total = 0
-    for (const order of supplierOrders) {
-      const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-      if (!supplier || !supplier.shipmentPrices) continue
-
-      // For each material, find the closest shipment size and add its price
-      for (const material of ["patty", "cheese", "bun", "potato"] as const) {
-        const amount = order[`${material}Purchase`]
-        if (amount > 0 && supplier.shipmentPrices[material]) {
-          const sizes = Object.keys(supplier.shipmentPrices[material]).map(Number)
-          // Find the closest shipment size (or the largest not exceeding the amount)
-          const closest = sizes.reduce((prev, curr) =>
-            Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev
-          )
-          total += supplier.shipmentPrices[material][closest]
-        }
-      }
+    const currentAction: GameAction = {
+      supplierOrders,
+      production: action.production,
+      customerOrders: customerOrders
     }
-    return total
-  }, [supplierOrders, levelConfig])
+    return calculateTransportationCostUtil(currentAction, levelConfig)
+  }, [supplierOrders, action.production, customerOrders, levelConfig])
 
   // Calculate revenue from sales and customer orders
   const calculateRevenue = useCallback(() => {

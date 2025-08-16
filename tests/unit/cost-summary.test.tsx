@@ -84,10 +84,10 @@ describe('CostSummary Component - UX2 Alignment Fix', () => {
             expect(screen.getByText('Revenue')).toBeInTheDocument()
             expect(screen.getByText('Profit')).toBeInTheDocument()
 
-            // Verify calculated totals
-            const totalCost = 120.25 + 12.50 + 8.15 + 2.50 // 143.40
+            // Verify calculated totals (including transportation cost)
+            const totalCost = 120.25 + 30.25 + 12.50 + 8.15 + 2.50 // 173.65
             const revenue = 200.75
-            const profit = revenue - totalCost // 57.35
+            const profit = revenue - totalCost // 27.10
 
             expect(screen.getByText(`${totalCost.toFixed(2)} kr`)).toBeInTheDocument()
             expect(screen.getByText(`${revenue.toFixed(2)} kr`)).toBeInTheDocument()
@@ -173,7 +173,7 @@ describe('CostSummary Component - UX2 Alignment Fix', () => {
         it('should display profit in green when positive', () => {
             render(<CostSummary {...defaultProps} />)
 
-            const profitValue = screen.getByText(/57\.35 kr/)
+            const profitValue = screen.getByText(/27\.10 kr/)
             expect(profitValue).toHaveClass('text-green-600')
         })
 
@@ -185,15 +185,15 @@ describe('CostSummary Component - UX2 Alignment Fix', () => {
 
             render(<CostSummary {...lossProps} />)
 
-            // Total cost is 143.40, revenue is 50.00, so profit is -93.40
-            const profitValue = screen.getByText(/-93\.40 kr/)
+            // Total cost is 173.65, revenue is 50.00, so profit is -123.65
+            const profitValue = screen.getByText(/-123\.65 kr/)
             expect(profitValue).toHaveClass('text-red-600')
         })
 
         it('should display total cost in red', () => {
             render(<CostSummary {...defaultProps} />)
 
-            const totalCostValue = screen.getByText(/143\.40 kr/)
+            const totalCostValue = screen.getByText(/173\.65 kr/)
             expect(totalCostValue).toHaveClass('text-red-600')
         })
 
