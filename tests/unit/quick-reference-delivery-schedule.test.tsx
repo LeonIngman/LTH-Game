@@ -115,8 +115,8 @@ describe('QuickReference - Delivery Schedule Display', () => {
         const propsOnTrack = {
             ...mockProps,
             currentDay: 3,
-            gameState: { 
-                ...mockGameState, 
+            gameState: {
+                ...mockGameState,
                 day: 3,
                 customerDeliveries: { 1: 20, 2: 0, 3: 0 } // 20 units delivered to Yummy Zone (customer id 1)
             }
@@ -131,10 +131,10 @@ describe('QuickReference - Delivery Schedule Display', () => {
         // Should show "On track" badge instead of "Due Today"
         expect(screen.getByText('On track')).toBeInTheDocument()
         expect(screen.queryByText('Due Today')).not.toBeInTheDocument()
-        
+
         // Should still show the delivery requirement
         expect(screen.getByText('Day 3: 20 units')).toBeInTheDocument()
-        
+
         // Should show delivered status
         expect(screen.getByText('Delivered: 20 / 20 units')).toBeInTheDocument()
     })
@@ -144,8 +144,8 @@ describe('QuickReference - Delivery Schedule Display', () => {
         const propsBehind = {
             ...mockProps,
             currentDay: 3,
-            gameState: { 
-                ...mockGameState, 
+            gameState: {
+                ...mockGameState,
                 day: 3,
                 customerDeliveries: { 1: 10, 2: 0, 3: 0 } // Only 10 units delivered to Yummy Zone
             }
@@ -160,7 +160,7 @@ describe('QuickReference - Delivery Schedule Display', () => {
         // Should show "Due Today" badge since requirement not met
         expect(screen.getByText('Due Today')).toBeInTheDocument()
         expect(screen.queryByText('On track')).not.toBeInTheDocument()
-        
+
         // Should still show the delivery requirement
         expect(screen.getByText('Day 3: 20 units')).toBeInTheDocument()
     })
@@ -170,8 +170,8 @@ describe('QuickReference - Delivery Schedule Display', () => {
         const propsCumulative = {
             ...mockProps,
             currentDay: 20,
-            gameState: { 
-                ...mockGameState, 
+            gameState: {
+                ...mockGameState,
                 day: 20,
                 customerDeliveries: { 1: 80, 2: 0, 3: 0 } // 80 units total delivered
             }
@@ -194,8 +194,8 @@ describe('QuickReference - Delivery Schedule Display', () => {
         const initialProps = {
             ...mockProps,
             currentDay: 3,
-            gameState: { 
-                ...mockGameState, 
+            gameState: {
+                ...mockGameState,
                 day: 3,
                 customerDeliveries: { 1: 0, 2: 0, 3: 0 } // No deliveries initially
             }
@@ -213,7 +213,7 @@ describe('QuickReference - Delivery Schedule Display', () => {
         // Update game state to reflect completed delivery
         const updatedProps = {
             ...initialProps,
-            gameState: { 
+            gameState: {
                 ...initialProps.gameState,
                 customerDeliveries: { 1: 20, 2: 0, 3: 0 } // Delivery completed
             }
