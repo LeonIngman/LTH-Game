@@ -69,8 +69,8 @@ describe('CostSummary Alignment - UX2', () => {
     it('should display Total Cost value properly', () => {
         render(<CostSummary {...mockProps} />)
 
-        // The Total Cost should be the sum: 120.25 + 12.50 + 8.15 + 2.50 = 143.40
-        expect(screen.getByText('143.40 kr')).toBeInTheDocument()
+        // The Total Cost should be the sum: 120.25 + 30.25 + 12.50 + 8.15 + 2.50 = 173.65
+        expect(screen.getByText('173.65 kr')).toBeInTheDocument()
         expect(screen.getByText('Total Cost')).toBeInTheDocument()
     })
 })

@@ -216,7 +216,7 @@ describe('CostSummary Component - UX2 Alignment Fix', () => {
         it('should provide tooltips for disabled states', () => {
             const disabledProps = {
                 ...defaultProps,
-                isNextDayButtonDisabled: jest.fn(() => true),
+                isNextDayButtonDisabled: () => true,
                 getNextDayDisabledReason: jest.fn(() => 'Insufficient funds')
             }
 
