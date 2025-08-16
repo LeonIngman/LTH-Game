@@ -4,9 +4,7 @@ import { useState, useEffect } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { AlertTriangle, Calendar, CheckCircle2, CheckCircle } from "lucide-react"
+import { Calendar, CheckCircle } from "lucide-react"
 import type { CostumerSalesPopupProps } from "@/types/components"
 import { CustomerOrderForm } from "./ui/customer-order-form"
 
@@ -20,10 +18,11 @@ export function CustomerSalesPopup({
   gameState,
   day,
   levelConfig,
-}: CostumerSalesPopupProps) {
+}: Readonly<CostumerSalesPopupProps>) {
   // Local state for pending order
   const [pendingQuantity, setPendingQuantity] = useState(0)
   const [hasConfirmedOrder, setHasConfirmedOrder] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   // Initialize pending quantity when customer changes
   useEffect(() => {
@@ -32,8 +31,9 @@ export function CustomerSalesPopup({
       const currentQuantity = currentOrder?.quantity || 0
       setPendingQuantity(currentQuantity)
       setHasConfirmedOrder(currentQuantity > 0)
+      setShowSuccessMessage(false)
     }
-  }, [customer, customerOrders])
+  }, [customer, customerOrders, isOpen])
 
   if (!customer || !isOpen) return null
 
@@ -50,6 +50,13 @@ export function CustomerSalesPopup({
   const handleConfirmOrder = () => {
     handleCustomerOrderChange(customer.id, pendingQuantity)
     setHasConfirmedOrder(pendingQuantity > 0)
+    setShowSuccessMessage(true)
+
+    // Auto-close after showing success message
+    setTimeout(() => {
+      setShowSuccessMessage(false)
+      onClose()
+    }, 1500) // Show success message for 1.5 seconds before closing
   }
 
   // Calculate customer progress
@@ -95,8 +102,8 @@ export function CustomerSalesPopup({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center justify-between">
-            <span>Sales to {customer.name}</span>
+          <div className="flex flex-col space-y-2">
+            <DialogTitle className="text-xl font-bold">Sales to {customer.name}</DialogTitle>
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
@@ -109,7 +116,7 @@ export function CustomerSalesPopup({
                 </Badge>
               )}
             </div>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
           
@@ -130,17 +137,35 @@ export function CustomerSalesPopup({
           />
         </div>
 
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="py-4 px-6 bg-green-50 border border-green-200 rounded-md mx-6">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Order placed successfully!</span>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              {pendingQuantity} meals ordered from {customer.name}.
+            </p>
+          </div>
+        )}
+
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          <Button
-            onClick={handleConfirmOrder}
-            disabled={isDisabled || (!hasPendingChanges && hasConfirmedOrder)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            {hasPendingChanges ? "Confirm Order" : "Order Confirmed"}
-          </Button>
+          {/* Only show footer if not showing success message */}
+          {!showSuccessMessage && (
+            <>
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              <Button
+                onClick={handleConfirmOrder}
+                disabled={isDisabled || (!hasPendingChanges && hasConfirmedOrder)}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {hasPendingChanges ? "Confirm Order" : "Order Confirmed"}
+              </Button>
+            </>
+          )}
         </DialogFooter>
       </DialogContent>
     </Dialog>
