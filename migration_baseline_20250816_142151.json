@@ -26,7 +26,7 @@
     "notes": {
       "non_empty_tables": [
         "User (3 rows)",
-        "Session (22 rows)", 
+        "Session (22 rows)",
         "GameLevel (3 rows)",
         "GameSession (2 rows)",
         "Performance (2 rows)",
@@ -35,7 +35,7 @@
       ],
       "empty_tables": [
         "GameDailyData",
-        "Product", 
+        "Product",
         "Supplier",
         "SupplierProduct",
         "Order"
