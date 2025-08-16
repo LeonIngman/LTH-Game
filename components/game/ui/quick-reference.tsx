@@ -191,23 +191,37 @@ export function QuickReference({
                                 const isCurrent = milestone.day === currentDay
                                 const isFuture = milestone.day > currentDay
 
+                                if (isCurrent) {
+                                  // Special formatting for current day with proper orange highlighting
+                                  return (
+                                    <div
+                                      key={index}
+                                      className="bg-orange-50 border border-orange-200 rounded-md p-2 text-xs"
+                                    >
+                                      <div className="flex items-center gap-1 mb-1">
+                                        <Badge
+                                          variant="outline"
+                                          className="text-xs bg-orange-100 text-orange-700 border-orange-300"
+                                        >
+                                          Due Today
+                                        </Badge>
+                                      </div>
+                                      <div className="text-orange-800 font-medium">
+                                        Day {milestone.day}: {milestone.requiredAmount} units
+                                      </div>
+                                    </div>
+                                  )
+                                }
+
                                 return (
                                   <div
                                     key={index}
                                     className={`flex justify-between items-center text-xs ${
-                                      isPast ? "text-gray-500" : isCurrent ? "text-orange-600 font-medium" : "text-gray-700"
+                                      isPast ? "text-gray-500" : "text-gray-700"
                                     }`}
                                   >
                                     <span>Day {milestone.day}:</span>
                                     <span>{milestone.requiredAmount} units</span>
-                                    {isCurrent && (
-                                      <Badge
-                                        variant="outline"
-                                        className="ml-1 text-xs bg-orange-50 text-orange-700 border-orange-200"
-                                      >
-                                        Due Today
-                                      </Badge>
-                                    )}
                                   </div>
                                 )
                               })}

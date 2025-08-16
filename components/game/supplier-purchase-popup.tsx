@@ -92,13 +92,13 @@ export function SupplierPurchasePopup({
       }
       setHasConfirmedOrder(true)
       setShowSuccessMessage(true)
-      
+
       // Auto-close after showing success message
       setTimeout(() => {
         setShowSuccessMessage(false)
         onClose()
       }, 1500) // Show success message for 1.5 seconds before closing
-      
+
       if (onOrderConfirmed) onOrderConfirmed()
     }
   }

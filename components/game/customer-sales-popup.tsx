@@ -119,7 +119,7 @@ export function CustomerSalesPopup({
           </div>
         </DialogHeader>
 
-          
+
         <div className="space-y-4 py-4">
           <CustomerOrderForm
             customer={customer}
