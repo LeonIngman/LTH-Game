@@ -74,8 +74,8 @@ export async function createUser(prevState: any, formData: FormData) {
     const id = `user_${Math.random().toString(36).substring(2, 10)}`
 
     const result = await sql`
-      INSERT INTO "User" (id, username, password, visible_password, role, progress, "lastActive", "createdAt", "updatedAt")
-      VALUES (${id}, ${username}, ${hashedPassword}, ${password}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO "User" (id, username, password, role, progress, "lastActive", "createdAt", "updatedAt")
+      VALUES (${id}, ${username}, ${hashedPassword}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING id
     `
 
@@ -134,8 +134,8 @@ export async function createBatchUsers(prevState: any, formData: FormData) {
       const id = `user_${Math.random().toString(36).substring(2, 10)}`
 
       const result = await sql`
-        INSERT INTO "User" (id, username, password, visible_password, role, progress, "lastActive", "createdAt", "updatedAt")
-        VALUES (${id}, ${username}, ${hashedPassword}, ${currentPassword}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO "User" (id, username, password, role, progress, "lastActive", "createdAt", "updatedAt")
+        VALUES (${id}, ${username}, ${hashedPassword}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         RETURNING id
       `
       userIds.push(result[0].id)
@@ -204,14 +204,16 @@ export async function deleteUser(prevState: any, formData: FormData) {
 export async function getAllStudents() {
   try {
     const students = await sql`
-      SELECT id, username, visible_password, progress, "lastActive" 
+      SELECT id, username, email, role, progress, "lastActive", "createdAt"
       FROM "User" 
       WHERE role = 'student' 
-      ORDER BY username ASC
+      ORDER BY "lastActive" DESC
+      LIMIT 25
     `
     return students.map((user) => ({
       ...user,
-      lastActive: new Date(user.lastActive).toLocaleDateString(),
+      lastActive: new Date(user.lastActive).toLocaleDateString("sv-SE"),
+      createdAt: new Date(user.createdAt).toLocaleDateString("sv-SE"),
     }))
   } catch (error) {
     console.error("Error getting students:", error)
