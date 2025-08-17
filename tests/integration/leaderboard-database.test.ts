@@ -87,7 +87,7 @@ describe('Leaderboard Database Integration', () => {
           p."userId", 
           p."levelId", 
           p."cumulativeProfit", 
-          p."timestampId",
+          p."sessionId",
           p."createdAt",
           u.username
         FROM "Performance" p
@@ -112,26 +112,27 @@ describe('Leaderboard Database Integration', () => {
                 }
             })
 
-            test('should have timestamp records linked to performances', async () => {
-                const timestamps = await sql`
+            test('should have GameSession records with game state data', async () => {
+                const gameSessions = await sql`
         SELECT 
-          ts.id,
-          ts."levelId",
-          ts."timestampNumber",
-          COUNT(p.id) as performance_count
-        FROM "TimeStamp" ts
-        LEFT JOIN "Performance" p ON p."timestampId" = ts.id
-        GROUP BY ts.id, ts."levelId", ts."timestampNumber"
-        ORDER BY ts."levelId", ts."timestampNumber"
+          gs.id,
+          gs.user_id,
+          gs.level_id,
+          gs.game_state::json->>'cumulativeProfit' as profit,
+          gs.game_state::json->>'day' as day,
+          gs.updated_at
+        FROM "GameSession" gs
+        WHERE gs.game_state IS NOT NULL
+        ORDER BY gs.updated_at DESC
         LIMIT 10
       `
 
-                console.log(`Found ${timestamps.length} timestamp records`)
-                console.log('Sample timestamp data:', timestamps.slice(0, 3))
+                console.log(`Found ${gameSessions.length} GameSession records with game state`)
+                console.log('Sample GameSession data:', gameSessions.slice(0, 3))
 
-                timestamps.forEach(ts => {
-                    expect(ts.levelId).toBeDefined()
-                    expect(ts.timestampNumber).toBeDefined()
+                gameSessions.forEach(gs => {
+                    expect(gs.user_id).toBeDefined()
+                    expect(gs.level_id).toBeDefined()
                 })
             })
         })
@@ -204,10 +205,8 @@ describe('Leaderboard Database Integration', () => {
             p."userId",
             p."levelId",
             p."cumulativeProfit",
-            p."timestampId",
-            ts."timestampNumber"
+            p."createdAt"
           FROM "Performance" p
-          LEFT JOIN "TimeStamp" ts ON ts.id = p."timestampId"
           ORDER BY p."userId", p."createdAt" DESC
         )
         SELECT 
@@ -216,7 +215,7 @@ describe('Leaderboard Database Integration', () => {
           u.progress as user_progress,
           lp."levelId" as latest_level,
           lp."cumulativeProfit" as latest_profit,
-          lp."timestampNumber" as latest_day
+          u.progress as latest_day
         FROM "User" u
         LEFT JOIN latest_perf lp ON lp."userId" = u.id
         WHERE u.role = 'student'
@@ -232,4 +231,24 @@ describe('Leaderboard Database Integration', () => {
                 expect(studentsWithProgress.length).toBeGreaterThan(0)
             })
         })
+
+        describe('Leaderboard Functions', () => {
+            test('getLeaderboard should return real data from database', async () => {
+                const result = await getLeaderboard()
+
+                console.log(`Leaderboard returned ${result.length} entries`)
+                if (result.length > 0) {
+                    console.log('Sample leaderboard entries:', result.slice(0, 3))
+                    result.forEach(entry => {
+                        expect(entry.id).toBeDefined()
+                        expect(entry.username).toBeDefined()
+                        expect(typeof entry.profit).toBe('number')
+                        expect(typeof entry.level).toBe('number')
+                    })
+                }
+
+                expect(result).toBeDefined()
+            })
+        })
     })
+}
