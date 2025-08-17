@@ -162,7 +162,7 @@ export function usePersistedGameState(levelConfig: LevelConfig): GameStateHook &
                 })
             }
 
-            console.log("Game state reset to initial state")
+            // Reset successful - no logging needed
         } catch (error) {
             console.error("Error resetting game state:", error)
             // Still reset the local state even if database clear fails
@@ -211,7 +211,7 @@ export function usePersistedGameState(levelConfig: LevelConfig): GameStateHook &
                     duration: 3000,
                 })
 
-                console.log(`Level ${levelConfig.id} reset successfully`)
+                // Reset successful - no additional logging needed
             } else {
                 throw new Error(data.error || 'Reset operation failed')
             }

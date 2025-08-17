@@ -19,20 +19,6 @@ describe.skip('Leaderboard Database Troubleshooting', () => {
         ORDER BY u.username, p."levelId", p."createdAt" DESC
       `
 
-      console.log('=== ALL PERFORMANCE RECORDS ===')
-      console.log(`Found ${performances.length} performance records`)
-
-      performances.forEach((p, index) => {
-        console.log(`${index + 1}. User: ${p.username} | Level: ${p.levelId} | Profit: ${p.cumulativeProfit} | Created: ${p.createdAt}`)
-      })
-
-      // Check specifically for leoningman-student2
-      const student2Records = performances.filter(p => p.username === 'leoningman-student2')
-      console.log(`\n=== LEONINGMAN-STUDENT2 RECORDS (${student2Records.length}) ===`)
-      student2Records.forEach((p, index) => {
-        console.log(`${index + 1}. Level: ${p.levelId} | Profit: ${p.cumulativeProfit} | Created: ${p.createdAt}`)
-      })
-
       expect(performances.length).toBeGreaterThan(0)
     } catch (error) {
       console.error('Database query failed:', error)
@@ -42,8 +28,7 @@ describe.skip('Leaderboard Database Troubleshooting', () => {
 
   it('should show the CTE query results step by step', async () => {
     try {
-      console.log('\n=== STEP 1: Latest Performance Per Level ===')
-      const latestPerf = await sql`
+      await sql`
         SELECT DISTINCT ON (p."userId", p."levelId")
           p."userId" as user_id,
           p."levelId" as level_id,
@@ -56,13 +41,7 @@ describe.skip('Leaderboard Database Troubleshooting', () => {
         ORDER BY p."userId", p."levelId", p."createdAt" DESC
       `
 
-      console.log(`Found ${latestPerf.length} latest performance records per user-level`)
-      latestPerf.forEach((p, index) => {
-        console.log(`${index + 1}. User: ${p.username} | Level: ${p.level_id} | Profit: ${p.cumulative_profit} | Created: ${p.created_at}`)
-      })
-
-      console.log('\n=== STEP 2: User-Level Combinations ===')
-      const userLevels = await sql`
+      await sql`
         WITH latest_performance_per_level AS (
           SELECT DISTINCT ON (p."userId", p."levelId")
             p."userId" as user_id,
@@ -85,12 +64,6 @@ describe.skip('Leaderboard Database Troubleshooting', () => {
         ORDER BY u.username, lp.level_id
       `
 
-      console.log(`Found ${userLevels.length} user-level combinations`)
-      userLevels.forEach((ul, index) => {
-        console.log(`${index + 1}. User: ${ul.username} | Level: ${ul.level_id} | Profit: ${ul.cumulative_profit} | Progress: ${ul.progress}`)
-      })
-
-      console.log('\n=== STEP 3: Final Query Result ===')
       const finalResult = await sql`
         WITH latest_performance_per_level AS (
           SELECT DISTINCT ON (p."userId", p."levelId")
@@ -126,18 +99,6 @@ describe.skip('Leaderboard Database Troubleshooting', () => {
         ORDER BY ul.level_id ASC, ul.cumulative_profit DESC, ul."lastActive" DESC
       `
 
-      console.log(`Final result has ${finalResult.length} rows`)
-      finalResult.forEach((r, index) => {
-        console.log(`${index + 1}. User: ${r.username} | Level: ${r.level} | Day: ${r.day} | Profit: ${r.profit} | Last Active: ${r.lastActive}`)
-      })
-
-      // Verify leoningman-student2 appears multiple times
-      const student2Final = finalResult.filter(r => r.username === 'leoningman-student2')
-      console.log(`\n=== LEONINGMAN-STUDENT2 FINAL ENTRIES (${student2Final.length}) ===`)
-      student2Final.forEach((r, index) => {
-        console.log(`${index + 1}. Level: ${r.level} | Day: ${r.day} | Profit: ${r.profit}`)
-      })
-
       expect(finalResult.length).toBeGreaterThan(0)
     } catch (error) {
       console.error('Database troubleshooting failed:', error)
@@ -153,12 +114,6 @@ describe.skip('Leaderboard Database Troubleshooting', () => {
         WHERE role = 'student'
         ORDER BY username
       `
-
-      console.log('\n=== STUDENT USER RECORDS ===')
-      console.log(`Found ${users.length} student users`)
-      users.forEach((u, index) => {
-        console.log(`${index + 1}. ID: ${u.id} | Username: ${u.username} | Progress: ${u.progress} | Last Active: ${u.lastActive}`)
-      })
 
       expect(users.length).toBeGreaterThan(0)
     } catch (error) {

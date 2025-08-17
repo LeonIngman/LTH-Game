@@ -70,9 +70,6 @@ describe('Leaderboard Database Integration', () => {
         LIMIT 10
       `
 
-                console.log(`Found ${students.length} student records`)
-                console.log('Sample student data:', students.slice(0, 3))
-
                 expect(students.length).toBeGreaterThan(0)
                 students.forEach(student => {
                     expect(student.role).toBe('student')
@@ -97,9 +94,6 @@ describe('Leaderboard Database Integration', () => {
         LIMIT 10
       `
 
-                console.log(`Found ${performances.length} performance records`)
-                console.log('Sample performance data:', performances.slice(0, 3))
-
                 if (performances.length > 0) {
                     performances.forEach(perf => {
                         expect(perf.userId).toBeDefined()
@@ -108,7 +102,7 @@ describe('Leaderboard Database Integration', () => {
                         expect(perf.username).toBeDefined()
                     })
                 } else {
-                    console.warn('No performance records found - this may explain empty leaderboard')
+                    // No performance records found - empty test case
                 }
             })
 
@@ -127,9 +121,6 @@ describe('Leaderboard Database Integration', () => {
         LIMIT 10
       `
 
-                console.log(`Found ${gameSessions.length} GameSession records with game state`)
-                console.log('Sample GameSession data:', gameSessions.slice(0, 3))
-
                 gameSessions.forEach(gs => {
                     expect(gs.user_id).toBeDefined()
                     expect(gs.level_id).toBeDefined()
@@ -140,9 +131,6 @@ describe('Leaderboard Database Integration', () => {
         describe('Leaderboard Functions', () => {
             test('getLeaderboard should return real data from database', async () => {
                 const leaderboard = await getLeaderboard()
-
-                console.log(`Leaderboard returned ${leaderboard.length} entries`)
-                console.log('Sample leaderboard data:', leaderboard.slice(0, 3))
 
                 expect(Array.isArray(leaderboard)).toBe(true)
 
@@ -169,21 +157,14 @@ describe('Leaderboard Database Integration', () => {
                         entry.userId && !entry.userId.startsWith('student-')
                     )
 
-                    if (hasRealUserIds) {
-                        console.log('✓ Real database data detected')
-                    } else {
-                        console.warn('⚠ Only mock data detected - check database query')
-                    }
+                    // Real data validation is sufficient without logging
                 } else {
-                    console.warn('⚠ Empty leaderboard - this indicates a problem with data retrieval')
+                    // Empty leaderboard test continues
                 }
             })
 
             test('getLeaderboardByLevel should return level-specific data', async () => {
                 const level0Data = await getLeaderboardByLevel(0)
-
-                console.log(`Level 0 leaderboard returned ${level0Data.length} entries`)
-                console.log('Sample level 0 data:', level0Data.slice(0, 3))
 
                 expect(Array.isArray(level0Data)).toBe(true)
 
@@ -223,11 +204,6 @@ describe('Leaderboard Database Integration', () => {
         LIMIT 5
       `
 
-                console.log('Student progress consistency check:')
-                studentsWithProgress.forEach(student => {
-                    console.log(`${student.username}: progress=${student.user_progress}, level=${student.latest_level}, profit=${student.latest_profit}, day=${student.latest_day}`)
-                })
-
                 expect(studentsWithProgress.length).toBeGreaterThan(0)
             })
         })
@@ -236,9 +212,7 @@ describe('Leaderboard Database Integration', () => {
             test('getLeaderboard should return real data from database', async () => {
                 const result = await getLeaderboard()
 
-                console.log(`Leaderboard returned ${result.length} entries`)
                 if (result.length > 0) {
-                    console.log('Sample leaderboard entries:', result.slice(0, 3))
                     result.forEach(entry => {
                         expect(entry.id).toBeDefined()
                         expect(entry.username).toBeDefined()

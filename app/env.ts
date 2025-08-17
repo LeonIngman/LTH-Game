@@ -6,9 +6,6 @@ if (process.env.NODE_ENV === "production" && !process.env.NEXTAUTH_SECRET) {
   throw new Error("FATAL: NEXTAUTH_SECRET environment variable is not set in production.")
 }
 export const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "default_development_secret_do_not_use_in_prod"
-if (process.env.NODE_ENV !== "production" && NEXTAUTH_SECRET === "default_development_secret_do_not_use_in_prod") {
-  console.warn("Warning: Using default NEXTAUTH_SECRET in development. Set a unique value in your .env file.")
-}
 
 // DATABASE_URL: Also critical. pg library will use this.
 export const DATABASE_URL = process.env.DATABASE_URL || ""
@@ -19,14 +16,8 @@ if (!DATABASE_URL && process.env.NODE_ENV !== "test") {
 
 // DEMO_MODE: Explicitly enable via environment variable. Defaults to false.
 export const DEMO_MODE = process.env.DEMO_MODE === "true"
-if (DEMO_MODE && process.env.NODE_ENV !== "test") {
-  console.log("Application is running in DEMO_MODE.")
-}
 
 // NEXT_PUBLIC_VERCEL_ENV: This is Vercel-specific.
 // For self-hosting, it will typically be undefined, making this false.
 // If any code relies on this, it should be reviewed.
 export const NEXT_PUBLIC_VERCEL_ENV = process.env.NEXT_PUBLIC_VERCEL_ENV === "true"
-if (NEXT_PUBLIC_VERCEL_ENV && process.env.NODE_ENV !== "test") {
-  console.log("Application detected Vercel environment (NEXT_PUBLIC_VERCEL_ENV=true).")
-}
