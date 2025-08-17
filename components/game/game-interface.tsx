@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
+import { Button } from "@/components/ui/button"
 import type { Supplier, Customer, LevelConfig, GameAction, GameState } from "@/types/game"
 import type { GameInterfaceProps } from "@/types/components"
 import { calculateTransportationCost as calculateTransportationCostUtil } from "@/lib/game/inventory-management"
@@ -150,17 +151,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     setAction,
   })
 
-  const { isLoading, errorMessage, gameEnded, setGameEnded, processDay, submitLevel } = useGameActions({
-    levelId: levelConfig.id,
-    gameState,
-    setGameState,
-    initializeSupplierOrders,
-    initializeCustomerOrders,
-    setSupplierOrders,
-    setCustomerOrders,
-    setAction,
-  })
-
+  // Initialize game calculations first to get calculateTotalCost
   const {
     getMaterialPriceForSupplier,
     getOrderQuantitiesForSupplier,
@@ -170,12 +161,25 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     calculateProductionCost,
     isNextDayButtonDisabled,
     getNextDayDisabledReason,
-    calculateMaxProduction
+    calculateMaxProduction,
+    calculateTotalCost
   } = useGameCalculations({
     gameState,
     levelConfig,
     supplierOrders,
     action,
+  })
+
+  const { isLoading, errorMessage, gameEnded, setGameEnded, processDay, submitLevel, insufficientFundsMessage, clearInsufficientFundsMessage, checkSufficientFunds } = useGameActions({
+    levelId: levelConfig.id,
+    gameState,
+    setGameState,
+    initializeSupplierOrders,
+    initializeCustomerOrders,
+    setSupplierOrders,
+    setCustomerOrders,
+    setAction,
+    calculateTotalCost,
   })
 
 
@@ -512,6 +516,27 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         </div>
       </div>
 
+      {/* Insufficient Funds Banner */}
+      {insufficientFundsMessage && (
+        <Alert variant="destructive" className="border-red-300 bg-red-50">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="flex items-center justify-between">
+            Insufficient Funds
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearInsufficientFundsMessage}
+              className="h-auto p-1 text-red-700 hover:text-red-900"
+            >
+              ×
+            </Button>
+          </AlertTitle>
+          <AlertDescription className="text-red-700">
+            {insufficientFundsMessage}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <CostSummary
         gameState={gameState}
         levelConfig={levelConfig}
@@ -529,6 +554,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         calculateRevenue={calculateRevenue}
         isNextDayButtonDisabled={isNextDayButtonDisabled}
         getNextDayDisabledReason={getNextDayDisabledReason}
+        checkSufficientFunds={checkSufficientFunds}
       />
 
       <GameHistory history={gameState.history} />

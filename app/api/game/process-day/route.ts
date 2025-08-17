@@ -103,14 +103,27 @@ export async function POST(request: Request) {
         // Allow the player to proceed with just sales
         console.log("Player with zero cash is attempting sales only - allowing action")
       } else {
+        // Log the error on the server for debugging
+        console.error("Insufficient funds error:", {
+          userId,
+          levelId,
+          totalCost: affordabilityCheck.totalCost,
+          availableCash: affordabilityCheck.availableCash,
+          message: affordabilityCheck.message
+        })
+
+        // Return standardized insufficient funds response
         return NextResponse.json(
           {
-            error: affordabilityCheck.message || "Insufficient funds for the requested actions",
-            totalCost: affordabilityCheck.totalCost,
-            holdingCost: affordabilityCheck.holdingCost,
-            availableCash: gameState.cash,
+            code: "INSUFFICIENT_FUNDS",
+            message: `Insufficient funds. Total cost ${affordabilityCheck.totalCost?.toFixed(2)} kr, available cash ${affordabilityCheck.availableCash?.toFixed(2)} kr.`,
+            details: {
+              totalCost: affordabilityCheck.totalCost,
+              availableCash: affordabilityCheck.availableCash,
+              currency: "SEK"
+            }
           },
-          { status: 400 },
+          { status: 400 }
         )
       }
     }
@@ -127,12 +140,26 @@ export async function POST(request: Request) {
           // It's essentially zero due to floating point precision, set it to exactly 0
           newState.cash = 0
         } else {
+          // Log the error on the server for debugging
+          console.error("Processing resulted in negative cash balance:", {
+            userId,
+            levelId,
+            finalCash: newState.cash,
+            originalCash: gameState.cash,
+            action: action
+          })
+
           return NextResponse.json(
             {
-              error: "Processing resulted in negative cash balance. This should not happen.",
-              gameState: gameState, // Return original state
+              code: "INSUFFICIENT_FUNDS",
+              message: `Processing resulted in negative cash balance. Available cash ${gameState.cash.toFixed(2)} kr was insufficient.`,
+              details: {
+                totalCost: null, // Not available in this context
+                availableCash: gameState.cash,
+                currency: "SEK"
+              }
             },
-            { status: 400 },
+            { status: 400 }
           )
         }
       }
@@ -177,10 +204,9 @@ export async function POST(request: Request) {
       const err = processingError as Error
       return NextResponse.json(
         {
-          error: err.message || "Failed to process game day",
-          stack: (err as any).stack,
+          error: err.message || "Failed to process game day"
         },
-        { status: 400 },
+        { status: 400 }
       )
     }
   } catch (error) {
@@ -189,10 +215,9 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         error: "Failed to process game day",
-        details: err.message,
-        stack: (err as any).stack,
+        details: err.message
       },
-      { status: 500 },
+      { status: 500 }
     )
   }
 }

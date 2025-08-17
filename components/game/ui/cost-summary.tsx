@@ -22,6 +22,7 @@ export function CostSummary({
   calculateRevenue,
   isNextDayButtonDisabled,
   getNextDayDisabledReason,
+  checkSufficientFunds,
 }: Readonly<CostSummaryProps>) {
   // Calculate individual cost components
   const purchaseCost = calculateMaterialPurchaseCost()
@@ -57,6 +58,9 @@ export function CostSummary({
     return noOrders && action.production === 0 && (hasCustomerOrders)
   }
 
+  // Check funds before allowing action
+  const fundsCheck = checkSufficientFunds()
+
   // Determine if the Next Day button should be disabled
   const isButtonDisabled = () => {
     if (isLoading || gameEnded || gameState.gameOver) return true
@@ -64,14 +68,19 @@ export function CostSummary({
     // Special case: if player has 0 cash but is only trying to sell, allow it
     if (gameState.cash <= 0 && isOnlySales()) return false
 
-    // Otherwise, check if they can afford all actions
-    return totalCost > gameState.cash
+    // Use the pre-check for insufficient funds
+    return !fundsCheck.sufficient
   }
 
   // Determine why the Next Day button is disabled
   const getDisabledReason = () => {
     if (isLoading) return "Processing your actions..."
     if (gameEnded || gameState.gameOver) return "Game is over"
+
+    // If insufficient funds, show the specific message from pre-check
+    if (!fundsCheck.sufficient && fundsCheck.message) {
+      return fundsCheck.message
+    }
 
     return getNextDayDisabledReason()
   }
@@ -124,6 +133,17 @@ export function CostSummary({
             </p>
           </div>
         </div>
+        
+        {/* Insufficient Funds Warning */}
+        {!fundsCheck.sufficient && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 text-center">
+            <p className="text-sm font-medium text-red-800">⚠️ Insufficient Funds</p>
+            <p className="text-xs text-red-600 mt-1">
+              Available: {gameState.cash.toFixed(2)} kr | Needed: {totalCost.toFixed(2)} kr
+            </p>
+          </div>
+        )}
+        
         <div>
           <TooltipProvider>
             <Tooltip>

@@ -46,6 +46,7 @@ export interface CostSummaryProps {
   calculateRevenue: () => number
   isNextDayButtonDisabled: () => boolean
   getNextDayDisabledReason: () => string
+  checkSufficientFunds: () => { sufficient: boolean; message?: string }
 }
 
 export interface GameHistoryProps {

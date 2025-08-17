@@ -19,6 +19,7 @@ export function useGameActions({
   setSupplierOrders,
   setCustomerOrders,
   setAction,
+  calculateTotalCost, // Add this parameter for pre-check
 }: GameActionsParams): GameActionsHook {
   const { toast } = useToast()
   const router = useRouter()
@@ -26,6 +27,24 @@ export function useGameActions({
   const [isLoading, setIsLoading] = useState<boolean>(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [gameEnded, setGameEnded] = useState<boolean>(false)
+  const [insufficientFundsMessage, setInsufficientFundsMessage] = useState<string | null>(null)
+  const [lastInsufficientFundsMessage, setLastInsufficientFundsMessage] = useState<string | null>(null)
+
+  // Pre-check for insufficient funds before API call
+  const checkSufficientFunds = useCallback((): { sufficient: boolean; message?: string } => {
+    const totalCost = calculateTotalCost()
+    const availableCash = gameState.cash
+
+    if (totalCost > availableCash) {
+      const shortfall = (totalCost - availableCash).toFixed(2)
+      return {
+        sufficient: false,
+        message: `Insufficient funds. Total cost ${totalCost.toFixed(2)} kr, available ${availableCash.toFixed(2)} kr. You need ${shortfall} kr more.`
+      }
+    }
+
+    return { sufficient: true }
+  }, [calculateTotalCost, gameState.cash])
 
   // Handle API errors
   const handleApiError = useCallback(
@@ -82,8 +101,31 @@ export function useGameActions({
         return false
       }
 
+      // Pre-check for sufficient funds before making API call
+      const fundsCheck = checkSufficientFunds()
+      if (!fundsCheck.sufficient) {
+        const message = fundsCheck.message || 'Insufficient funds to complete this action'
+        
+        // Prevent spam by checking if message is different from last one
+        if (message !== lastInsufficientFundsMessage) {
+          setInsufficientFundsMessage(message)
+          setLastInsufficientFundsMessage(message)
+          
+          // Show a non-blocking toast
+          toast({
+            title: "Insufficient Funds",
+            description: message,
+            variant: "destructive",
+            duration: 5000,
+          })
+        }
+        
+        return false // Don't make API call, just return false
+      }
+
       setIsLoading(true)
       setErrorMessage(null)
+      setInsufficientFundsMessage(null) // Clear any previous insufficient funds message
 
       try {
         console.log("Processing day with action:", JSON.stringify(action))
@@ -103,7 +145,39 @@ export function useGameActions({
         })
 
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}))
+          let errorData: any = {}
+
+          // Safely parse JSON response
+          try {
+            errorData = await response.json()
+          } catch (parseError) {
+            console.warn("Failed to parse error response as JSON:", parseError)
+            // Fallback for non-JSON responses
+            errorData = { error: `Server error: ${response.status}` }
+          }
+
+          // Handle insufficient funds specifically
+          if (response.status === 400 && errorData.code === 'INSUFFICIENT_FUNDS') {
+            const message = errorData.message || 'Insufficient funds to complete this action'
+
+            // Prevent spam by checking if message is different from last one
+            if (message !== lastInsufficientFundsMessage) {
+              setInsufficientFundsMessage(message)
+              setLastInsufficientFundsMessage(message)
+
+              // Also show a non-blocking toast
+              toast({
+                title: "Insufficient Funds",
+                description: message,
+                variant: "destructive",
+                duration: 5000,
+              })
+            }
+
+            return false // Don't throw, just return false to indicate failure
+          }
+
+          // For other errors, throw as before
           throw new Error(errorData.error || `Server error: ${response.status}`)
         }
 
@@ -120,6 +194,10 @@ export function useGameActions({
 
         // Reset actions
         resetGameActions()
+
+        // Clear insufficient funds message on successful processing
+        setInsufficientFundsMessage(null)
+        setLastInsufficientFundsMessage(null)
 
         // Check if game is over
         if (data.gameOver) {
@@ -147,7 +225,7 @@ export function useGameActions({
         setIsLoading(false)
       }
     },
-    [user, levelId, gameState, setGameState, resetGameActions, toast, handleApiError],
+    [user, levelId, gameState, setGameState, resetGameActions, toast, handleApiError, lastInsufficientFundsMessage, checkSufficientFunds],
   )
 
   // Submit level results
@@ -210,5 +288,8 @@ export function useGameActions({
     setGameEnded,
     processDay,
     submitLevel,
+    insufficientFundsMessage,
+    clearInsufficientFundsMessage: () => setInsufficientFundsMessage(null),
+    checkSufficientFunds,
   }
 }
