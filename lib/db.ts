@@ -26,7 +26,7 @@ console.log('Database pool initialized with pg.');
  */
 export async function executeSqlTemplate(strings: TemplateStringsArray, ...values: any[]): Promise<any[]> {
   const text = strings.reduce((prev, curr, i) => prev + curr + (values[i] !== undefined ? `$${i + 1}` : ""), "");
-  
+
   if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SQL === 'true') {
     console.log('[SQL_TEMPLATE_EXEC]', text, values);
   }
