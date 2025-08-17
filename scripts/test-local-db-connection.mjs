@@ -10,11 +10,18 @@ async function testLocalConnection() {
   const dbUrl = process.env.DATABASE_URL;
 
   if (!dbUrl) {
-    console.error("❌ DATABASE_URL is not set. Please set it in your .env.local file or environment.");
+    console.error(
+      "❌ DATABASE_URL is not set. Please set it in your .env.local file or environment."
+    );
     process.exit(1);
   }
 
-  console.log(`Connecting with DATABASE_URL: ${dbUrl.replace(/:([^:@]*?)@/, ":********@")}`); // Mask password
+  console.log(
+    `Connecting with DATABASE_URL: ${dbUrl.replace(
+      /:([^:@]*?)@/,
+      ":********@"
+    )}`
+  ); // Mask password
 
   const pool = new Pool({
     connectionString: dbUrl,
@@ -28,7 +35,10 @@ async function testLocalConnection() {
 
     console.log("Attempting to execute a simple query (SELECT NOW())...");
     const result = await client.query("SELECT NOW()");
-    console.log("✅ Query successful! Current database time:", result.rows[0].now);
+    console.log(
+      "✅ Query successful! Current database time:",
+      result.rows[0].now
+    );
 
     client.release(); // Release the client back to the pool
     console.log("✅ Client released.");
@@ -38,15 +48,24 @@ async function testLocalConnection() {
     console.error("Error Message:", error.message);
 
     if (error.code === "ECONNREFUSED") {
-      console.error("\nHint: Connection refused. Is your PostgreSQL server running on localhost:5432?");
-    } else if (error.code === "28P01" || error.message.includes("password authentication failed")) {
       console.error(
-        "\nHint: Password authentication failed for user 'gustav'. Check your password and pg_hba.conf settings.",
+        "\nHint: Connection refused. Is your PostgreSQL server running on localhost:5432?"
+      );
+    } else if (
+      error.code === "28P01" ||
+      error.message.includes("password authentication failed")
+    ) {
+      console.error(
+        "\nHint: Password authentication failed for user 'gustav'. Check your password and pg_hba.conf settings."
       );
     } else if (error.code === "3D000") {
-      console.error(`\nHint: Database 'supply_chain_game' does not exist. Did you create it?`);
+      console.error(
+        `\nHint: Database 'supply_chain_game' does not exist. Did you create it?`
+      );
     } else {
-      console.error("\nHint: Check your DATABASE_URL, PostgreSQL server status, and network configuration.");
+      console.error(
+        "\nHint: Check your DATABASE_URL, PostgreSQL server status, and network configuration."
+      );
     }
     process.exit(1);
   } finally {

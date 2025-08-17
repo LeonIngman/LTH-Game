@@ -28,7 +28,9 @@ async function checkNetworkConnectivity() {
     console.log("Testing HTTPS connectivity...");
     await new Promise((resolve, reject) => {
       const req = https.get("https://www.google.com", (res) => {
-        console.log(`✅ HTTPS connectivity working: Status code ${res.statusCode}`);
+        console.log(
+          `✅ HTTPS connectivity working: Status code ${res.statusCode}`
+        );
         res.on("data", () => {});
         res.on("end", resolve);
       });
@@ -58,7 +60,9 @@ async function checkDatabaseUrl() {
 
     // Check protocol
     if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
-      console.error(`❌ Invalid protocol: ${url.protocol}. Should be postgres: or postgresql:`);
+      console.error(
+        `❌ Invalid protocol: ${url.protocol}. Should be postgres: or postgresql:`
+      );
       return false;
     }
     console.log("✅ Protocol is valid:", url.protocol);
@@ -76,13 +80,18 @@ async function checkDatabaseUrl() {
       const addresses = await dnsResolve(url.hostname);
       console.log(`✅ Hostname resolution successful: ${addresses.join(", ")}`);
     } catch (dnsError) {
-      console.error(`❌ Cannot resolve hostname: ${url.hostname}. Error:`, dnsError.message);
+      console.error(
+        `❌ Cannot resolve hostname: ${url.hostname}. Error:`,
+        dnsError.message
+      );
       return false;
     }
 
     // Check port
     if (url.port && url.port !== "5432" && url.port !== "443") {
-      console.warn(`⚠️ Unusual port: ${url.port}. Common ports are 5432 or 443`);
+      console.warn(
+        `⚠️ Unusual port: ${url.port}. Common ports are 5432 or 443`
+      );
     } else {
       console.log("✅ Port is valid:", url.port || "default (5432)");
     }
@@ -113,7 +122,9 @@ async function checkDatabaseUrl() {
     if (!sslMode) {
       console.warn("⚠️ SSL mode not specified. Neon requires sslmode=require");
     } else if (sslMode !== "require") {
-      console.warn(`⚠️ SSL mode is ${sslMode}, but Neon requires sslmode=require`);
+      console.warn(
+        `⚠️ SSL mode is ${sslMode}, but Neon requires sslmode=require`
+      );
     } else {
       console.log("✅ SSL mode is correctly set to:", sslMode);
     }
@@ -122,7 +133,9 @@ async function checkDatabaseUrl() {
   } catch (parseError) {
     console.error("❌ Invalid connection string format:", parseError.message);
     console.log("Connection string should be in format:");
-    console.log("postgres://username:password@hostname:port/database?sslmode=require");
+    console.log(
+      "postgres://username:password@hostname:port/database?sslmode=require"
+    );
     return false;
   }
 }
@@ -136,7 +149,10 @@ async function testDatabaseConnection() {
 
     // Set up a timeout
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error("Connection timeout after 10 seconds")), 10000);
+      setTimeout(
+        () => reject(new Error("Connection timeout after 10 seconds")),
+        10000
+      );
     });
 
     // Race between the connection and the timeout
@@ -157,14 +173,18 @@ async function diagnose() {
   // Step 1: Check network connectivity
   const networkOk = await checkNetworkConnectivity();
   if (!networkOk) {
-    console.log("\n❌ Network connectivity issues detected. Please check your internet connection.");
+    console.log(
+      "\n❌ Network connectivity issues detected. Please check your internet connection."
+    );
     return;
   }
 
   // Step 2: Check database URL
   const urlOk = await checkDatabaseUrl();
   if (!urlOk) {
-    console.log("\n❌ Database URL issues detected. Please check your DATABASE_URL environment variable.");
+    console.log(
+      "\n❌ Database URL issues detected. Please check your DATABASE_URL environment variable."
+    );
     return;
   }
 
@@ -185,7 +205,9 @@ async function diagnose() {
     return;
   }
 
-  console.log("\n✅ All checks passed! Your database connection is working correctly.");
+  console.log(
+    "\n✅ All checks passed! Your database connection is working correctly."
+  );
 }
 
 diagnose().catch(console.error);
