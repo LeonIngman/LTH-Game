@@ -1,9 +1,15 @@
-const { Pool } = require("pg");
-const fs = require("fs");
-const path = require("path");
+import { Pool } from "pg";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env.local
-require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") });
+dotenv.config({ path: path.join(__dirname, "..", ".env.local") });
 
 // For database creation, we need to connect to the default 'postgres' database first
 // Extract connection details from DATABASE_URL if available

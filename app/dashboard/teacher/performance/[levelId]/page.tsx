@@ -21,6 +21,28 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
   const levelId = Number.parseInt(levelIdRaw)
 
   useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true)
+      try {
+        const allStudents = await getAllStudents()
+        setStudents(
+          allStudents.map((student: any) => ({
+            userId: student.id,
+            username: student.username,
+            maxScore: student.maxScore ?? 0,
+            maxProfit: student.maxProfit ?? 0,
+          }))
+        )
+        const perfData = await getPerformanceData(levelId)
+        setPerformanceData(perfData)
+      } catch (error) {
+        console.error("Error fetching performance data:", error)
+        setPerformanceData([])
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
     if (!loading) {
       if (!user) {
         router.push("/auth/signin")
@@ -33,29 +55,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
         fetchData()
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, loading, router, levelId])
-
-  const fetchData = async () => {
-    setIsLoading(true)
-    try {
-      const allStudents = await getAllStudents()
-      setStudents(
-        allStudents.map((student: any) => ({
-          userId: student.id,
-          username: student.username,
-          maxScore: student.maxScore ?? 0,
-          maxProfit: student.maxProfit ?? 0,
-        }))
-      )
-      const perfData = await getPerformanceData(levelId)
-      setPerformanceData(perfData)
-    } catch (error) {
-      // Optionally handle error
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   if (loading || isLoading || !user) {
     return <LoadingScreen message="Loading performance data..." description="Analyzing student progress for this level" />

@@ -1,5 +1,5 @@
-const { Pool } = require("pg");
-const readline = require("readline");
+import { Pool } from "pg";
+import readline from "readline";
 
 // Prefer DATABASE_URL if set, otherwise use individual DB_* vars
 const config = process.env.DATABASE_URL
@@ -71,7 +71,7 @@ async function resetDatabase() {
         await pool.query('DELETE FROM "QuizQuestion"');
       }
     } catch (err) {
-      console.log("No quiz tables found, skipping.");
+      console.log("No quiz tables found, skipping:", err.message);
     }
 
     // Commit the transaction
@@ -81,9 +81,9 @@ async function resetDatabase() {
     console.log(
       "\nYou can now run the following scripts to re-seed your database:"
     );
-    console.log("1. node scripts/setup-local-database.js");
+    console.log("1. node scripts/setup-local-database.mjs");
     console.log("2. node scripts/seed-timestamps.js");
-    console.log("3. node scripts/create-test-user.js");
+    console.log("3. node scripts/create-test-user.mjs");
   } catch (err) {
     // Rollback in case of error
     await pool.query("ROLLBACK");

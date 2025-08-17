@@ -1,12 +1,19 @@
 // Script to create a test user in the local PostgreSQL database for development and testing purposes.
 // Prompts for username, email, password, and role, then inserts the user into the database.
-const { Pool } = require("pg");
-const bcrypt = require("bcryptjs"); // Use bcryptjs instead of crypto for password hashing
-const readline = require("readline");
-const path = require("path");
+import { Pool } from "pg";
+import bcrypt from "bcryptjs"; // Use bcryptjs instead of crypto for password hashing
+import readline from "readline";
+import path from "path";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+import crypto from "crypto";
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Load environment variables from .env.local
-require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") });
+dotenv.config({ path: path.join(__dirname, "..", ".env.local") });
 
 // Prefer DATABASE_URL if set, otherwise use individual DB_* vars
 const config = process.env.DATABASE_URL
@@ -82,7 +89,7 @@ async function createTestUser() {
       `INSERT INTO "User" (id, username, email, password, visible_password, role, progress, "lastActive", "createdAt", "updatedAt")
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
-        require("crypto").randomUUID(), // Generate a UUID for the id
+        crypto.randomUUID(), // Generate a UUID for the id
         username,
         email,
         hashedPassword,

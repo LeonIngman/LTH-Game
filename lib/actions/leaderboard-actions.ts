@@ -71,7 +71,6 @@ export async function getLeaderboard(): Promise<any[]> {
           p."userId" as user_id,
           p."levelId" as level_id,
           p."cumulativeProfit" as cumulative_profit,
-          p."timestampId" as timestamp_id,
           p."createdAt" as created_at,
           'performance'::text as source
         FROM "Performance" p
@@ -107,7 +106,6 @@ export async function getLeaderboard(): Promise<any[]> {
           user_id,
           level_id,
           cumulative_profit,
-          timestamp_id,
           created_at,
           source
         FROM (
@@ -115,7 +113,6 @@ export async function getLeaderboard(): Promise<any[]> {
             user_id,
             level_id,
             cumulative_profit,
-            timestamp_id,
             created_at,
             source
           FROM latest_performance_per_level
@@ -124,7 +121,6 @@ export async function getLeaderboard(): Promise<any[]> {
             gsd.user_id,
             gsd.level_id,
             gsd.cumulative_profit,
-            NULL::integer as timestamp_id,
             gsd.created_at,
             gsd.source
           FROM game_session_data gsd
@@ -139,12 +135,12 @@ export async function getLeaderboard(): Promise<any[]> {
           u."lastActive",
           cd.level_id,
           cd.cumulative_profit,
-          cd.timestamp_id,
+          cd.created_at,
           cd.source,
           CASE 
             WHEN cd.source = 'game_session' THEN gsd.day_number
-            ELSE NULL 
-          END as game_session_day
+            ELSE u.progress 
+          END as day_number
         FROM "User" u
         INNER JOIN combined_data cd ON cd.user_id = u.id
         LEFT JOIN game_session_data gsd ON gsd.user_id = cd.user_id AND gsd.level_id = cd.level_id
@@ -157,11 +153,10 @@ export async function getLeaderboard(): Promise<any[]> {
         COALESCE(ul.cumulative_profit, 0) AS profit,
         COALESCE(ul.level_id, 0) AS level,
         ul."lastActive",
-        COALESCE(ts."timestampNumber", ul.game_session_day, ul.progress, 0) AS day,
+        COALESCE(ul.day_number, ul.progress, 0) AS day,
         NULL AS "levelCompletedDate",
         ul.source
       FROM user_levels ul
-          LEFT JOIN "TimeStamp" ts ON ts.id = ul.timestamp_id
       ORDER BY ul.level_id ASC, ul.cumulative_profit DESC, ul."lastActive" DESC;
     `
 
@@ -186,7 +181,9 @@ export async function getLeaderboard(): Promise<any[]> {
       { ...d, id: `${d.id}-${d.level}`, userId: d.id, day: d.progress },
     ])
   }
-} export async function getLeaderboardByLevel(levelId: number) {
+}
+
+export async function getLeaderboardByLevel(levelId: number) {
   try {
     const rows = await sql`
       WITH latest_performance AS (
@@ -194,7 +191,6 @@ export async function getLeaderboard(): Promise<any[]> {
           p."userId" as user_id,
           p."levelId" as level_id,
           p."cumulativeProfit" as cumulative_profit,
-          p."timestampId" as timestamp_id,
           p."createdAt" as created_at,
           'performance'::text as source
         FROM "Performance" p
@@ -230,7 +226,6 @@ export async function getLeaderboard(): Promise<any[]> {
           user_id,
           level_id,
           cumulative_profit,
-          timestamp_id,
           created_at,
           source,
           day_number
@@ -239,7 +234,6 @@ export async function getLeaderboard(): Promise<any[]> {
             user_id,
             level_id,
             cumulative_profit,
-            timestamp_id,
             created_at,
             source,
             NULL::integer as day_number
@@ -249,7 +243,6 @@ export async function getLeaderboard(): Promise<any[]> {
             user_id,
             level_id,
             cumulative_profit,
-            NULL::integer as timestamp_id,
             created_at,
             source,
             day_number
@@ -264,12 +257,11 @@ export async function getLeaderboard(): Promise<any[]> {
         COALESCE(cd.cumulative_profit, 0) AS profit,
         COALESCE(cd.level_id, ${levelId}) AS level,
         u."lastActive",
-        COALESCE(ts."timestampNumber", cd.day_number, 0) AS day,
+        COALESCE(cd.day_number, u.progress, 0) AS day,
         NULL AS "levelCompletedDate",
         cd.source
       FROM "User" u
           LEFT JOIN combined_data cd ON cd.user_id = u.id
-          LEFT JOIN "TimeStamp" ts ON ts.id = cd.timestamp_id
           WHERE u.role = 'student' AND (cd.level_id = ${levelId} OR cd.level_id IS NULL)
       ORDER BY cd.cumulative_profit DESC, u."lastActive" DESC;
     `

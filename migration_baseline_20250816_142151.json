@@ -1,0 +1,53 @@
+{
+  "migration_baseline": {
+    "timestamp": "2025-08-16T14:21:51Z",
+    "database": "supply_chain_game",
+    "backup_file": "database_backup_20250816_142151.sql",
+    "description": "Baseline row counts before database migration",
+    "tables": {
+      "User": 3,
+      "Session": 22,
+      "GameLevel": 3,
+      "GameSession": 2,
+      "Performance": 2,
+      "GameDailyData": 0,
+      "TimeStamp": 2,
+      "Product": 0,
+      "Supplier": 0,
+      "SupplierProduct": 0,
+      "Order": 0,
+      "QuizSubmission": 1
+    },
+    "totals": {
+      "total_rows": 35,
+      "tables_with_data": 8,
+      "empty_tables": 4
+    },
+    "notes": {
+      "non_empty_tables": [
+        "User (3 rows)",
+        "Session (22 rows)",
+        "GameLevel (3 rows)",
+        "GameSession (2 rows)",
+        "Performance (2 rows)",
+        "TimeStamp (2 rows)",
+        "QuizSubmission (1 row)"
+      ],
+      "empty_tables": [
+        "GameDailyData",
+        "Product",
+        "Supplier",
+        "SupplierProduct",
+        "Order"
+      ],
+      "key_observations": [
+        "GameSession has 2 active sessions",
+        "Performance has 2 historical records",
+        "User table has 3 users (including test users)",
+        "Session table has 22 authentication sessions",
+        "GameLevel has 3 defined levels",
+        "QuizSubmission has 1 quiz response"
+      ]
+    }
+  }
+}
