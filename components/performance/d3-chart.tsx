@@ -247,7 +247,10 @@ function renderInventoryChart(
 
   // Add warning circles for overstock
   svg.selectAll(".overstock-warning")
-    .data(data.filter(d => d.overstockPenalty && d.overstockPenalty > 0))
+    .data(data.filter(d => {
+      const totalOverstock = Object.values(d.overstockCosts as Record<string, number>).reduce((sum, cost) => sum + cost, 0);
+      return totalOverstock > 0;
+    }))
     .enter()
     .append("circle")
     .attr("class", "overstock-warning")
@@ -257,7 +260,10 @@ function renderInventoryChart(
     .attr("fill", "#ef4444")
     .attr("opacity", 0.7)
     .append("title")
-    .text(d => `Overstock penalty: ${d.overstockPenalty} kr`)
+    .text(d => {
+      const totalOverstock = Object.values(d.overstockCosts as Record<string, number>).reduce((sum, cost) => sum + cost, 0);
+      return `Overstock cost: ${totalOverstock} kr`;
+    })
 
   // Add legend
   const legend = svg
