@@ -105,12 +105,12 @@ export function useGameActions({
       const fundsCheck = checkSufficientFunds()
       if (!fundsCheck.sufficient) {
         const message = fundsCheck.message || 'Insufficient funds to complete this action'
-        
+
         // Prevent spam by checking if message is different from last one
         if (message !== lastInsufficientFundsMessage) {
           setInsufficientFundsMessage(message)
           setLastInsufficientFundsMessage(message)
-          
+
           // Show a non-blocking toast
           toast({
             title: "Insufficient Funds",
@@ -119,7 +119,7 @@ export function useGameActions({
             duration: 5000,
           })
         }
-        
+
         return false // Don't make API call, just return false
       }
 

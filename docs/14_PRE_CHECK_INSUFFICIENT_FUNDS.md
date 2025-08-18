@@ -11,23 +11,31 @@ Successfully implemented lightweight pre-check functionality to prevent API call
 **Added**: Pre-check function that validates funds before API calls
 
 ```typescript
-const checkSufficientFunds = useCallback((): { sufficient: boolean; message?: string } => {
-  const totalCost = calculateTotalCost()
-  const availableCash = gameState.cash
+const checkSufficientFunds = useCallback((): {
+  sufficient: boolean;
+  message?: string;
+} => {
+  const totalCost = calculateTotalCost();
+  const availableCash = gameState.cash;
 
   if (totalCost > availableCash) {
-    const shortfall = (totalCost - availableCash).toFixed(2)
+    const shortfall = (totalCost - availableCash).toFixed(2);
     return {
       sufficient: false,
-      message: `Insufficient funds. Total cost ${totalCost.toFixed(2)} kr, available ${availableCash.toFixed(2)} kr. You need ${shortfall} kr more.`
-    }
+      message: `Insufficient funds. Total cost ${totalCost.toFixed(
+        2
+      )} kr, available ${availableCash.toFixed(
+        2
+      )} kr. You need ${shortfall} kr more.`,
+    };
   }
 
-  return { sufficient: true }
-}, [calculateTotalCost, gameState.cash])
+  return { sufficient: true };
+}, [calculateTotalCost, gameState.cash]);
 ```
 
 **Updated**: `processDay` function to check funds before making API calls:
+
 - ✅ Pre-check prevents unnecessary API calls
 - ✅ Shows immediate feedback via toast and banner
 - ✅ Prevents duplicate messages through debouncing
@@ -35,11 +43,13 @@ const checkSufficientFunds = useCallback((): { sufficient: boolean; message?: st
 ### 2. Enhanced Cost Summary Component
 
 **Added**: Visual insufficient funds indicator:
+
 - ✅ Red warning box appears when funds are insufficient
 - ✅ Shows available cash vs. needed cost
 - ✅ Auto-hides when funds become sufficient
 
 **Updated**: Button disabled state logic:
+
 - ✅ Uses pre-check results for more accurate state
 - ✅ Enhanced tooltip with specific insufficient funds message
 - ✅ Reactive updates when cash/costs change
@@ -47,6 +57,7 @@ const checkSufficientFunds = useCallback((): { sufficient: boolean; message?: st
 ### 3. TypeScript Interface Updates
 
 **Updated**: Type definitions to support new functionality:
+
 - ✅ `GameActionsParams` includes `calculateTotalCost` function
 - ✅ `GameActionsHook` includes `checkSufficientFunds` function
 - ✅ `CostSummaryProps` includes `checkSufficientFunds` function
@@ -70,21 +81,25 @@ const checkSufficientFunds = useCallback((): { sufficient: boolean; message?: st
 ## Key Features
 
 ### ✅ **Immediate Feedback**
+
 - No API calls when funds are insufficient
 - Real-time calculations update the UI state
 - Clear visual indicators for insufficient funds
 
 ### ✅ **Auto Re-enabling**
+
 - Button and warnings update automatically when state changes
 - No page refresh needed
 - Reactive to all cost/cash changes
 
 ### ✅ **Detailed Information**
+
 - Shows exact shortage amount
 - Displays available vs. needed cash
 - Specific tooltips explain the situation
 
 ### ✅ **Prevention First**
+
 - Catches issues before API calls
 - Reduces server load
 - Faster user feedback
@@ -92,34 +107,38 @@ const checkSufficientFunds = useCallback((): { sufficient: boolean; message?: st
 ## Technical Implementation
 
 ### Pre-Check Logic
+
 ```typescript
 // In useGameActions hook
-const fundsCheck = checkSufficientFunds()
+const fundsCheck = checkSufficientFunds();
 if (!fundsCheck.sufficient) {
   // Show message, return false, no API call
-  return false
+  return false;
 }
 // Continue with API call
 ```
 
 ### UI State Management
+
 ```tsx
 // In CostSummary component
-const fundsCheck = checkSufficientFunds()
+const fundsCheck = checkSufficientFunds();
 
 // Visual warning
-{!fundsCheck.sufficient && (
-  <div className="bg-red-50 border border-red-200">
-    ⚠️ Insufficient Funds
-    Available: {cash} kr | Needed: {totalCost} kr
-  </div>
-)}
+{
+  !fundsCheck.sufficient && (
+    <div className="bg-red-50 border border-red-200">
+      ⚠️ Insufficient Funds Available: {cash} kr | Needed: {totalCost} kr
+    </div>
+  );
+}
 
 // Button state
-<Button disabled={!fundsCheck.sufficient} />
+<Button disabled={!fundsCheck.sufficient} />;
 ```
 
 ### Reactive Updates
+
 - Hook dependencies ensure calculations re-run when state changes
 - UI components automatically reflect new calculation results
 - No manual state management needed
@@ -135,16 +154,19 @@ const fundsCheck = checkSufficientFunds()
 ## Testing Scenarios
 
 ### Scenario 1: Insufficient Funds
+
 1. Set up game with low cash (e.g., 100 kr)
 2. Add expensive supplier orders (e.g., 1000+ kr total)
 3. **Expected**: Red warning appears, button disabled, tooltip shows shortage
 
 ### Scenario 2: Becoming Sufficient
+
 1. Start with insufficient funds scenario
 2. Reduce order quantities or increase cash
 3. **Expected**: Warning disappears, button enables automatically
 
 ### Scenario 3: Edge Cases
+
 1. Try with zero cash but only sales actions
 2. **Expected**: Should still allow (special case handling)
 

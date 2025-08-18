@@ -28,8 +28,12 @@ export function CostSummary({
   const purchaseCost = calculateMaterialPurchaseCost()
   const productionCost = calculateProductionCost()
 
+  // Calculate supplier transport cost (difference between total purchase cost and base material costs)
+  const totalPurchaseCostWithTransport = calculateTotalPurchaseCost()
+  const supplierTransportCost = totalPurchaseCostWithTransport - purchaseCost
+
   // Calculate transportation cost as the difference between total purchase cost and base material costs
-  const transportationCost = calculateTransportationCost()
+  const restaurantTransportationCost = calculateTransportationCost()
 
   // Calculate holding cost using the same method as the game engine
   const holdingCost = calculateHoldingCost()
@@ -40,8 +44,8 @@ export function CostSummary({
   // Calculate revenue from both direct sales and customer orders
   const revenue = calculateRevenue()
 
-  // Calculate total cost as sum of all components (including transportation cost)
-  const totalCost = purchaseCost + transportationCost + productionCost + holdingCost + overstockCost
+  // Calculate total cost as sum of all components (matching backend calculation)
+  const totalCost = purchaseCost + supplierTransportCost + productionCost + holdingCost + overstockCost + restaurantTransportationCost
   const profit = revenue - totalCost
 
   // Check if the player is only attempting sales (no purchases or production)
@@ -87,16 +91,16 @@ export function CostSummary({
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary" data-testid="cost-summary">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Purchase Cost</p>
           <p className="text-xl font-bold">{purchaseCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Sum of all material purchases</p>
+          <p className="text-xs text-muted-foreground mt-1">Base material costs</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Transportation Cost</p>
-          <p className="text-xl font-bold">{transportationCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Delivery and shipping costs</p>
+          <p className="text-sm font-medium text-muted-foreground">Supplier Transport</p>
+          <p className="text-xl font-bold">{supplierTransportCost.toFixed(2)} kr</p>
+          <p className="text-xs text-muted-foreground mt-1">Supplier delivery costs</p>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Production Cost</p>
@@ -106,14 +110,19 @@ export function CostSummary({
           </p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Daily Holding Cost</p>
+          <p className="text-sm font-medium text-muted-foreground">Holding Cost</p>
           <p className="text-xl font-bold">{holdingCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Total inventory value × 25% annual rate ÷ 365 days</p>
+          <p className="text-xs text-muted-foreground mt-1">Inventory value × 25% annual rate ÷ 365 days</p>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Overstock Cost</p>
           <p className="text-xl font-bold">{overstockCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Inventory value of overstocked materials × 25% annual rate ÷ 365 days</p>
+          <p className="text-xs text-muted-foreground mt-1">Overstocked inventory × 25% annual rate ÷ 365 days</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Restaurant Transport</p>
+          <p className="text-xl font-bold">{restaurantTransportationCost.toFixed(2)} kr</p>
+          <p className="text-xs text-muted-foreground mt-1">Customer delivery costs</p>
         </div>
       </div>
       <div className="mt-4 border-t pt-4 flex justify-between items-center">
@@ -133,7 +142,7 @@ export function CostSummary({
             </p>
           </div>
         </div>
-        
+
         {/* Insufficient Funds Warning */}
         {!fundsCheck.sufficient && (
           <div className="bg-red-50 border border-red-200 rounded-md p-3 text-center">
@@ -143,7 +152,7 @@ export function CostSummary({
             </p>
           </div>
         )}
-        
+
         <div>
           <TooltipProvider>
             <Tooltip>
