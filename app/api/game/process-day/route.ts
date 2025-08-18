@@ -29,6 +29,8 @@ export async function POST(request: Request) {
   try {
     const { userId, levelId, gameState, action } = await request.json()
 
+    // Check for debug flag
+    const debugCostReconciliation = process.env.DEBUG_COST_RECONCILIATION === 'true'
 
     if (!userId || levelId === undefined || !gameState || !action) {
       return NextResponse.json({ error: "Missing required parameters" }, { status: 400 })
@@ -112,19 +114,27 @@ export async function POST(request: Request) {
           message: affordabilityCheck.message
         })
 
+        // Build response with optional debug information
+        const response: any = {
+          code: "INSUFFICIENT_FUNDS",
+          message: `Insufficient funds. Total cost ${affordabilityCheck.totalCost?.toFixed(2)} kr, available cash ${affordabilityCheck.availableCash?.toFixed(2)} kr.`,
+          details: {
+            totalCost: affordabilityCheck.totalCost,
+            availableCash: affordabilityCheck.availableCash,
+            currency: "SEK"
+          }
+        }
+
+        // Add debug cost breakdown if flag is enabled
+        if (debugCostReconciliation && affordabilityCheck.costBreakdown) {
+          response.debug = {
+            totalCostBackend: Number(affordabilityCheck.totalCost?.toFixed(2) || 0),
+            components: affordabilityCheck.costBreakdown
+          }
+        }
+
         // Return standardized insufficient funds response
-        return NextResponse.json(
-          {
-            code: "INSUFFICIENT_FUNDS",
-            message: `Insufficient funds. Total cost ${affordabilityCheck.totalCost?.toFixed(2)} kr, available cash ${affordabilityCheck.availableCash?.toFixed(2)} kr.`,
-            details: {
-              totalCost: affordabilityCheck.totalCost,
-              availableCash: affordabilityCheck.availableCash,
-              currency: "SEK"
-            }
-          },
-          { status: 400 }
-        )
+        return NextResponse.json(response, { status: 400 })
       }
     }
 
@@ -149,18 +159,27 @@ export async function POST(request: Request) {
             action: action
           })
 
-          return NextResponse.json(
-            {
-              code: "INSUFFICIENT_FUNDS",
-              message: `Processing resulted in negative cash balance. Available cash ${gameState.cash.toFixed(2)} kr was insufficient.`,
-              details: {
-                totalCost: null, // Not available in this context
-                availableCash: gameState.cash,
-                currency: "SEK"
-              }
-            },
-            { status: 400 }
-          )
+          // Build response with optional debug information
+          const response: any = {
+            code: "INSUFFICIENT_FUNDS",
+            message: `Processing resulted in negative cash balance. Available cash ${gameState.cash.toFixed(2)} kr was insufficient.`,
+            details: {
+              totalCost: null, // Not available in this context
+              availableCash: gameState.cash,
+              currency: "SEK"
+            }
+          }
+
+          // Add debug note if flag is enabled (detailed breakdown not available in this context)
+          if (debugCostReconciliation) {
+            response.debug = {
+              totalCostBackend: null, // Not calculable post-processing
+              components: null,
+              note: "Cost breakdown not available - negative cash detected after processing"
+            }
+          }
+
+          return NextResponse.json(response, { status: 400 })
         }
       }
 
