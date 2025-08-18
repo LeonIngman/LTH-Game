@@ -71,6 +71,15 @@ export function validateAffordability(
   totalCost?: number
   holdingCost?: number
   availableCash?: number
+  costBreakdown?: {
+    purchaseCost: number
+    supplierTransportCost: number
+    productionCost: number
+    holdingCost: number
+    overstockCost: number
+    restaurantDeliveryCost: number
+    otherSurcharges: number
+  }
 } {
   // Calculate total purchase cost
   let totalPurchaseCost = 0
@@ -102,11 +111,34 @@ export function validateAffordability(
     }
   }
 
+  // Calculate pure material purchase cost (without transport)
+  let purePurchaseCost = 0
+  for (const order of action.supplierOrders) {
+    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+    if (!supplier?.materialPrices) continue
+
+    if (order.pattyPurchase > 0) {
+      purePurchaseCost += order.pattyPurchase * supplier.materialPrices.patty
+    }
+    if (order.cheesePurchase > 0) {
+      purePurchaseCost += order.cheesePurchase * supplier.materialPrices.cheese
+    }
+    if (order.bunPurchase > 0) {
+      purePurchaseCost += order.bunPurchase * supplier.materialPrices.bun
+    }
+    if (order.potatoPurchase > 0) {
+      purePurchaseCost += order.potatoPurchase * supplier.materialPrices.potato
+    }
+  }
+
   // Calculate production cost
   const productionCost = action.production * levelConfig.productionCostPerUnit
 
   // Calculate transportation cost
   const transportationCost = calculateTransportationCost(action, levelConfig)
+
+  // Calculate supplier transport cost (difference between total and pure purchase)
+  const supplierTransportCost = totalPurchaseCost - purePurchaseCost
 
   // Calculate total action cost
   const totalActionCost = totalPurchaseCost + productionCost + transportationCost
@@ -117,8 +149,25 @@ export function validateAffordability(
   // Calculate overstock cost
   const overstockCost = calculateOverstockCost(gameState, levelConfig)
 
+  // Calculate restaurant delivery cost (transportation cost from our calculation)
+  const restaurantDeliveryCost = transportationCost
+
+  // Other surcharges (none currently in the system)
+  const otherSurcharges = 0
+
   // Calculate total cost
   const totalCost = totalActionCost + holdingCost + overstockCost
+
+  // Create cost breakdown for debug purposes
+  const costBreakdown = {
+    purchaseCost: Number(purePurchaseCost.toFixed(2)),
+    supplierTransportCost: Number(supplierTransportCost.toFixed(2)),
+    productionCost: Number(productionCost.toFixed(2)),
+    holdingCost: Number(holdingCost.toFixed(2)),
+    overstockCost: Number(overstockCost.toFixed(2)),
+    restaurantDeliveryCost: Number(restaurantDeliveryCost.toFixed(2)),
+    otherSurcharges: Number(otherSurcharges.toFixed(2))
+  }
 
   // Check if player has enough cash
   if (totalCost > gameState.cash) {
@@ -128,10 +177,17 @@ export function validateAffordability(
       totalCost,
       holdingCost,
       availableCash: gameState.cash,
+      costBreakdown
     }
   }
 
-  return { valid: true, totalCost, holdingCost, availableCash: gameState.cash }
+  return {
+    valid: true,
+    totalCost,
+    holdingCost,
+    availableCash: gameState.cash,
+    costBreakdown
+  }
 }
 
 /**
