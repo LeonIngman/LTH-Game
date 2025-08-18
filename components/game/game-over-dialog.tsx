@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { useToast } from "@/hooks/use-toast"
 import { saveGameResults } from "@/lib/actions/game-actions"
 import type { GameOverDialogProps } from "@/types/components"
 import { calculateGameResult } from "@/lib/game/engine"
@@ -28,9 +29,10 @@ export function GameOverDialog({
   isSubmitting,
 }: GameOverDialogProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [isSaving, setIsSaving] = useState(false)
   const [saveSuccess, setSaveSuccess] = useState<boolean | null>(null)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   // Calculate final results
   const gameResult = calculateGameResult(gameState, levelConfig, userId)
@@ -51,25 +53,41 @@ export function GameOverDialog({
     try {
       setIsSaving(true)
       setSaveSuccess(null)
-      setSaveError(null)
 
       // Save the game results to the database
       const result = await saveGameResults(userId, levelConfig.id, gameState)
 
       if (result.success) {
         setSaveSuccess(true)
+        toast({
+          title: "Success",
+          description: "Game results saved successfully!",
+          variant: "default",
+        })
         // Wait a moment before redirecting
         setTimeout(() => {
           router.push("/dashboard/student")
         }, 2000)
       } else {
-        setSaveError(result.error || "Failed to save results")
         setSaveSuccess(false)
+        // Show non-blocking toast error
+        toast({
+          title: "Failed to save results",
+          description: result.error || "An unexpected error occurred. You can retry saving.",
+          variant: "destructive",
+        })
+        setRetryCount(prev => prev + 1)
       }
     } catch (error) {
       console.error("Error saving game results:", error)
-      setSaveError(String(error) || "An unexpected error occurred")
       setSaveSuccess(false)
+      // Show non-blocking toast error
+      toast({
+        title: "Failed to save results",
+        description: "An unexpected error occurred. You can retry saving.",
+        variant: "destructive",
+      })
+      setRetryCount(prev => prev + 1)
     } finally {
       setIsSaving(false)
     }
@@ -142,10 +160,6 @@ export function GameOverDialog({
               Redirecting to dashboard...
             </div>
           )}
-
-          {saveSuccess === false && (
-            <div className="rounded-md bg-red-50 p-4 text-red-800">Failed to save game results: {saveError}</div>
-          )}
         </div>
 
         <AlertDialogFooter>
@@ -155,7 +169,7 @@ export function GameOverDialog({
             disabled={isSaving || saveSuccess === true}
             className="bg-green-600 hover:bg-green-700"
           >
-            {isSaving ? "Saving..." : "Save Results"}
+            {isSaving ? "Saving..." : saveSuccess === false && retryCount > 0 ? "Retry Save" : "Save Results"}
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
