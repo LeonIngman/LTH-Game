@@ -71,7 +71,7 @@ INSERT INTO "User" (
     gen_random_uuid()::text,
     'admin',
     'admin@lth.se',
-    '$2a$12$LQv3c1yqBwEHFw4GqQpJWOBVKjgQZu.V8Z8GqU7ZL1WvxWv5oBQKW', -- SuperAdmin123!
+    '$2b$12$xeCG.BIP5MbWrV/c6hqnGu71W/UYf0I9qMIagHHl4X494lHPRmBgu', 
     'SuperAdmin123!',
     'teacher',
     0,
