@@ -16,8 +16,6 @@ pgPool.on('error', (err, client) => {
   process.exit(-1);
 });
 
-console.log('Database pool initialized with pg.');
-
 /**
  * Executes a SQL query using a tagged template literal.
  * Example: await executeSqlTemplate`SELECT * FROM "User" WHERE id = ${userId}`;
@@ -26,10 +24,6 @@ console.log('Database pool initialized with pg.');
  */
 export async function executeSqlTemplate(strings: TemplateStringsArray, ...values: any[]): Promise<any[]> {
   const text = strings.reduce((prev, curr, i) => prev + curr + (values[i] !== undefined ? `$${i + 1}` : ""), "");
-
-  if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SQL === 'true') {
-    console.log('[SQL_TEMPLATE_EXEC]', text, values);
-  }
 
   try {
     const res = await pgPool.query(text, values);
@@ -47,9 +41,6 @@ export async function executeSqlTemplate(strings: TemplateStringsArray, ...value
  * Example: await query('SELECT * FROM "User" WHERE id = $1', [userId]);
  */
 export async function query(text: string, params?: any[]): Promise<any[]> {
-  if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SQL === 'true') {
-    console.log('[SQL_QUERY_EXEC]', text, params);
-  }
   try {
     const res = await pgPool.query(text, params);
     return res.rows;
