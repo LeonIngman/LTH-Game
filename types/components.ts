@@ -40,13 +40,16 @@ export interface CostSummaryProps {
   calculateTotalPurchaseCost: () => number
   calculateProductionCost: () => number
   calculateMaterialPurchaseCost: () => number
-  calculateTransportationCost: () => number
+  calculateMaterialTransportationCost: () => number
+  calculateRestaurantTransportationCost: () => number
   calculateHoldingCost: () => number
   calculateOverstockCost: () => number
   calculateRevenue: () => number
   isNextDayButtonDisabled: () => boolean
   getNextDayDisabledReason: () => string
   checkSufficientFunds: () => { sufficient: boolean; message?: string }
+  calculateTotalCost: () => number
+  calculateProfit: () => number
 }
 
 export interface GameHistoryProps {
