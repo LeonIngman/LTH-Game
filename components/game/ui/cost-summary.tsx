@@ -33,7 +33,8 @@ export function CostSummary({
   const holdingCost = calculateHoldingCost()
   const overstockCost = calculateOverstockCost()
   const revenue = calculateRevenue()
-  const totalCost = calculateTotalCost()
+  // Calculate total cost locally to ensure all components are included
+  const totalCost = materialPurchaseCost + materialTransportationCost + productionCost + restaurantTransportationCost + holdingCost + overstockCost
   const profit = calculateProfit()
 
   // Check if the player is only attempting sales (no purchases or production)

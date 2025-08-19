@@ -362,9 +362,9 @@ export function useGameCalculations({
     return calculateTotalPurchaseCost() + calculateProductionCost()
   }
 
-  // Calculate total cost including holding costs
+  // Calculate total cost including holding costs and overstock costs
   const calculateTotalCost = (): number => {
-    return calculateTotalActionCost() + getHoldingCost()
+    return calculateTotalActionCost() + getHoldingCost() + getOverstockCost()
   }
 
   // Calculate maximum production based on available materials
