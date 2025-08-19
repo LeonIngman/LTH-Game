@@ -18,6 +18,7 @@ node scripts/setup-local-database.mjs
 \`\`\`
 
 This script will:
+
 - Create a new PostgreSQL database called `supply_chain_game`
 - Create all necessary tables based on the schema
 - Set up the development environment
@@ -79,6 +80,7 @@ For production deployment to Neon:
 3. Run the script to create all tables and seed data
 
 This single script handles:
+
 - Complete table creation with proper camelCase columns
 - Game levels (0-2) matching the local database
 - 90 TimeStamp records with realistic market data
