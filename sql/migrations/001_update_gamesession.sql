@@ -15,53 +15,53 @@ BEGIN
     END IF;
 END $$;
 
--- Add proper foreign key constraint for user_id if it doesn't exist
+-- Add proper foreign key constraint for userId if it doesn't exist
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints 
-        WHERE constraint_name = 'GameSession_user_id_fkey'
+        WHERE constraint_name = 'GameSession_userId_fkey'
         AND table_name = 'GameSession'
     ) THEN
         ALTER TABLE "GameSession" 
-        ADD CONSTRAINT "GameSession_user_id_fkey" 
-        FOREIGN KEY (user_id) REFERENCES "User"(id) ON DELETE CASCADE;
+        ADD CONSTRAINT "GameSession_userId_fkey" 
+        FOREIGN KEY ("userId") REFERENCES "User"(id) ON DELETE CASCADE;
     END IF;
 END $$;
 
--- Add proper foreign key constraint for level_id if it doesn't exist
+-- Add proper foreign key constraint for levelId if it doesn't exist
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM information_schema.table_constraints 
-        WHERE constraint_name = 'GameSession_level_id_fkey'
+        WHERE constraint_name = 'GameSession_levelId_fkey'
         AND table_name = 'GameSession'
     ) THEN
         ALTER TABLE "GameSession" 
-        ADD CONSTRAINT "GameSession_level_id_fkey" 
-        FOREIGN KEY (level_id) REFERENCES "GameLevel"(id) ON DELETE CASCADE;
+        ADD CONSTRAINT "GameSession_levelId_fkey" 
+        FOREIGN KEY ("levelId") REFERENCES "GameLevel"(id) ON DELETE CASCADE;
     END IF;
 END $$;
 
--- Create index on user_id if it doesn't exist
+-- Create index on userId if it doesn't exist
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_indexes 
-        WHERE indexname = 'idx_gamesession_user_id'
+        WHERE indexname = 'idx_gamesession_userId'
     ) THEN
-        CREATE INDEX "idx_gamesession_user_id" ON "GameSession"(user_id);
+        CREATE INDEX "idx_gamesession_userId" ON "GameSession"("userId");
     END IF;
 END $$;
 
--- Create index on level_id if it doesn't exist
+-- Create index on levelId if it doesn't exist
 DO $$
 BEGIN
     IF NOT EXISTS (
         SELECT 1 FROM pg_indexes 
-        WHERE indexname = 'idx_gamesession_level_id'
+        WHERE indexname = 'idx_gamesession_levelId'
     ) THEN
-        CREATE INDEX "idx_gamesession_level_id" ON "GameSession"(level_id);
+        CREATE INDEX "idx_gamesession_levelId" ON "GameSession"("levelId");
     END IF;
 END $$;
 
