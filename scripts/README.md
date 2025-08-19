@@ -1,60 +1,89 @@
-# Database Setup Scripts
+# Database Scripts
 
-This directory contains scripts to help you set up and manage your local database for the Supply Chain Game.
+This directory contains scripts to help you set up and manage your database for the Supply Chain Game.
 
 ## Prerequisites
 
-1. PostgreSQL installed locally
+1. PostgreSQL installed locally (for local development)
 2. Node.js installed
 
 ## Available Scripts
 
 ### 1. Setup Local Database
 
-Creates the database and all required tables:
+Creates the local database and all required tables:
 
 \`\`\`bash
-node scripts/setup-local-database.js
+node scripts/setup-local-database.mjs
 \`\`\`
 
 This script will:
 - Create a new PostgreSQL database called `supply_chain_game`
 - Create all necessary tables based on the schema
-- Seed the game levels
+- Set up the development environment
 
-### 2. Create Test User
+### 2. Create Super User
+
+Creates a teacher/admin user:
+
+\`\`\`bash
+node scripts/create-super-user.mjs
+\`\`\`
+
+Creates an admin user with teacher privileges for local development.
+
+### 3. Create Test User
 
 Creates a test user for local development:
 
 \`\`\`bash
-node scripts/create-test-user.js
+node scripts/create-test-user.mjs
 \`\`\`
 
-This script will prompt you for:
-- Username (default: testuser)
-- Email (default: test@example.com)
-- Password (default: password123)
-- Role (student/teacher, default: student)
-
-### 3. Seed Timestamps
-
-Populates the TimeStamp table with data for all game levels:
-
-\`\`\`bash
-node scripts/seed-timestamps.js
-\`\`\`
-
-This script will generate 30 days of timestamps for each level with realistic market demand and price fluctuations.
+This script will prompt you for user details and create a student account.
 
 ### 4. Reset Database
 
-Completely resets the database by deleting all data:
+Completely resets the local database:
 
 \`\`\`bash
-node scripts/reset-database.js
+node scripts/reset-database.mjs
 \`\`\`
 
 ⚠️ **WARNING**: This will delete ALL data in your database. Use with caution!
+
+### 5. Test Database Connection
+
+Tests connectivity to your database:
+
+\`\`\`bash
+node scripts/test-db-connection.mjs
+\`\`\`
+
+Verifies that your database connection is working properly.
+
+### 6. Run Demo
+
+Starts a demo session:
+
+\`\`\`bash
+node scripts/run-demo.mjs
+\`\`\`
+
+## Neon Database Setup
+
+For production deployment to Neon:
+
+1. Copy the contents of `sql/neon-complete-setup.sql`
+2. Paste into the Neon SQL editor
+3. Run the script to create all tables and seed data
+
+This single script handles:
+- Complete table creation with proper camelCase columns
+- Game levels (0-2) matching the local database
+- 90 TimeStamp records with realistic market data
+- Demo users with bcrypt hashed passwords
+- All necessary indexes and constraints
 
 ## Environment Setup
 
