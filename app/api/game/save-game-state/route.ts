@@ -12,6 +12,7 @@ export async function POST(request: Request) {
             )
         }
 
+        // saveGameSession must use quoted camelCase identifiers in its SQL implementation
         const result = await saveGameSession(userId, levelId, gameState)
 
         if (!result.success) {

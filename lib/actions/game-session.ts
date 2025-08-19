@@ -37,14 +37,14 @@ export async function saveGameSession(
 
         // Use PostgreSQL UPSERT with ON CONFLICT to ensure idempotent operation
         const result = await sql`
-      INSERT INTO "GameSession" (user_id, level_id, game_state, created_at, updated_at)
-      VALUES (${userId}, ${levelId}, ${JSON.stringify(gameState)}, NOW(), NOW())
-      ON CONFLICT (user_id, level_id)
-      DO UPDATE SET 
-        game_state = ${JSON.stringify(gameState)},
-        updated_at = NOW()
-      RETURNING id
-    `
+            INSERT INTO "GameSession" ("userId", "levelId", "gameState", "updatedAt")
+            VALUES (${userId}, ${levelId}, ${JSON.stringify(gameState)}, NOW())
+            ON CONFLICT ("userId", "levelId")
+            DO UPDATE SET 
+                "gameState" = EXCLUDED."gameState",
+                "updatedAt" = EXCLUDED."updatedAt"
+            RETURNING "userId", "levelId"
+        `
 
         if (result.length === 0) {
             return { success: false, error: "Failed to save game session" }
@@ -78,12 +78,12 @@ export async function loadGameSession(
         }
 
         const result = await sql`
-      SELECT id, game_state, created_at, updated_at 
-      FROM "GameSession"
-      WHERE user_id = ${userId} AND level_id = ${levelId}
-      ORDER BY updated_at DESC
-      LIMIT 1
-    `
+            SELECT "userId", "levelId", "gameState", "updatedAt" 
+            FROM "GameSession"
+            WHERE "userId" = ${userId} AND "levelId" = ${levelId}
+            ORDER BY "updatedAt" DESC
+            LIMIT 1
+        `
 
         if (result.length === 0) {
             return { success: true, gameState: null }
@@ -91,14 +91,14 @@ export async function loadGameSession(
 
         const session = result[0]
 
-        // Validate that the game_state is valid JSON and contains expected properties
-        if (!session.game_state || typeof session.game_state !== 'object') {
+        // Validate that the gameState is valid JSON and contains expected properties
+        if (!session.gameState || typeof session.gameState !== 'object') {
             console.warn(`Invalid game state found for user ${userId}, level ${levelId}`)
             return { success: true, gameState: null }
         }
 
         // Basic validation of required GameState properties
-        const gameState = session.game_state as GameState
+        const gameState = session.gameState as GameState
         if (typeof gameState.day !== 'number' ||
             typeof gameState.cash !== 'number' ||
             !gameState.inventory ||
@@ -138,9 +138,9 @@ export async function deleteGameSession(
         }
 
         await sql`
-      DELETE FROM "GameSession"
-      WHERE user_id = ${userId} AND level_id = ${levelId}
-    `
+            DELETE FROM "GameSession"
+            WHERE "userId" = ${userId} AND "levelId" = ${levelId}
+        `
 
         return { success: true }
     } catch (error) {
@@ -172,18 +172,18 @@ export async function getUserGameSessions(userId: string): Promise<{
         }
 
         const result = await sql`
-      SELECT id, level_id, game_state, updated_at
-      FROM "GameSession"
-      WHERE user_id = ${userId}
-      ORDER BY updated_at DESC
-    `
+            SELECT "userId", "levelId", "gameState", "updatedAt"
+            FROM "GameSession"
+            WHERE "userId" = ${userId}
+            ORDER BY "updatedAt" DESC
+        `
 
         const sessions = result.map(session => ({
-            id: session.id,
-            levelId: session.level_id,
-            lastUpdated: session.updated_at,
-            day: session.game_state?.day || 0,
-            cash: session.game_state?.cash || 0
+            id: session.userId, // for compatibility with expected return type
+            levelId: session.levelId,
+            lastUpdated: session.updatedAt,
+            day: session.gameState?.day || 0,
+            cash: session.gameState?.cash || 0
         }))
 
         return { success: true, sessions }

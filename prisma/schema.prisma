@@ -8,56 +8,14 @@ datasource db {
 }
 
 model User {
-  id              String    @id @default(cuid())
-  email           String?   @unique
-  username        String    @unique
-  password        String
+  id               String   @id
+  email            String?  @unique
+  username         String   @unique
+  password         String
   visible_password String?
-  role            String    // "student" or "teacher"
-  progress        Int       @default(0)
-  lastActive      DateTime  @default(now())
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  performances    Performance[]
-}
-
-model GameLevel {
-  id              Int       @id
-  name            String
-  description     String
-  maxScore        Int
-  performances    Performance[]
-  timestamps      TimeStamp[]
-}
-
-model Performance {
-  id                Int       @id @default(autoincrement())
-  userId            String
-  levelId           Int
-  timestampId       Int?
-  score             Int
-  cumulativeProfit  Decimal
-  cashFlow          Decimal
-  rawMaterialAStock Int
-  rawMaterialBStock Int
-  finishedGoodStock Int
-  decisions         Json?
-  createdAt         DateTime  @default(now())
-  
-  user              User      @relation(fields: [userId], references: [id])
-  level             GameLevel @relation(fields: [levelId], references: [id])
-  timestamp         TimeStamp? @relation(fields: [timestampId], references: [id])
-}
-
-model TimeStamp {
-  id                Int       @id @default(autoincrement())
-  levelId           Int
-  timestampNumber   Int
-  marketDemand      Int
-  rawMaterialAPrice Decimal
-  rawMaterialBPrice Decimal
-  finishedGoodPrice Decimal
-  
-  level             GameLevel @relation(fields: [levelId], references: [id])
-  performances      Performance[]
+  role             String
+  progress         Int      @default(0)
+  lastActive       DateTime @default(now())
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
 }
