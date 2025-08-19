@@ -502,16 +502,13 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
         // Deduct cost from cash
         state.cash = Number.parseFloat((state.cash - totalCost).toFixed(2))
 
-        // Add to inventory value
-        state.inventoryValue[material.type] += totalCost
-
         // Always update deliveredSoFar immediately
         if (!state.supplierDeliveries[order.supplierId]) state.supplierDeliveries[order.supplierId] = {}
         state.supplierDeliveries[order.supplierId][material.type] =
           (state.supplierDeliveries[order.supplierId][material.type] || 0) + material.quantity
 
         if (leadTime === 0) {
-          // Add directly to inventory with value
+          // Add directly to inventory with value (handles both quantity and value)
           addInventoryValue(state, material.type, material.quantity, totalCost)
         } else {
           // Add to pending orders with lead time
