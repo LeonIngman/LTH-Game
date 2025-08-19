@@ -192,3 +192,42 @@ export function calculateTransportationCost(
 
   return total
 }
+
+/**
+ * Calculate customer transportation cost for restaurant deliveries
+ */
+export function calculateCustomerTransportationCost(
+  action: GameAction,
+  levelConfig: LevelConfig
+): number {
+  let total = 0
+
+  if (!action.customerOrders || !levelConfig.customers) {
+    return total
+  }
+
+  for (const customerOrder of action.customerOrders) {
+    if (customerOrder.quantity > 0) {
+      const customer = levelConfig.customers.find(c => c.id === customerOrder.customerId)
+      if (customer && customer.transportCosts) {
+        const transportCosts = customer.transportCosts
+        const orderQuantity = customerOrder.quantity
+
+        // Check if exact quantity exists
+        if (transportCosts[orderQuantity]) {
+          total += transportCosts[orderQuantity]
+        } else {
+          // Find the smallest shipment size that can handle this quantity
+          const availableSizes = Object.keys(transportCosts).map(Number).sort((a, b) => a - b)
+          const suitableSize = availableSizes.find(size => size >= orderQuantity)
+
+          if (suitableSize) {
+            total += transportCosts[suitableSize]
+          }
+        }
+      }
+    }
+  }
+
+  return total
+}

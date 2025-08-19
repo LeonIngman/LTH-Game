@@ -22,6 +22,7 @@ import {
   calculateOverstockCost,
   getOverstockCostBreakdown,
   calculateTransportationCost,
+  calculateCustomerTransportationCost,
   PATTIES_PER_MEAL,
   CHEESE_PER_MEAL,
   BUNS_PER_MEAL,
@@ -134,14 +135,14 @@ export function validateAffordability(
   // Calculate production cost
   const productionCost = action.production * levelConfig.productionCostPerUnit
 
-  // Calculate transportation cost
-  const transportationCost = calculateTransportationCost(action, levelConfig)
+  // Calculate customer transportation cost (restaurant delivery cost)
+  const customerTransportationCost = calculateCustomerTransportationCost(action, levelConfig)
 
   // Calculate supplier transport cost (difference between total and pure purchase)
   const supplierTransportCost = totalPurchaseCost - purePurchaseCost
 
   // Calculate total action cost
-  const totalActionCost = totalPurchaseCost + productionCost + transportationCost
+  const totalActionCost = totalPurchaseCost + productionCost + customerTransportationCost
 
   // Calculate holding cost
   const holdingCost = calculateHoldingCost(gameState)
@@ -150,7 +151,7 @@ export function validateAffordability(
   const overstockCost = calculateOverstockCost(gameState, levelConfig)
 
   // Calculate restaurant delivery cost (transportation cost from our calculation)
-  const restaurantDeliveryCost = transportationCost
+  const restaurantDeliveryCost = customerTransportationCost
 
   // Other surcharges (none currently in the system)
   const otherSurcharges = 0

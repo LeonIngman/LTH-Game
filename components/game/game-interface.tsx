@@ -223,10 +223,38 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
   // Calculate restaurant transportation cost (customer delivery - currently 0)
   const calculateRestaurantTransportationCost = useCallback(() => {
-    // Restaurant transport should be customer delivery costs
-    // Currently not implemented in the game, so return 0
-    return 0
-  }, [])
+    let totalRestaurantTransportCost = 0
+
+    if (action.customerOrders && levelConfig.customers) {
+      for (const customerOrder of action.customerOrders) {
+        if (customerOrder.quantity > 0) {
+          const customer = levelConfig.customers.find(c => c.id === customerOrder.customerId)
+          if (customer && customer.transportCosts) {
+            // Find the exact quantity or closest allowed shipment size
+            const transportCosts = customer.transportCosts
+            const orderQuantity = customerOrder.quantity
+
+            // Check if exact quantity exists
+            if (transportCosts[orderQuantity]) {
+              const cost = transportCosts[orderQuantity]
+              totalRestaurantTransportCost += cost
+            } else {
+              // Find the smallest shipment size that can handle this quantity
+              const availableSizes = Object.keys(transportCosts).map(Number).sort((a, b) => a - b)
+              const suitableSize = availableSizes.find(size => size >= orderQuantity)
+
+              if (suitableSize) {
+                const cost = transportCosts[suitableSize]
+                totalRestaurantTransportCost += cost
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return totalRestaurantTransportCost
+  }, [action.customerOrders, levelConfig.customers])
 
   // Calculate profit (revenue - total cost)
   const calculateProfit = useCallback(() => {
