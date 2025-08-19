@@ -78,30 +78,24 @@ export async function getLeaderboard(): Promise<any[]> {
       ),
       game_session_data AS (
         SELECT DISTINCT
-          gs.user_id,
-          gs.level_id,
+          gs."userId"  AS user_id,
+          gs."levelId" AS level_id,
           COALESCE(
-            -- Handle both integer (öre) and decimal (krona) formats from GameSession
-            CASE 
-              WHEN gs.game_state::json->>'cumulativeProfit' ~ '^-?\d+$' 
-              THEN CAST(gs.game_state::json->>'cumulativeProfit' AS INTEGER)
-              ELSE CAST(ROUND(CAST(gs.game_state::json->>'cumulativeProfit' AS NUMERIC) * 100) AS INTEGER)
+            CASE
+              WHEN (gs."gameState"->>'cumulativeProfit') ~ '^-?\\\d+$'
+                THEN (gs."gameState"->>'cumulativeProfit')::INTEGER
+              ELSE ROUND(((gs."gameState"->>'cumulativeProfit')::NUMERIC * 100))::INTEGER
             END,
             0
-          ) as cumulative_profit,
-          COALESCE(
-            CAST(gs.game_state::json->>'day' AS INTEGER),
-            1
-          ) as day_number,
-          gs.updated_at as created_at,
-          'game_session'::text as source
+          ) AS cumulative_profit,
+          COALESCE((gs."gameState"->>'day')::INTEGER, 1) AS day_number,
+          gs."updatedAt" AS created_at,
+          'game_session'::text AS source
         FROM "GameSession" gs
-        WHERE gs.game_state IS NOT NULL 
-          AND gs.game_state::json->>'cumulativeProfit' IS NOT NULL
+        WHERE gs."gameState" IS NOT NULL
+          AND gs."gameState"->>'cumulativeProfit' IS NOT NULL
       ),
       combined_data AS (
-        -- Prioritize GameSession data when it's more recent than Performance data
-        -- This ensures that reset levels show fresh data instead of stale performance data
         SELECT DISTINCT ON (user_id, level_id)
           user_id,
           level_id,
@@ -199,29 +193,25 @@ export async function getLeaderboardByLevel(levelId: number) {
       ),
       game_session_data AS (
         SELECT DISTINCT
-          gs.user_id,
-          gs.level_id,
+          gs."userId"  AS user_id,
+          gs."levelId" AS level_id,
           COALESCE(
-            CASE 
-              WHEN gs.game_state::json->>'cumulativeProfit' ~ '^-?\d+$' 
-              THEN CAST(gs.game_state::json->>'cumulativeProfit' AS INTEGER)
-              ELSE CAST(ROUND(CAST(gs.game_state::json->>'cumulativeProfit' AS NUMERIC) * 100) AS INTEGER)
+            CASE
+              WHEN (gs."gameState"->>'cumulativeProfit') ~ '^-?\\\d+$'
+                THEN (gs."gameState"->>'cumulativeProfit')::INTEGER
+              ELSE ROUND(((gs."gameState"->>'cumulativeProfit')::NUMERIC * 100))::INTEGER
             END,
             0
-          ) as cumulative_profit,
-          COALESCE(
-            CAST(gs.game_state::json->>'day' AS INTEGER),
-            1
-          ) as day_number,
-          gs.updated_at as created_at,
-          'game_session'::text as source
+          ) AS cumulative_profit,
+          COALESCE((gs."gameState"->>'day')::INTEGER, 1) AS day_number,
+          gs."updatedAt" AS created_at,
+          'game_session'::text AS source
         FROM "GameSession" gs
-        WHERE gs.level_id = ${levelId}
-          AND gs.game_state IS NOT NULL 
-          AND gs.game_state::json->>'cumulativeProfit' IS NOT NULL
+        WHERE gs."levelId" = ${levelId}
+          AND gs."gameState" IS NOT NULL
+          AND gs."gameState"->>'cumulativeProfit' IS NOT NULL
       ),
       combined_data AS (
-        -- Prioritize most recent data (GameSession over Performance if GameSession is newer)
         SELECT DISTINCT ON (user_id)
           user_id,
           level_id,
@@ -261,8 +251,8 @@ export async function getLeaderboardByLevel(levelId: number) {
         NULL AS "levelCompletedDate",
         cd.source
       FROM "User" u
-          LEFT JOIN combined_data cd ON cd.user_id = u.id
-          WHERE u.role = 'student' AND (cd.level_id = ${levelId} OR cd.level_id IS NULL)
+      LEFT JOIN combined_data cd ON cd.user_id = u.id
+      WHERE u.role = 'student' AND (cd.level_id = ${levelId} OR cd.level_id IS NULL)
       ORDER BY cd.cumulative_profit DESC, u."lastActive" DESC;
     `
 
