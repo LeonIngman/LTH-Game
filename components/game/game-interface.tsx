@@ -4,9 +4,8 @@ import { useState, useEffect, useCallback, useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
-import type { Supplier, Customer, LevelConfig, GameAction, GameState } from "@/types/game"
+import type { Supplier, Customer, LevelConfig, GameAction } from "@/types/game"
 import type { GameInterfaceProps } from "@/types/components"
-import { calculateTransportationCost as calculateTransportationCostUtil } from "@/lib/game/inventory-management"
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
@@ -197,16 +196,6 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     return total
   }, [supplierOrders, levelConfig])
 
-  // Calculates only the transportation cost (shipment/delivery)
-  const calculateTransportationCost = useCallback(() => {
-    const currentAction: GameAction = {
-      supplierOrders,
-      production: action.production,
-      customerOrders: customerOrders
-    }
-    return calculateTransportationCostUtil(currentAction, levelConfig)
-  }, [supplierOrders, action.production, customerOrders, levelConfig])
-
   // Calculate revenue from sales and customer orders
   const calculateRevenue = useCallback(() => {
     let totalRevenue = 0
@@ -224,6 +213,27 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
     return totalRevenue
   }, [action, levelConfig])
+
+  // Calculate material transportation cost (supplier transport)
+  const calculateMaterialTransportationCost = useCallback(() => {
+    const totalWithTransport = calculateTotalPurchaseCost()
+    const baseMaterialCost = calculateMaterialPurchaseCost()
+    return totalWithTransport - baseMaterialCost
+  }, [calculateTotalPurchaseCost, calculateMaterialPurchaseCost])
+
+  // Calculate restaurant transportation cost (customer delivery - currently 0)
+  const calculateRestaurantTransportationCost = useCallback(() => {
+    // Restaurant transport should be customer delivery costs
+    // Currently not implemented in the game, so return 0
+    return 0
+  }, [])
+
+  // Calculate profit (revenue - total cost)
+  const calculateProfit = useCallback(() => {
+    const revenue = calculateRevenue()
+    const totalCost = calculateTotalCost()
+    return revenue - totalCost
+  }, [calculateRevenue, calculateTotalCost])
 
   // Check if the game is over
   useEffect(() => {
@@ -548,13 +558,16 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         calculateTotalPurchaseCost={calculateTotalPurchaseCost}
         calculateProductionCost={calculateProductionCost}
         calculateMaterialPurchaseCost={calculateMaterialPurchaseCost}
-        calculateTransportationCost={calculateTransportationCost}
+        calculateMaterialTransportationCost={calculateMaterialTransportationCost}
+        calculateRestaurantTransportationCost={calculateRestaurantTransportationCost}
         calculateHoldingCost={getHoldingCost}
         calculateOverstockCost={getOverstockCost}
         calculateRevenue={calculateRevenue}
         isNextDayButtonDisabled={isNextDayButtonDisabled}
         getNextDayDisabledReason={getNextDayDisabledReason}
         checkSufficientFunds={checkSufficientFunds}
+        calculateTotalCost={calculateTotalCost}
+        calculateProfit={calculateProfit}
       />
 
       <GameHistory history={gameState.history} />

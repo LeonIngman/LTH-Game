@@ -13,40 +13,28 @@ export function CostSummary({
   isLoading,
   gameEnded,
   onProcessDay,
-  calculateTotalPurchaseCost,
   calculateProductionCost,
   calculateMaterialPurchaseCost,
-  calculateTransportationCost,
+  calculateMaterialTransportationCost,
+  calculateRestaurantTransportationCost,
   calculateHoldingCost,
   calculateOverstockCost,
   calculateRevenue,
   isNextDayButtonDisabled,
   getNextDayDisabledReason,
   checkSufficientFunds,
+  calculateTotalCost,
+  calculateProfit,
 }: Readonly<CostSummaryProps>) {
-  // Calculate individual cost components
-  const purchaseCost = calculateMaterialPurchaseCost()
+  const materialPurchaseCost = calculateMaterialPurchaseCost()
+  const materialTransportationCost = calculateMaterialTransportationCost()
   const productionCost = calculateProductionCost()
-
-  // Calculate supplier transport cost (difference between total purchase cost and base material costs)
-  const totalPurchaseCostWithTransport = calculateTotalPurchaseCost()
-  const supplierTransportCost = totalPurchaseCostWithTransport - purchaseCost
-
-  // Calculate transportation cost as the difference between total purchase cost and base material costs
-  const restaurantTransportationCost = calculateTransportationCost()
-
-  // Calculate holding cost using the same method as the game engine
+  const restaurantTransportationCost = calculateRestaurantTransportationCost()
   const holdingCost = calculateHoldingCost()
-
-  // Calculate overstock cost using the same method as the game engine
   const overstockCost = calculateOverstockCost()
-
-  // Calculate revenue from both direct sales and customer orders
   const revenue = calculateRevenue()
-
-  // Calculate total cost as sum of all components (matching backend calculation)
-  const totalCost = purchaseCost + supplierTransportCost + productionCost + holdingCost + overstockCost + restaurantTransportationCost
-  const profit = revenue - totalCost
+  const totalCost = calculateTotalCost()
+  const profit = calculateProfit()
 
   // Check if the player is only attempting sales (no purchases or production)
   const isOnlySales = () => {
@@ -94,12 +82,12 @@ export function CostSummary({
       <div className="grid grid-cols-1 md:grid-cols-6 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Purchase Cost</p>
-          <p className="text-xl font-bold">{purchaseCost.toFixed(2)} kr</p>
+          <p className="text-xl font-bold">{materialPurchaseCost.toFixed(2)} kr</p>
           <p className="text-xs text-muted-foreground mt-1">Base material costs</p>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Supplier Transport</p>
-          <p className="text-xl font-bold">{supplierTransportCost.toFixed(2)} kr</p>
+          <p className="text-xl font-bold">{materialTransportationCost.toFixed(2)} kr</p>
           <p className="text-xs text-muted-foreground mt-1">Supplier delivery costs</p>
         </div>
         <div>
