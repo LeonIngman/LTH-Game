@@ -35,13 +35,13 @@ export function SupplierOrderForm({
     // Get current cumulative purchases for this supplier
     const currentPurchases = gameState.supplierDeliveries[supplier.id] || {}
     const usedCapacity = currentPurchases[materialType] || 0
-    
+
     // Get total game capacity
     const totalCapacity = supplier.capacityPerGame[materialType] || 0
 
     // Staged order for today (from supplierOrder)
     const stagedOrder = supplierOrder[`${materialType}Purchase`] || 0
-    
+
     return Math.max(0, totalCapacity - usedCapacity)// - stagedOrder)
   }
 
@@ -113,68 +113,68 @@ export function SupplierOrderForm({
       {MATERIALS.map(({ key, label }) => {
         /* Patty Purchase - Only show if available AND has remaining capacity */
         if (checkMaterialAvailability(supplier.id, key, supplier) && getRemainingCapacity(key) > 0) return (
-            <div className="space-y-2" key={key}>
-              <div className="flex justify-between items-center">
-                <Label htmlFor={`${key}-${supplier.id}`}>
-                  {label} ({getMaterialPriceForSupplier(supplier.id, key).toFixed(2)} kr/unit)
-                </Label>
-                <span className="text-xs text-gray-500">{getRemainingCapacity(key)} units remaining</span>
-              </div>
-              {supplier.shipmentPrices && (
-                <div className="mb-2 overflow-x-auto">
-                  <table className="w-full text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-gray-100">
-                        <th className="p-1 border">Quantity</th>
-                        <th className="p-1 border">Shipment Cost (kr)</th>
-                        <th className="p-1 border">Total Cost (kr)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {getMaterialOrderQuantities(key)
-                        .filter((qty) => qty > 0)
-                        .map((qty) => {
-                          const shipmentCost = getShipmentCost(key, qty)
-                          const baseCost = getBaseCost(key, qty)
-                          const totalCost = baseCost + shipmentCost
-                          return (
-                            <tr key={qty} className={supplierOrder[`${key}Purchase`] === qty ? "bg-blue-50" : ""}>
-                              <td className="p-1 border text-center">{qty}</td>
-                              <td className="p-1 border text-center">{shipmentCost.toFixed(2)}</td>
-                              <td className="p-1 border text-center">{totalCost.toFixed(2)}</td>
-                            </tr>
-                          )
-                        })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <div className="flex flex-col space-y-2">
-                <RadioGroup
-                  value={supplierOrder[`${key}Purchase`]?.toString() || "0"}
-                  onValueChange={(value) => onOrderChange(supplier.id, `${key}Purchase`, Number.parseInt(value))}
-                  className="flex space-x-2"
-                  disabled={disabled}
-                >
-                  <div className="flex flex-wrap gap-2">
-                    {getMaterialOrderQuantities(key).map((qty) => (
-                      <div key={qty} className="flex items-center space-x-1">
-                        <RadioGroupItem
-                          value={qty.toString()}
-                          id={`${key}-${supplier.id}-${qty}`}
-                          disabled={qty > getRemainingCapacity(key) || disabled}
-                        />
-                        <Label htmlFor={`${key}-${supplier.id}-${qty}`}>{qty}</Label>
-                      </div>
-                    ))}
-                  </div>
-                </RadioGroup>
-              </div>
+          <div className="space-y-2" key={key}>
+            <div className="flex justify-between items-center">
+              <Label htmlFor={`${key}-${supplier.id}`}>
+                {label} ({getMaterialPriceForSupplier(supplier.id, key).toFixed(2)} kr/unit)
+              </Label>
+              <span className="text-xs text-gray-500">{getRemainingCapacity(key)} units remaining</span>
             </div>
-          )
-          /* Show "No capacity" message if material is available but capacity is 0 */
+            {supplier.shipmentPrices && (
+              <div className="mb-2 overflow-x-auto">
+                <table className="w-full text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="p-1 border">Quantity</th>
+                      <th className="p-1 border">Shipment Cost (kr)</th>
+                      <th className="p-1 border">Total Cost (kr)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getMaterialOrderQuantities(key)
+                      .filter((qty) => qty > 0)
+                      .map((qty) => {
+                        const shipmentCost = getShipmentCost(key, qty)
+                        const baseCost = getBaseCost(key, qty)
+                        const totalCost = baseCost + shipmentCost
+                        return (
+                          <tr key={qty} className={supplierOrder[`${key}Purchase`] === qty ? "bg-blue-50" : ""}>
+                            <td className="p-1 border text-center">{qty}</td>
+                            <td className="p-1 border text-center">{shipmentCost.toFixed(2)}</td>
+                            <td className="p-1 border text-center">{totalCost.toFixed(2)}</td>
+                          </tr>
+                        )
+                      })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="flex flex-col space-y-2">
+              <RadioGroup
+                value={supplierOrder[`${key}Purchase`]?.toString() || "0"}
+                onValueChange={(value) => onOrderChange(supplier.id, `${key}Purchase`, Number.parseInt(value))}
+                className="flex space-x-2"
+                disabled={disabled}
+              >
+                <div className="flex flex-wrap gap-2">
+                  {getMaterialOrderQuantities(key).map((qty) => (
+                    <div key={qty} className="flex items-center space-x-1">
+                      <RadioGroupItem
+                        value={qty.toString()}
+                        id={`${key}-${supplier.id}-${qty}`}
+                        disabled={qty > getRemainingCapacity(key) || disabled}
+                      />
+                      <Label htmlFor={`${key}-${supplier.id}-${qty}`}>{qty}</Label>
+                    </div>
+                  ))}
+                </div>
+              </RadioGroup>
+            </div>
+          </div>
+        )
+        /* Show "No capacity" message if material is available but capacity is 0 */
         if (checkMaterialAvailability(supplier.id, key, supplier) && getRemainingCapacity(key) === 0) return (
-          <div className="space-y-2">
+          <div className="space-y-2" key={`${key}-no-capacity`}>
             <div className="flex justify-between items-center">
               <Label className="text-gray-400">
                 {label} ({getMaterialPriceForSupplier(supplier.id, key).toFixed(2)} kr/unit)
@@ -185,9 +185,11 @@ export function SupplierOrderForm({
               This supplier has no remaining capacity for {label.toLowerCase()} this game.
             </div>
           </div>
-          )
-        }
-      )}
+        )
+
+        /* Return null if material is not available or no conditions are met */
+        return null
+      })}
 
       <div className="text-right">
         Total for {supplier.name}: {calculateSupplierOrderTotal()} kr

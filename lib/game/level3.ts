@@ -41,7 +41,7 @@ export const level3Config: LevelConfig = {
         potato: 0,
       },
       shipmentPrices: {
-        patty: { 50: 116, 100: 134},
+        patty: { 50: 116, 100: 134 },
         bun: { 50: 89, 100: 98, 200: 134 },
         cheese: { 50: 65, 100: 89, 200: 116 },
         potato: { 50: 98, 100: 134, 200: 134 },
@@ -139,30 +139,30 @@ export const level3Config: LevelConfig = {
   ],
 
   overstock: {
-    patty: { threshold: 100, penaltyPerUnit: 2 },
-    bun: { threshold: Infinity, penaltyPerUnit: 1 },
-    cheese: { threshold: 250, penaltyPerUnit: 1 },
-    potato: { threshold: 300, penaltyPerUnit: 0.5 },
+    patty: { threshold: 40, penaltyPerUnit: 2 },
+    bun: { threshold: 100, penaltyPerUnit: 1 },
+    cheese: { threshold: 150, penaltyPerUnit: 1 },
+    potato: { threshold: 40, penaltyPerUnit: 0.5 },
     finishedGoods: { threshold: 50, penaltyPerUnit: 3 },
   },
   safetystock: {
-    patty: { threshold: 20},
-    bun: { threshold: 40},
-    cheese: { threshold: 60},
-    potato: { threshold: 80},
+    patty: { threshold: 20 },
+    bun: { threshold: 40 },
+    cheese: { threshold: 60 },
+    potato: { threshold: 80 },
   },
 
   mapPositions: {
-      mainFactory: { x: 210, y: 495 },
-      suppliers: [
-        { x: 30, y: 360, name: "Pink Patty", id: 1 },
-        { x: 460, y: 150, name: "Brown Sauce", id: 2 },
-        { x: 970, y: 325, name: "Firehouse Foods", id: 3 },
-      ],
-      customers: [
-        { x: 590, y: 750, name: "Yummy Zone", id: 1 },
-        { x: 795, y: 125, name: "Toast-to-go", id: 2 },
-        { x: 55, y: 610, name: "StudyFuel", id: 3 },
-      ],
+    mainFactory: { x: 210, y: 495 },
+    suppliers: [
+      { x: 30, y: 360, name: "Pink Patty", id: 1 },
+      { x: 460, y: 150, name: "Brown Sauce", id: 2 },
+      { x: 970, y: 325, name: "Firehouse Foods", id: 3 },
+    ],
+    customers: [
+      { x: 590, y: 750, name: "Yummy Zone", id: 1 },
+      { x: 795, y: 125, name: "Toast-to-go", id: 2 },
+      { x: 55, y: 610, name: "StudyFuel", id: 3 },
+    ],
   },
 }

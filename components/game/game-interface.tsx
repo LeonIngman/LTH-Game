@@ -3,7 +3,8 @@
 import { useState, useEffect, useCallback, useMemo } from "react"
 import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import type { Supplier, Customer, LevelConfig, GameAction, GameState } from "@/types/game"
+import { Button } from "@/components/ui/button"
+import type { Supplier, Customer, LevelConfig, GameAction } from "@/types/game"
 import type { GameInterfaceProps } from "@/types/components"
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
@@ -34,7 +35,7 @@ import { QuickReference } from "./ui/quick-reference"
 import { TutorialOverlay } from "./tutorial-overlay"
 
 // Import our custom hooks
-import { useGameState } from "@/hooks/use-game-state"
+import { usePersistedGameState } from "@/hooks/use-persisted-game-state"
 import { useGameActions } from "@/hooks/use-game-actions"
 import { useGameCalculations } from "@/hooks/use-game-calculations"
 import { useSupplierOrders } from "@/hooks/use-supplier-orders"
@@ -94,7 +95,17 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   const [forecastData, setForecastData] = useState<Record<string, any> | null>(null)
 
   // Initialize game state and action
-  const { gameState, setGameState, isLastDay } = useGameState(levelConfig)
+  const {
+    gameState,
+    setGameState,
+    isLastDay,
+    isLoadingState,
+    isSaving,
+    lastSaved,
+    isDirty,
+    saveGameState,
+    resetLevelState
+  } = usePersistedGameState(levelConfig)
   const [action, setAction] = useState<GameAction>({
     supplierOrders: [],
     production: 0,
@@ -139,17 +150,7 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     setAction,
   })
 
-  const { isLoading, errorMessage, gameEnded, setGameEnded, processDay, submitLevel } = useGameActions({
-    levelId: levelConfig.id,
-    gameState,
-    setGameState,
-    initializeSupplierOrders,
-    initializeCustomerOrders,
-    setSupplierOrders,
-    setCustomerOrders,
-    setAction,
-  })
-
+  // Initialize game calculations first to get calculateTotalCost
   const {
     getMaterialPriceForSupplier,
     getOrderQuantitiesForSupplier,
@@ -159,12 +160,25 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     calculateProductionCost,
     isNextDayButtonDisabled,
     getNextDayDisabledReason,
-    calculateMaxProduction
+    calculateMaxProduction,
+    calculateTotalCost
   } = useGameCalculations({
     gameState,
     levelConfig,
     supplierOrders,
     action,
+  })
+
+  const { isLoading, errorMessage, gameEnded, setGameEnded, processDay, submitLevel, insufficientFundsMessage, clearInsufficientFundsMessage, checkSufficientFunds } = useGameActions({
+    levelId: levelConfig.id,
+    gameState,
+    setGameState,
+    initializeSupplierOrders,
+    initializeCustomerOrders,
+    setSupplierOrders,
+    setCustomerOrders,
+    setAction,
+    calculateTotalCost,
   })
 
 
@@ -182,43 +196,16 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
     return total
   }, [supplierOrders, levelConfig])
 
-  // Calculates only the transportation cost (shipment/delivery)
-  const calculateTransportationCost = useCallback(() => {
-    let total = 0
-    for (const order of supplierOrders) {
-      const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
-      if (!supplier || !supplier.shipmentPrices) continue
-
-      // For each material, find the closest shipment size and add its price
-      for (const material of ["patty", "cheese", "bun", "potato"] as const) {
-        const amount = order[`${material}Purchase`]
-        if (amount > 0 && supplier.shipmentPrices[material]) {
-          const sizes = Object.keys(supplier.shipmentPrices[material]).map(Number)
-          // Find the closest shipment size (or the largest not exceeding the amount)
-          const closest = sizes.reduce((prev, curr) =>
-            Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev
-          )
-          total += supplier.shipmentPrices[material][closest]
-        }
-      }
-    }
-    return total
-  }, [supplierOrders, levelConfig])
-
   // Calculate revenue from sales and customer orders
   const calculateRevenue = useCallback(() => {
     let totalRevenue = 0
 
-    // Revenue from direct sales attempts
-    const salesPrice = levelConfig.sellingPricePerUnit || 25
-    totalRevenue += salesPrice
-
-    // Revenue from customer orders
+    // Revenue only from actual customer orders (no phantom baseline)
     if (action.customerOrders) {
       for (const customerOrder of action.customerOrders) {
         const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
         if (customer && customerOrder.quantity > 0) {
-          const pricePerUnit = (customer as any).pricePerUnit || salesPrice
+          const pricePerUnit = (customer as any).pricePerUnit
           totalRevenue += customerOrder.quantity * pricePerUnit
         }
       }
@@ -226,6 +213,55 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
 
     return totalRevenue
   }, [action, levelConfig])
+
+  // Calculate material transportation cost (supplier transport)
+  const calculateMaterialTransportationCost = useCallback(() => {
+    const totalWithTransport = calculateTotalPurchaseCost()
+    const baseMaterialCost = calculateMaterialPurchaseCost()
+    return totalWithTransport - baseMaterialCost
+  }, [calculateTotalPurchaseCost, calculateMaterialPurchaseCost])
+
+  // Calculate restaurant transportation cost (customer delivery - currently 0)
+  const calculateRestaurantTransportationCost = useCallback(() => {
+    let totalRestaurantTransportCost = 0
+
+    if (action.customerOrders && levelConfig.customers) {
+      for (const customerOrder of action.customerOrders) {
+        if (customerOrder.quantity > 0) {
+          const customer = levelConfig.customers.find(c => c.id === customerOrder.customerId)
+          if (customer && customer.transportCosts) {
+            // Find the exact quantity or closest allowed shipment size
+            const transportCosts = customer.transportCosts
+            const orderQuantity = customerOrder.quantity
+
+            // Check if exact quantity exists
+            if (transportCosts[orderQuantity]) {
+              const cost = transportCosts[orderQuantity]
+              totalRestaurantTransportCost += cost
+            } else {
+              // Find the smallest shipment size that can handle this quantity
+              const availableSizes = Object.keys(transportCosts).map(Number).sort((a, b) => a - b)
+              const suitableSize = availableSizes.find(size => size >= orderQuantity)
+
+              if (suitableSize) {
+                const cost = transportCosts[suitableSize]
+                totalRestaurantTransportCost += cost
+              }
+            }
+          }
+        }
+      }
+    }
+
+    return totalRestaurantTransportCost
+  }, [action.customerOrders, levelConfig.customers])
+
+  // Calculate profit (revenue - total cost)
+  const calculateProfit = useCallback(() => {
+    const revenue = calculateRevenue()
+    const totalCost = calculateTotalCost()
+    return revenue - totalCost
+  }, [calculateRevenue, calculateTotalCost])
 
   // Check if the game is over
   useEffect(() => {
@@ -235,25 +271,25 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
   }, [gameState.day, isLastDay, levelConfig.daysToComplete])
 
   // Handle forecasting completion
-const handleForecastingComplete = useCallback(
-  (forecasts: Record<string, any>) => {
-    setForecastingCompleted(true)
-    setShowForecasting(false)
-    setForecastData(forecasts)
+  const handleForecastingComplete = useCallback(
+    (forecasts: Record<string, any>) => {
+      setForecastingCompleted(true)
+      setShowForecasting(false)
+      setForecastData(forecasts)
 
-    toast({
-      title: "Forecasting Complete",
-      description: "You can now start the level with your forecasts.",
-    })
-  },
-  [toast],
-)
+      toast({
+        title: "Forecasting Complete",
+        description: "You can now start the level with your forecasts.",
+      })
+    },
+    [toast],
+  )
 
-// Get today's planned production
-const getTodaysPlannedProduction = useCallback(() => {
-  if (!forecastData?.productionRates) return undefined
-  return forecastData.productionRates[gameState.day] || 0 // ← NEW: Get current day's production
-}, [forecastData, gameState.day])
+  // Get today's planned production
+  const getTodaysPlannedProduction = useCallback(() => {
+    if (!forecastData?.productionRates) return undefined
+    return forecastData.productionRates[gameState.day] || 0 // ← NEW: Get current day's production
+  }, [forecastData, gameState.day])
 
   // Handle objectives completion
   const handleObjectivesComplete = useCallback(() => {
@@ -358,30 +394,29 @@ const getTodaysPlannedProduction = useCallback(() => {
     [],
   )
 
-// Added function to render dialogs
-const renderDialogs = () => (
-  <>
-    <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
+  // Added function to render dialogs
+  const renderDialogs = () => (
+    <>
+      <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />
 
-    {requiresForecasting && (
-      <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
-    )}
-  </>
-)
+      {requiresForecasting && (
+        <ForecastingDialog isOpen={showForecasting} onComplete={handleForecastingComplete} levelId={levelConfig.id} />
+      )}
+    </>
+  )
 
-// Added function to calculate planned production
-const getPlannedProduction = useCallback(() => {
-  if (!forecastData) return undefined
+  // Added function to calculate planned production
+  const getPlannedProduction = useCallback(() => {
+    if (!forecastData) return undefined
 
-  if (forecastData.productionRates) {
-    // Sum up the production rates for all days
-    console.log(forecastData.productionRates)
-    return Object.values(forecastData.productionRates)//.reduce((sum: number, rate: number) => sum + rate, 0)
-  } else {
-    // Sum up the customer forecasts
-    return (forecastData["yummy-zone"] || 0) + (forecastData["toast-to-go"] || 0) + (forecastData["study-fuel"] || 0)
-  }
-}, [forecastData])
+    if (forecastData.productionRates) {
+      // Sum up the production rates for all days
+      return Object.values(forecastData.productionRates)//.reduce((sum: number, rate: number) => sum + rate, 0)
+    } else {
+      // Sum up the customer forecasts
+      return (forecastData["yummy-zone"] || 0) + (forecastData["toast-to-go"] || 0) + (forecastData["study-fuel"] || 0)
+    }
+  }, [forecastData])
 
   const lastDayPenalty =
     gameState.overstockPenalties && gameState.overstockPenalties.length > 0
@@ -390,12 +425,20 @@ const getPlannedProduction = useCallback(() => {
 
   return (
     <div className="space-y-6">
-      {renderDialogs()} 
+      {renderDialogs()}
       <GameHeader
         levelId={levelConfig.id}
         levelConfig={levelConfig}
         onShowObjectives={() => setShowObjectives(true)}
         onShowTutorial={() => setShowTutorial(true)}
+        saveStatus={{
+          isSaving,
+          lastSaved,
+          isLoadingState,
+          isDirty
+        }}
+        onSave={saveGameState}
+        onResetLevel={resetLevelState}
       />
 
       <StatusBar gameState={gameState} levelConfig={levelConfig} />
@@ -502,9 +545,35 @@ const getPlannedProduction = useCallback(() => {
           />
         </div>
         <div className="md:col-span-8">
-          <CashflowChart data={gameState.history} height={300} profitThreshold={1500} />
+          <CashflowChart
+            data={gameState.history}
+            height={300}
+            profitThreshold={1500}
+            currentDay={gameState.day}
+          />
         </div>
       </div>
+
+      {/* Insufficient Funds Banner */}
+      {insufficientFundsMessage && (
+        <Alert variant="destructive" className="border-red-300 bg-red-50">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle className="flex items-center justify-between">
+            Insufficient Funds
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={clearInsufficientFundsMessage}
+              className="h-auto p-1 text-red-700 hover:text-red-900"
+            >
+              ×
+            </Button>
+          </AlertTitle>
+          <AlertDescription className="text-red-700">
+            {insufficientFundsMessage}
+          </AlertDescription>
+        </Alert>
+      )}
 
       <CostSummary
         gameState={gameState}
@@ -517,12 +586,16 @@ const getPlannedProduction = useCallback(() => {
         calculateTotalPurchaseCost={calculateTotalPurchaseCost}
         calculateProductionCost={calculateProductionCost}
         calculateMaterialPurchaseCost={calculateMaterialPurchaseCost}
-        calculateTransportationCost={calculateTransportationCost}
+        calculateMaterialTransportationCost={calculateMaterialTransportationCost}
+        calculateRestaurantTransportationCost={calculateRestaurantTransportationCost}
         calculateHoldingCost={getHoldingCost}
         calculateOverstockCost={getOverstockCost}
         calculateRevenue={calculateRevenue}
         isNextDayButtonDisabled={isNextDayButtonDisabled}
         getNextDayDisabledReason={getNextDayDisabledReason}
+        checkSufficientFunds={checkSufficientFunds}
+        calculateTotalCost={calculateTotalCost}
+        calculateProfit={calculateProfit}
       />
 
       <GameHistory history={gameState.history} />
@@ -540,7 +613,6 @@ const getPlannedProduction = useCallback(() => {
         setGameEnded={setGameEnded}
         onSubmitLevel={handleSubmitLevel}
         isSubmitting={isLoading}
-        level={levelConfig.id}
       />
 
       <ObjectivesDialog isOpen={showObjectives} onClose={handleObjectivesComplete} levelId={levelConfig.id} />

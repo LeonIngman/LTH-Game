@@ -2,24 +2,45 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { use } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { LoadingScreen, InlineLoadingScreen } from "@/components/ui/loading-screen"
 import { getQuizResults } from "@/lib/actions/quiz-actions"
 import { ArrowLeft } from "lucide-react"
 
 interface TeacherQuizPageProps {
-  params: {
+  params: Promise<{
     levelId: string
-  }
+  }>
 }
 
 export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const levelId = Number.parseInt(params.levelId)
+
+  // Unwrap params using React.use() for Next.js 15+ compatibility
+  const { levelId: levelIdParam } = use(params)
+  const levelId = Number.parseInt(levelIdParam, 10)
   const [quizResults, setQuizResults] = useState<any[]>([])
   const [isLoading, setIsLoading] = useState(true)
+
+  // Validate levelId
+  if (isNaN(levelId) || levelId < 0) {
+    return (
+      <div className="container mx-auto py-8 px-4 max-w-6xl">
+        <div className="text-center space-y-4">
+          <h1 className="text-2xl font-bold text-red-600">Invalid Level</h1>
+          <p className="text-gray-600">The level ID "{levelIdParam}" is not valid.</p>
+          <Button onClick={() => router.push("/dashboard/teacher")} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Teacher Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   useEffect(() => {
     if (!loading) {
@@ -45,7 +66,7 @@ export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
   }
 
   if (loading || !user) {
-    return <div className="flex min-h-screen items-center justify-center">Loading...</div>
+    return <LoadingScreen message="Loading quiz results..." description="Fetching student submissions and answers" />
   }
 
   return (
@@ -60,7 +81,7 @@ export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center">Loading quiz results...</div>
+        <InlineLoadingScreen message="Loading quiz results..." size="lg" />
       ) : quizResults.length === 0 ? (
         <Card>
           <CardContent className="text-center py-8">
@@ -87,7 +108,7 @@ export default function TeacherQuizPage({ params }: TeacherQuizPageProps) {
                     <div className="text-sm text-gray-600">
                       {Object.entries(result.answers.q2 || {}).map(([item, category]) => (
                         <p key={item}>
-                          {item}: {category}
+                          {item}: {String(category)}
                         </p>
                       ))}
                     </div>

@@ -24,9 +24,10 @@ export function SupplierPurchasePopup({
   levelConfig,
   setGameState,
   onOrderConfirmed,
-}: SupplierPurchasePopupProps) {
+}: Readonly<SupplierPurchasePopupProps>) {
   const [pendingOrder, setPendingOrder] = useState<SupplierOrder | null>(null)
   const [hasConfirmedOrder, setHasConfirmedOrder] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   // Initialize pending order when supplier changes
   useEffect(() => {
@@ -45,15 +46,16 @@ export function SupplierPurchasePopup({
         currentOrder.bunPurchase > 0 ||
         currentOrder.potatoPurchase > 0
       )
+      setShowSuccessMessage(false)
     }
-  }, [supplier, supplierOrders])
+  }, [supplier, supplierOrders, isOpen])
 
   if (!supplier || !pendingOrder) return null
 
   // --- Capacity and Remaining Calculation ---
   // Use capacityPerGame for the supplier
   const getMaterialCapacity = (supplier: Supplier, material: string) => {
-    return (supplier.capacityPerGame && supplier.capacityPerGame[material]) ?? 0
+    return supplier.capacityPerGame?.[material] ?? 0
   }
 
   const getOrderedToday = (material: MaterialType) => {
@@ -89,6 +91,14 @@ export function SupplierPurchasePopup({
         )
       }
       setHasConfirmedOrder(true)
+      setShowSuccessMessage(true)
+
+      // Auto-close after showing success message
+      setTimeout(() => {
+        setShowSuccessMessage(false)
+        onClose()
+      }, 1500) // Show success message for 1.5 seconds before closing
+
       if (onOrderConfirmed) onOrderConfirmed()
     }
   }
@@ -119,8 +129,8 @@ export function SupplierPurchasePopup({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="text-xl font-bold flex items-center justify-between">
-            <span>Order from {supplier.name}</span>
+          <div className="flex flex-col space-y-2">
+            <DialogTitle className="text-xl font-bold">Order from {supplier.name}</DialogTitle>
             <div className="flex items-center gap-2">
               {isImmediateDelivery && (
                 <Badge variant="outline" className="text-blue-600 border-blue-600">
@@ -134,7 +144,7 @@ export function SupplierPurchasePopup({
                 </Badge>
               )}
             </div>
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
         <div className="mt-4">
@@ -150,22 +160,41 @@ export function SupplierPurchasePopup({
           />
         </div>
 
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="py-4 px-6 bg-green-50 border border-green-200 rounded-md mx-6">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Order placed successfully!</span>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              Materials ordered from {supplier.name}.
+            </p>
+          </div>
+        )}
+
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          {hasAnyOrder && (
-            <Button
-              onClick={handleConfirmOrder}
-              disabled={isDisabled || (!hasPendingChanges && hasConfirmedOrder)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {hasPendingChanges
-                ? isImmediateDelivery
-                  ? "Confirm & Deliver Now"
-                  : "Confirm Order"
-                : "Order Confirmed"}
-            </Button>
+          {/* Only show footer if not showing success message */}
+          {!showSuccessMessage && (
+            <>
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              {hasAnyOrder && (
+                <Button
+                  onClick={handleConfirmOrder}
+                  disabled={isDisabled || (!hasPendingChanges && hasConfirmedOrder)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {(() => {
+                    if (hasPendingChanges) {
+                      return isImmediateDelivery ? "Confirm & Deliver Now" : "Confirm Order"
+                    }
+                    return "Order Confirmed"
+                  })()}
+                </Button>
+              )}
+            </>
           )}
         </DialogFooter>
       </DialogContent>

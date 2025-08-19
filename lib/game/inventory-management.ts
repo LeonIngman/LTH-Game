@@ -4,7 +4,8 @@ import type {
   Supplier,
   MaterialType,
   InventoryHoldingCosts,
-  InventoryOverstockCosts
+  InventoryOverstockCosts,
+  GameAction
 } from "@/types/game"
 
 // Production constants
@@ -50,7 +51,7 @@ function calculateAverageCost(
 ): number {
   const quantity = gameState.inventory[materialType]
   const totalValue = gameState.inventoryValue[materialType]
-  
+
   return quantity > 0 ? totalValue / quantity : 0
 }
 
@@ -137,7 +138,7 @@ export function addInventoryValue(
 ): void {
   // Add to inventory quantity
   gameState.inventory[materialType] += quantity
-  
+
   // Add to inventory value
   gameState.inventoryValue[materialType] += totalCost
 }
@@ -153,10 +154,80 @@ export function removeInventoryValue(
   // Calculate value to remove (average cost × quantity)
   const averageCost = calculateAverageCost(materialType, gameState)
   const valueToRemove = averageCost * quantity
-  
+
   // Remove from inventory quantity
   gameState.inventory[materialType] -= quantity
-  
+
   // Remove from inventory value
   gameState.inventoryValue[materialType] -= valueToRemove
+}
+
+/**
+ * Calculate transportation cost for supplier orders
+ */
+export function calculateTransportationCost(
+  action: GameAction,
+  levelConfig: LevelConfig
+): number {
+  let total = 0
+
+  for (const order of action.supplierOrders) {
+    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+    if (!supplier?.shipmentPrices) continue
+
+    // For each material, find the closest shipment size and add its price
+    for (const material of ["patty", "cheese", "bun", "potato"] as const) {
+      const amount = order[`${material}Purchase`]
+      if (amount > 0 && supplier.shipmentPrices[material]) {
+        const sizes = Object.keys(supplier.shipmentPrices[material]).map(Number)
+        // Find the closest shipment size (or the largest not exceeding the amount)
+        const closest = sizes.reduce((prev, curr) =>
+          Math.abs(curr - amount) < Math.abs(prev - amount) ? curr : prev,
+          sizes[0]
+        )
+        total += supplier.shipmentPrices[material][closest]
+      }
+    }
+  }
+
+  return total
+}
+
+/**
+ * Calculate customer transportation cost for restaurant deliveries
+ */
+export function calculateCustomerTransportationCost(
+  action: GameAction,
+  levelConfig: LevelConfig
+): number {
+  let total = 0
+
+  if (!action.customerOrders || !levelConfig.customers) {
+    return total
+  }
+
+  for (const customerOrder of action.customerOrders) {
+    if (customerOrder.quantity > 0) {
+      const customer = levelConfig.customers.find(c => c.id === customerOrder.customerId)
+      if (customer && customer.transportCosts) {
+        const transportCosts = customer.transportCosts
+        const orderQuantity = customerOrder.quantity
+
+        // Check if exact quantity exists
+        if (transportCosts[orderQuantity]) {
+          total += transportCosts[orderQuantity]
+        } else {
+          // Find the smallest shipment size that can handle this quantity
+          const availableSizes = Object.keys(transportCosts).map(Number).sort((a, b) => a - b)
+          const suitableSize = availableSizes.find(size => size >= orderQuantity)
+
+          if (suitableSize) {
+            total += transportCosts[suitableSize]
+          }
+        }
+      }
+    }
+  }
+
+  return total
 }

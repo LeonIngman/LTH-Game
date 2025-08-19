@@ -167,53 +167,89 @@ export function QuickReference({
                         {gameState.customerDeliveries?.[customer.id] || 0} units
                       </div>
                       <div>Lead Time:</div>
-                        <div className="text-right">
-                          {customer.leadTime} day{customer.leadTime !== 1 ? "s" : ""}
-                          {customer.randomLeadTime && customer.leadTimeRange && (
-                            <Badge variant="outline" className="ml-1 text-xs">
-                              Random: {customer.leadTimeRange.join("-")} days
-                            </Badge>
-                          )}
-                        </div>
-                        {customer.allowedShipmentSizes && (
-                          <>
-                            <div>Allowed Shipments:</div>
-                            <div className="text-right">{customer.allowedShipmentSizes.join(", ")} units</div>
-                          </>
+                      <div className="text-right">
+                        {customer.leadTime} day{customer.leadTime !== 1 ? "s" : ""}
+                        {customer.randomLeadTime && customer.leadTimeRange && (
+                          <Badge variant="outline" className="ml-1 text-xs">
+                            Random: {customer.leadTimeRange.join("-")} days
+                          </Badge>
                         )}
-                        {/* Add delivery schedule section if it exists */}
-                        {customer.deliverySchedule && customer.deliverySchedule.length > 0 && (
-                          <div className="mt-2 pt-2 border-t">
-                            <div className="font-medium text-xs mb-1 text-blue-700">Delivery Schedule:</div>
-                            <div className="space-y-1">
-                              {customer.deliverySchedule.map((milestone, index) => {
-                                const isPast = milestone.day < currentDay
-                                const isCurrent = milestone.day === currentDay
-                                const isFuture = milestone.day > currentDay
+                      </div>
+                      {customer.allowedShipmentSizes && (
+                        <>
+                          <div>Allowed Shipments:</div>
+                          <div className="text-right">{customer.allowedShipmentSizes.join(", ")} units</div>
+                        </>
+                      )}
+                      {/* Add delivery schedule section if it exists */}
+                      {customer.deliverySchedule && customer.deliverySchedule.length > 0 && (
+                        <div className="mt-2 pt-2 border-t">
+                          <div className="font-medium text-xs mb-1 text-blue-700">Delivery Schedule:</div>
+                          <div className="space-y-1">
+                            {customer.deliverySchedule.map((milestone, index) => {
+                              const isPast = milestone.day < currentDay
+                              const isCurrent = milestone.day === currentDay
+                              const isFuture = milestone.day > currentDay
 
+                              if (isCurrent) {
+                                // Calculate cumulative required amount up to current day
+                                const cumulativeRequired = customer.deliverySchedule
+                                  .filter((item) => item.day <= currentDay)
+                                  .reduce((sum, curr) => sum + curr.requiredAmount, 0)
+
+                                // Get total delivered to date from database
+                                const totalDelivered = gameState.customerDeliveries?.[customer.id] || 0
+
+                                // Check if user is on track
+                                const isOnTrack = totalDelivered >= cumulativeRequired
+
+                                // Special formatting for current day with dynamic badge based on delivery status
                                 return (
                                   <div
-                                    key={index}
-                                    className={`flex justify-between items-center text-xs ${
-                                      isPast ? "text-gray-500" : isCurrent ? "text-orange-600 font-medium" : "text-gray-700"
-                                    }`}
+                                    key={`current-${milestone.day}`}
+                                    className={`${isOnTrack
+                                        ? "bg-green-50 border border-green-200"
+                                        : "bg-orange-50 border border-orange-200"
+                                      } rounded-md p-2 text-xs`}
                                   >
-                                    <span>Day {milestone.day}:</span>
-                                    <span>{milestone.requiredAmount} units</span>
-                                    {isCurrent && (
+                                    <div className="flex items-center gap-1 mb-1">
                                       <Badge
                                         variant="outline"
-                                        className="ml-1 text-xs bg-orange-50 text-orange-700 border-orange-200"
+                                        className={`text-xs ${isOnTrack
+                                            ? "bg-green-100 text-green-700 border-green-300"
+                                            : "bg-orange-100 text-orange-700 border-orange-300"
+                                          }`}
                                       >
-                                        Due Today
+                                        {isOnTrack ? "On track" : "Due Today"}
                                       </Badge>
+                                    </div>
+                                    <div className={`font-medium ${isOnTrack ? "text-green-800" : "text-orange-800"
+                                      }`}>
+                                      Day {milestone.day}: {milestone.requiredAmount} units
+                                    </div>
+                                    {isOnTrack && (
+                                      <div className="text-green-700 text-xs mt-1">
+                                        Delivered: {totalDelivered} / {cumulativeRequired} units
+                                      </div>
                                     )}
                                   </div>
                                 )
-                              })}
-                            </div>
+                              }
+
+                              return (
+                                <div
+                                  key={`milestone-${milestone.day}`}
+                                  className={`flex justify-between items-center text-xs ${isPast ? "text-gray-500" : "text-gray-700"
+                                    }`}
+                                >
+                                  <span>Day {milestone.day}:</span>
+                                  <span>{milestone.requiredAmount} units</span>
+                                </div>
+                              )
+                            })}
                           </div>
-                        )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}

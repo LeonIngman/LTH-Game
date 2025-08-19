@@ -117,27 +117,39 @@ export async function saveGameResults(
 
     // If we have a valid performance ID and game history, save detailed daily data
     if (performanceId && Array.isArray(effectiveGameHistory) && effectiveGameHistory.length > 0) {
-      const values = effectiveGameHistory.map((entry: DailyResult) => [
-        performanceId,
-        entry.day,
-        entry.cash || 0,
-        entry.inventory?.patty || 0,
-        entry.inventory?.bun || 0,
-        entry.inventory?.cheese || 0,
-        entry.inventory?.potato || 0,
-        entry.inventory?.finishedGoods || 0,
-        entry.production || 0,
-        entry.sales || 0,
-        entry.revenue || 0,
-        entry.costs.purchases || 0,
-        entry.costs.production || 0,
-        entry.costs.holding || 0,
-        entry.costs.total || 0,
-        entry.profit || 0,
-        entry.cumulativeProfit || 0,
-        entry.overstockPenalty || 0, // <-- add this
-        JSON.stringify(entry.overstockPenaltyDetails || {}) // <-- and this
-      ]);
+      const values = effectiveGameHistory.map((entry: DailyResult) => {
+        const overstockCost = entry.overstockCosts ? Object.values(entry.overstockCosts).reduce((sum, cost) => sum + cost, 0) : 0;
+        const purchaseCosts = entry.costs.purchases || 0;
+        const productionCosts = entry.costs.production || 0;
+        const holdingCosts = entry.costs.holding || 0;
+        const transportCosts = entry.costs.transport || 0;
+
+        // Calculate totalCosts including all components: purchaseCosts + supplierTransportCost + productionCosts + holdingCosts + overstockCost + restaurantDeliveryCost + otherSurcharges
+        // Note: transport costs may include both supplier transport and restaurant delivery costs
+        const totalCosts = purchaseCosts + productionCosts + holdingCosts + overstockCost + transportCosts;
+
+        return [
+          performanceId,
+          entry.day,
+          entry.cash || 0,
+          entry.inventory?.patty || 0,
+          entry.inventory?.bun || 0,
+          entry.inventory?.cheese || 0,
+          entry.inventory?.potato || 0,
+          entry.inventory?.finishedGoods || 0,
+          entry.production || 0,
+          entry.sales || 0,
+          entry.revenue || 0,
+          purchaseCosts,
+          productionCosts,
+          holdingCosts,
+          Math.round(totalCosts * 100) / 100, // Ensure two-decimal rounding
+          entry.profit || 0,
+          entry.cumulativeProfit || 0,
+          Math.round(overstockCost * 100) / 100, // Ensure two-decimal rounding
+          JSON.stringify(entry.overstockCosts || {})
+        ];
+      });
       const rows = values.length;
       if (rows > 0) {
         const valuePlaceholders = values
@@ -170,8 +182,8 @@ export async function saveGameResults(
             "totalCosts",
             "profit",
             "cumulativeProfit",
-            "overstockPenalty",           -- new
-            "overstockPenaltyDetails"     -- new
+            "overstockCost",
+            "overstockCostDetails"
           ) VALUES ${valuePlaceholders}
           `,
           flatValues

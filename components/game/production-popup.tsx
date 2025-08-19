@@ -23,16 +23,18 @@ export function ProductionPopup({
   forecastData,
   currentDay = 1,
   inventory,
-  requiresForecasting
-}: ProductionPopupProps) {
+  requiresForecasting,
+}: Readonly<ProductionPopupProps>) {
   // Local state for pending production
-  const [pendingProduction, setPendingProduction] = useState(0)
+  const [pendingProduction, setPendingProduction] = useState(10) // Default to 10 instead of 0
   const [hasConfirmedProduction, setHasConfirmedProduction] = useState(false)
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false)
 
   // Initialize pending production when popup opens
   useEffect(() => {
-    setPendingProduction(production)
+    setPendingProduction(production > 0 ? production : 10) // Default to 10 if no production set
     setHasConfirmedProduction(production > 0)
+    setShowSuccessMessage(false)
   }, [production, isOpen])
 
   // Calculate max production for each ingredient
@@ -56,10 +58,10 @@ export function ProductionPopup({
     { name: "Cheese", max: maxProductionByCheese },
     { name: "Buns", max: maxProductionByBun },
     { name: "Potatoes", max: maxProductionByPotato },
-  ].reduce((prev, current) => (current.max < prev.max ? current : prev))
+  ].reduce((prev, current) => (current.max < prev.max ? current : prev), { name: "Patties", max: maxProductionByPatty })
 
-  // Define all production options
-  const allProductionOptions = [0, 10, 20, 30]
+  // Define production options (excluding 0)
+  const allProductionOptions = [10, 20, 30]
 
   // Check if there are pending changes
   const hasPendingChanges = pendingProduction !== production
@@ -68,6 +70,13 @@ export function ProductionPopup({
   const handleConfirmProduction = () => {
     onProductionChange(pendingProduction.toString())
     setHasConfirmedProduction(pendingProduction > 0)
+    setShowSuccessMessage(true)
+
+    // Auto-close after showing success message
+    setTimeout(() => {
+      setShowSuccessMessage(false)
+      onClose()
+    }, 1500) // Show success message for 1.5 seconds before closing
   }
 
   // Calculate total production cost
@@ -118,15 +127,15 @@ export function ProductionPopup({
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center justify-between">
-            <span>Production - Main Factory</span>
+          <div className="flex flex-col space-y-2">
+            <DialogTitle>Production - Main Factory</DialogTitle>
             {hasConfirmedProduction && !hasPendingChanges && production > 0 && (
-              <Badge variant="default" className="bg-green-500 flex items-center gap-1">
+              <Badge variant="default" className="bg-green-500 flex items-center gap-1 w-fit">
                 <CheckCircle className="h-3 w-3" />
                 Confirmed
               </Badge>
             )}
-          </DialogTitle>
+          </div>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
@@ -203,36 +212,40 @@ export function ProductionPopup({
                   <div className="grid grid-cols-2 gap-2">
                     {Object.entries(dailyProductionRates).map(([day, rate], index) => {
                       if (Number(day) !== 0) { // skip day 0
-                        
-                      const dayNumber = day.replace("day", "")
-                      const isCurrentDay = Number.parseInt(dayNumber) === currentDay
 
-                      return (
-                        <div
-                          key={day}
-                          className={cn(
-                            "p-2 rounded-md border flex justify-between items-center",
-                            isCurrentDay
-                              ? "border-blue-400 bg-blue-100"
-                              : Number.parseInt(dayNumber) < currentDay
-                                ? "border-gray-200 bg-gray-50 opacity-70"
-                                : "border-blue-200",
-                          )}
-                        >
-                          <span className={cn("text-sm font-medium", isCurrentDay ? "text-blue-800" : "text-blue-700")}>
-                            Day {dayNumber}:
-                          </span>
-                          <span className={cn("font-bold", isCurrentDay ? "text-blue-800" : "text-blue-700")}>
-                            {rate} meals
-                            {isCurrentDay && (
-                              <Badge variant="outline" className="ml-1 bg-blue-200 border-blue-300 text-blue-800">
-                                Today
-                              </Badge>
+                        const dayNumber = day.replace("day", "")
+                        const isCurrentDay = Number.parseInt(dayNumber) === currentDay
+                        const isPastDay = Number.parseInt(dayNumber) < currentDay
+
+                        let containerClass = "border-blue-200"
+                        if (isCurrentDay) {
+                          containerClass = "border-blue-400 bg-blue-100"
+                        } else if (isPastDay) {
+                          containerClass = "border-gray-200 bg-gray-50 opacity-70"
+                        }
+
+                        return (
+                          <div
+                            key={day}
+                            className={cn(
+                              "p-2 rounded-md border flex justify-between items-center",
+                              containerClass,
                             )}
-                          </span>
-                        </div>
-                      )
-                    }
+                          >
+                            <span className={cn("text-sm font-medium", isCurrentDay ? "text-blue-800" : "text-blue-700")}>
+                              Day {dayNumber}:
+                            </span>
+                            <span className={cn("font-bold", isCurrentDay ? "text-blue-800" : "text-blue-700")}>
+                              {String(rate)} meals
+                              {isCurrentDay && (
+                                <Badge variant="outline" className="ml-1 bg-blue-200 border-blue-300 text-blue-800">
+                                  Today
+                                </Badge>
+                              )}
+                            </span>
+                          </div>
+                        )
+                      }
                     })}
                   </div>
 
@@ -310,18 +323,35 @@ export function ProductionPopup({
           </div>
         </div>
 
-        <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={onClose}>
-            Close
-          </Button>
-          {!requiresForecasting && pendingProduction >= 0 && (
-            <Button
-              onClick={handleConfirmProduction}
-              disabled={isDisabled || (!hasPendingChanges && hasConfirmedProduction)}
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              {hasPendingChanges ? "Confirm Production" : "Production Confirmed"}
-            </Button>
+        {/* Success Message */}
+        {showSuccessMessage && (
+          <div className="py-4 px-6 bg-green-50 border border-green-200 rounded-md mx-6">
+            <div className="flex items-center gap-2 text-green-800">
+              <CheckCircle className="h-5 w-5" />
+              <span className="font-medium">Production order placed successfully!</span>
+            </div>
+            <p className="text-sm text-green-700 mt-1">
+              {pendingProduction} meals will be produced at 4 kr per meal.
+            </p>
+          </div>
+        )}
+
+        <DialogFooter className="flex gap-2">{/* Only show footer if not showing success message */}
+          {!showSuccessMessage && (
+            <>
+              <Button variant="outline" onClick={onClose}>
+                Close
+              </Button>
+              {!requiresForecasting && pendingProduction >= 0 && (
+                <Button
+                  onClick={handleConfirmProduction}
+                  disabled={isDisabled || (!hasPendingChanges && hasConfirmedProduction)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {hasPendingChanges ? "Confirm Production" : "Production Confirmed"}
+                </Button>
+              )}
+            </>
           )}
         </DialogFooter>
       </DialogContent>

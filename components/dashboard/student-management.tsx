@@ -27,9 +27,11 @@ import { createUser, createBatchUsers, deleteUser, updateUserProgress } from "@/
 interface Student {
   id: string
   username: string
-  visible_password: string
+  email: string
+  role: string
   progress: number
   lastActive: string
+  createdAt: string
 }
 
 interface StudentManagementProps {
@@ -67,6 +69,8 @@ export function StudentManagement({ students }: StudentManagementProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isBatchAddDialogOpen, setIsBatchAddDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null)
   const [newStudent, setNewStudent] = useState({
     username: "",
     password: generateRandomPassword(),
@@ -165,6 +169,8 @@ export function StudentManagement({ students }: StudentManagementProps) {
         description: "Student deleted successfully",
       })
       setIsLoading(false)
+      setIsDeleteDialogOpen(false)
+      setStudentToDelete(null)
       router.refresh()
     }
   }, [deleteState, router, toast])
@@ -182,12 +188,9 @@ export function StudentManagement({ students }: StudentManagementProps) {
     })
   }, [setBatchStudents])
 
-  const handleDeleteConfirm = (id: string) => {
-    if (!confirm("Are you sure you want to delete this student?")) return
-    setIsLoading(true)
-    const formData = new FormData()
-    formData.append("userId", id)
-    deleteAction(formData)
+  const handleDeleteConfirm = (student: Student) => {
+    setStudentToDelete(student)
+    setIsDeleteDialogOpen(true)
   }
 
   const handleCustomPasswordChange = (index: number, value: string) => {
@@ -473,6 +476,56 @@ export function StudentManagement({ students }: StudentManagementProps) {
               </form>
             </DialogContent>
           </Dialog>
+
+          {/* Delete Student Confirmation Dialog */}
+          <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Delete Student</DialogTitle>
+                <DialogDescription>
+                  Are you sure you want to delete {studentToDelete?.username}? This action cannot be undone and will remove all associated data including game sessions, performance records, and quiz submissions.
+                </DialogDescription>
+              </DialogHeader>
+              <form action={deleteAction} onSubmit={() => setIsLoading(true)}>
+                <div className="space-y-4 py-4">
+                  {studentToDelete && (
+                    <>
+                      <input type="hidden" name="userId" value={studentToDelete.id} />
+                      <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                        <p className="text-sm text-destructive font-medium">
+                          Student: {studentToDelete.username}
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Email: {studentToDelete.email || "Not provided"}
+                        </p>
+                        <p className="text-sm text-muted-foreground">
+                          Progress: Level {studentToDelete.progress}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" type="button" onClick={() => setIsDeleteDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" variant="destructive" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete Student
+                      </>
+                    )}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardHeader>
       <CardContent>
@@ -480,46 +533,54 @@ export function StudentManagement({ students }: StudentManagementProps) {
           <TableHeader>
             <TableRow>
               <TableHead>Username</TableHead>
-              <TableHead>Password</TableHead>
+              <TableHead>Email</TableHead>
               <TableHead>Progress</TableHead>
               <TableHead className="hidden md:table-cell">Last Active</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {students.map((student) => (
-              <TableRow key={student.id}>
-                <TableCell className="font-medium">{student.username}</TableCell>
-                <TableCell>{student.visible_password}</TableCell>
-                <TableCell>Level {student.progress}</TableCell>
-                <TableCell className="hidden md:table-cell">{student.lastActive}</TableCell>
-                <TableCell>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
-                        <span className="sr-only">Actions</span>
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          setSelectedStudent(student)
-                          setProgressValue(student.progress)
-                        }}
-                      >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Update Progress
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleDeleteConfirm(student.id)} className="text-red-600">
-                        <Trash className="mr-2 h-4 w-4" />
-                        Delete Student
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+            {students.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                  No students yet. Add some students to get started.
                 </TableCell>
               </TableRow>
-            ))}
+            ) : (
+              students.map((student) => (
+                <TableRow key={student.id}>
+                  <TableCell className="font-medium">{student.username}</TableCell>
+                  <TableCell>{student.email || "Not provided"}</TableCell>
+                  <TableCell>Level {student.progress}</TableCell>
+                  <TableCell className="hidden md:table-cell">{student.lastActive}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Actions</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSelectedStudent(student)
+                            setProgressValue(student.progress)
+                          }}
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          Update Progress
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDeleteConfirm(student)} className="text-red-600">
+                          <Trash className="mr-2 h-4 w-4" />
+                          Delete Student
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
           </TableBody>
         </Table>
       </CardContent>

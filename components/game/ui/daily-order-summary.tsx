@@ -106,13 +106,13 @@ export function DailyOrderSummary({
       const supplier = getSupplier(supplierId)
       if (!supplier) return 0
 
-      // Check if supplier has special shipment prices
+      // Check if supplier has shipment prices
       if (
         supplier.shipmentPrices &&
         supplier.shipmentPrices[materialType] &&
         supplier.shipmentPrices[materialType][quantity]
       ) {
-  
+
         // Add base cost and shipment cost
         const baseCost = calculateBaseCost(quantity, supplierId, materialType)
         return baseCost + supplier.shipmentPrices[materialType][quantity]
@@ -127,10 +127,67 @@ export function DailyOrderSummary({
     }
   }
 
-  // Calculate total cost for all supplier orders
+  // Calculate total supplier transport cost for a specific supplier
+  const calculateSupplierTransportCost = (supplierId: number): number => {
+    try {
+      let totalTransportCost = 0
+      const order = supplierOrders.find(o => o.supplierId === supplierId)
+      if (!order) return 0
+
+      // Calculate transport cost for each material type
+      if (order.pattyPurchase > 0) {
+        totalTransportCost += calculateShipmentCost(order.pattyPurchase, supplierId, "patty")
+      }
+      if (order.cheesePurchase > 0) {
+        totalTransportCost += calculateShipmentCost(order.cheesePurchase, supplierId, "cheese")
+      }
+      if (order.bunPurchase > 0) {
+        totalTransportCost += calculateShipmentCost(order.bunPurchase, supplierId, "bun")
+      }
+      if (order.potatoPurchase > 0) {
+        totalTransportCost += calculateShipmentCost(order.potatoPurchase, supplierId, "potato")
+      }
+
+      return Math.round(totalTransportCost * 100) / 100
+    } catch (error) {
+      console.error(`Error calculating supplier transport cost for supplier ${supplierId}:`, error)
+      return 0
+    }
+  }
+
+  // Calculate total pure purchase cost for a specific supplier (without transport)
+  const calculateSupplierPurePurchaseCost = (supplierId: number): number => {
+    try {
+      let totalPureCost = 0
+      const order = supplierOrders.find(o => o.supplierId === supplierId)
+      if (!order) return 0
+
+      // Calculate pure cost for each material type
+      if (order.pattyPurchase > 0) {
+        totalPureCost += calculateBaseCost(order.pattyPurchase, supplierId, "patty")
+      }
+      if (order.cheesePurchase > 0) {
+        totalPureCost += calculateBaseCost(order.cheesePurchase, supplierId, "cheese")
+      }
+      if (order.bunPurchase > 0) {
+        totalPureCost += calculateBaseCost(order.bunPurchase, supplierId, "bun")
+      }
+      if (order.potatoPurchase > 0) {
+        totalPureCost += calculateBaseCost(order.potatoPurchase, supplierId, "potato")
+      }
+
+      return Math.round(totalPureCost * 100) / 100
+    } catch (error) {
+      console.error(`Error calculating supplier pure purchase cost for supplier ${supplierId}:`, error)
+      return 0
+    }
+  }
+
+  // Calculate total cost for all supplier orders (purchase + transport)
   const calculateSupplierTotalCost = (): number => {
     try {
-      let total = 0
+      let totalPurchaseCost = 0
+      let totalTransportCost = 0
 
       supplierOrders.forEach((order) => {
         if (!order) return
@@ -138,25 +195,17 @@ export function DailyOrderSummary({
         const supplier = getSupplier(order.supplierId)
         if (!supplier) return
 
-        // Calculate total for each material
-        if (order.pattyPurchase > 0) {
-          total += calculateMaterialTotalCost(order.pattyPurchase, order.supplierId, "patty")
-        }
-        if (order.cheesePurchase > 0) {
-          total += calculateMaterialTotalCost(order.cheesePurchase, order.supplierId, "cheese")
-        }
-        if (order.bunPurchase > 0) {
-          total += calculateMaterialTotalCost(order.bunPurchase, order.supplierId, "bun")
-        }
-        if (order.potatoPurchase > 0) {
-          total += calculateMaterialTotalCost(order.potatoPurchase, order.supplierId, "potato")
-        }
+        // Calculate pure purchase cost for this supplier
+        totalPurchaseCost += calculateSupplierPurePurchaseCost(order.supplierId)
+
+        // Calculate transport cost for this supplier
+        totalTransportCost += calculateSupplierTransportCost(order.supplierId)
       })
 
-      // Round to 2 decimal places for consistency
-      return Math.round(total * 100) / 100
+      // Return total cost (purchase + transport)
+      return Math.round((totalPurchaseCost + totalTransportCost) * 100) / 100
     } catch (error) {
-      console.error("Error calculating total cost:", error)
+      console.error("Error calculating total supplier cost:", error)
       return 0
     }
   }
@@ -286,29 +335,29 @@ export function DailyOrderSummary({
                     const supplier = getSupplier(order.supplierId)
                     if (!supplier) return null
 
-                    // Calculate supplier total
-                    let supplierTotal = 0
+                    // Calculate supplier pure purchase cost and transport cost
+                    const supplierPurePurchaseCost = calculateSupplierPurePurchaseCost(order.supplierId)
+                    const supplierTransportCost = calculateSupplierTransportCost(order.supplierId)
+                    const supplierTotal = supplierPurePurchaseCost + supplierTransportCost
 
-                    // Calculate totals for each material
-                    const pattyTotal =
+                    // Calculate base costs for each material (for display)
+                    const pattyBaseCost =
                       order.pattyPurchase > 0
-                        ? calculateMaterialTotalCost(order.pattyPurchase, order.supplierId, "patty")
+                        ? calculateBaseCost(order.pattyPurchase, order.supplierId, "patty")
                         : 0
 
-                    const cheeseTotal =
+                    const cheeseBaseCost =
                       order.cheesePurchase > 0
-                        ? calculateMaterialTotalCost(order.cheesePurchase, order.supplierId, "cheese")
+                        ? calculateBaseCost(order.cheesePurchase, order.supplierId, "cheese")
                         : 0
 
-                    const bunTotal =
-                      order.bunPurchase > 0 ? calculateMaterialTotalCost(order.bunPurchase, order.supplierId, "bun") : 0
+                    const bunBaseCost =
+                      order.bunPurchase > 0 ? calculateBaseCost(order.bunPurchase, order.supplierId, "bun") : 0
 
-                    const potatoTotal =
+                    const potatoBaseCost =
                       order.potatoPurchase > 0
-                        ? calculateMaterialTotalCost(order.potatoPurchase, order.supplierId, "potato")
+                        ? calculateBaseCost(order.potatoPurchase, order.supplierId, "potato")
                         : 0
-
-                    supplierTotal = pattyTotal + cheeseTotal + bunTotal + potatoTotal
 
                     return (
                       <div key={order.supplierId} className="bg-gray-50 rounded-md p-3">
@@ -325,7 +374,7 @@ export function DailyOrderSummary({
                                 </Badge>
                                 <span>{formatMaterialName("patty")}</span>
                               </div>
-                              <span className="font-medium">{formatCurrency(pattyTotal)}</span>
+                              <span className="font-medium">{formatCurrency(pattyBaseCost)}</span>
                             </div>
                           )}
                           {order.cheesePurchase > 0 && (
@@ -339,7 +388,7 @@ export function DailyOrderSummary({
                                 </Badge>
                                 <span>{formatMaterialName("cheese")}</span>
                               </div>
-                              <span className="font-medium">{formatCurrency(cheeseTotal)}</span>
+                              <span className="font-medium">{formatCurrency(cheeseBaseCost)}</span>
                             </div>
                           )}
                           {order.bunPurchase > 0 && (
@@ -353,7 +402,7 @@ export function DailyOrderSummary({
                                 </Badge>
                                 <span>{formatMaterialName("bun")}</span>
                               </div>
-                              <span className="font-medium">{formatCurrency(bunTotal)}</span>
+                              <span className="font-medium">{formatCurrency(bunBaseCost)}</span>
                             </div>
                           )}
                           {order.potatoPurchase > 0 && (
@@ -367,7 +416,13 @@ export function DailyOrderSummary({
                                 </Badge>
                                 <span>{formatMaterialName("potato")}</span>
                               </div>
-                              <span className="font-medium">{formatCurrency(potatoTotal)}</span>
+                              <span className="font-medium">{formatCurrency(potatoBaseCost)}</span>
+                            </div>
+                          )}
+                          {supplierTransportCost > 0 && (
+                            <div className="flex justify-between items-center text-xs">
+                              <span className="text-muted-foreground">Transport Cost:</span>
+                              <span className="text-red-600">-{formatCurrency(supplierTransportCost)}</span>
                             </div>
                           )}
                         </div>

@@ -35,6 +35,21 @@ export default function StudentDashboard() {
 	const [isLoading, setIsLoading] = useState(true)
 	const [error, setError] = useState<string | null>(null)
 
+	// Function to fetch leaderboard data
+	const fetchLeaderboardData = async () => {
+		try {
+			setError(null)
+			const data = await getLeaderboard()
+			setLeaderboardData(data)
+		} catch (error) {
+			console.error("Error fetching leaderboard:", error)
+			setError("Failed to load leaderboard data.")
+			setLeaderboardData([]) // No fallback/mock data
+		} finally {
+			setIsLoading(false)
+		}
+	}
+
 	useEffect(() => {
 		if (!loading) {
 			if (!user) {
@@ -43,22 +58,22 @@ export default function StudentDashboard() {
 				router.push("/dashboard/teacher")
 			} else {
 				// Fetch leaderboard data
-				const fetchData = async () => {
-					try {
-						const data = await getLeaderboard()
-						setLeaderboardData(data)
-					} catch (error) {
-						console.error("Error fetching leaderboard:", error)
-						setError("Failed to load leaderboard data.")
-						setLeaderboardData([]) // No fallback/mock data
-					} finally {
-						setIsLoading(false)
-					}
-				}
-				fetchData()
+				fetchLeaderboardData()
 			}
 		}
 	}, [user, loading, router])
+
+	// Add window focus event listener to refresh data when returning to the dashboard
+	useEffect(() => {
+		const handleFocus = () => {
+			if (user && !isLoading) {
+				fetchLeaderboardData()
+			}
+		}
+
+		window.addEventListener('focus', handleFocus)
+		return () => window.removeEventListener('focus', handleFocus)
+	}, [user, isLoading])
 
 	if (loading || isLoading || !user) {
 		return (

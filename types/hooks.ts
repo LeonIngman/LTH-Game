@@ -17,6 +17,9 @@ export interface GameActionsHook {
   setGameEnded: (ended: boolean) => void
   processDay: (action: GameAction) => Promise<boolean>
   submitLevel: () => Promise<boolean>
+  insufficientFundsMessage: string | null
+  clearInsufficientFundsMessage: () => void
+  checkSufficientFunds: () => { sufficient: boolean; message?: string }
 }
 
 export interface GameActionsParams {
@@ -28,6 +31,7 @@ export interface GameActionsParams {
   setSupplierOrders: (orders: SupplierOrder[]) => void
   setCustomerOrders: (orders: CustomerOrder[]) => void
   setAction: (action: GameAction | ((prev: GameAction) => GameAction)) => void
+  calculateTotalCost: () => number
 }
 
 export interface GameCalculationsHook {

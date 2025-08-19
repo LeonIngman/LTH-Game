@@ -1,4 +1,4 @@
-import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, MaterialOrder, CustomerOrder, Customer, Supplier, Inventory } from "@/types/game"
+import type { DailyResult, GameState, LevelConfig, SupplierOrder, CustomerOrder, GameAction, MaterialOrder, Customer, Supplier, Inventory } from "@/types/game"
 import { Dispatch, SetStateAction } from "react"
 import { Action } from "sonner"
 
@@ -14,6 +14,14 @@ export interface GameHeaderProps {
   levelConfig: LevelConfig
   onShowObjectives: () => void
   onShowTutorial: () => void
+  saveStatus?: {
+    isSaving: boolean
+    lastSaved: Date | null
+    isLoadingState: boolean
+    isDirty: boolean
+  }
+  onSave?: () => Promise<void>
+  onResetLevel?: () => Promise<void>
 }
 
 export interface StatusBarProps {
@@ -32,12 +40,16 @@ export interface CostSummaryProps {
   calculateTotalPurchaseCost: () => number
   calculateProductionCost: () => number
   calculateMaterialPurchaseCost: () => number
-  calculateTransportationCost: () => number
+  calculateMaterialTransportationCost: () => number
+  calculateRestaurantTransportationCost: () => number
   calculateHoldingCost: () => number
   calculateOverstockCost: () => number
   calculateRevenue: () => number
   isNextDayButtonDisabled: () => boolean
   getNextDayDisabledReason: () => string
+  checkSufficientFunds: () => { sufficient: boolean; message?: string }
+  calculateTotalCost: () => number
+  calculateProfit: () => number
 }
 
 export interface GameHistoryProps {
@@ -167,11 +179,11 @@ export interface InventoryChartProps {
     finishedGoods?: { threshold: number }
   }
   safetystock?: {
-  patty?: { threshold: number }
-  cheese?: { threshold: number }
-  bun?: { threshold: number }
-  potato?: { threshold: number }
-  finishedGoods?: { threshold: number }
+    patty?: { threshold: number }
+    cheese?: { threshold: number }
+    bun?: { threshold: number }
+    potato?: { threshold: number }
+    finishedGoods?: { threshold: number }
   }
 }
 

@@ -98,6 +98,7 @@ export interface DailyResult {
     purchases: number
     production: number
     holding: number
+    transport: number
     total: number
   }
   profit: number

@@ -4,7 +4,6 @@ import { ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import type { CostSummaryProps } from "@/types/components"
-import { calculateHoldingCosts } from "@/lib/game/inventory-management"
 
 export function CostSummary({
   gameState,
@@ -14,35 +13,29 @@ export function CostSummary({
   isLoading,
   gameEnded,
   onProcessDay,
-  calculateTotalPurchaseCost,
   calculateProductionCost,
   calculateMaterialPurchaseCost,
-  calculateTransportationCost,
+  calculateMaterialTransportationCost,
+  calculateRestaurantTransportationCost,
   calculateHoldingCost,
   calculateOverstockCost,
   calculateRevenue,
   isNextDayButtonDisabled,
   getNextDayDisabledReason,
-}: CostSummaryProps) {
-  // Calculate individual cost components
-  const purchaseCost = calculateMaterialPurchaseCost()
+  checkSufficientFunds,
+  calculateTotalCost,
+  calculateProfit,
+}: Readonly<CostSummaryProps>) {
+  const materialPurchaseCost = calculateMaterialPurchaseCost()
+  const materialTransportationCost = calculateMaterialTransportationCost()
   const productionCost = calculateProductionCost()
-
-  // Calculate transportation cost as the difference between total purchase cost and base material costs
-  const transportationCost = calculateTransportationCost()
-
-  // Calculate holding cost using the same method as the game engine
+  const restaurantTransportationCost = calculateRestaurantTransportationCost()
   const holdingCost = calculateHoldingCost()
-
-  // Calculate overstock cost using the same method as the game engine
   const overstockCost = calculateOverstockCost()
-
-  // Calculate revenue from both direct sales and customer orders
   const revenue = calculateRevenue()
-
-  // Calculate total cost as sum of all components
-  const totalCost = purchaseCost + productionCost + holdingCost + overstockCost
-  const profit = revenue - totalCost
+  // Calculate total cost locally to ensure all components are included
+  const totalCost = materialPurchaseCost + materialTransportationCost + productionCost + restaurantTransportationCost + holdingCost + overstockCost
+  const profit = calculateProfit()
 
   // Check if the player is only attempting sales (no purchases or production)
   const isOnlySales = () => {
@@ -54,9 +47,12 @@ export function CostSummary({
         order.potatoPurchase === 0,
     )
 
-    const hasCustomerOrders = action.customerOrders && action.customerOrders.some((order) => order.quantity > 0)
+    const hasCustomerOrders = action.customerOrders?.some((order) => order.quantity > 0)
     return noOrders && action.production === 0 && (hasCustomerOrders)
   }
+
+  // Check funds before allowing action
+  const fundsCheck = checkSufficientFunds()
 
   // Determine if the Next Day button should be disabled
   const isButtonDisabled = () => {
@@ -65,8 +61,8 @@ export function CostSummary({
     // Special case: if player has 0 cash but is only trying to sell, allow it
     if (gameState.cash <= 0 && isOnlySales()) return false
 
-    // Otherwise, check if they can afford all actions
-    return totalCost > gameState.cash
+    // Use the pre-check for insufficient funds
+    return !fundsCheck.sufficient
   }
 
   // Determine why the Next Day button is disabled
@@ -74,24 +70,26 @@ export function CostSummary({
     if (isLoading) return "Processing your actions..."
     if (gameEnded || gameState.gameOver) return "Game is over"
 
+    // If insufficient funds, show the specific message from pre-check
+    if (!fundsCheck.sufficient && fundsCheck.message) {
+      return fundsCheck.message
+    }
+
     return getNextDayDisabledReason()
   }
 
-  // Calculate annual holding cost rate (25%)
-  const annualRate = 0.25 * 100
-
   return (
-    <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary">
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 text-center">
+    <div className="bg-gray-50 p-4 rounded-lg border cost-summary" data-tutorial="cost-summary" data-testid="cost-summary">
+      <div className="grid grid-cols-1 md:grid-cols-6 gap-4 text-center">
         <div>
           <p className="text-sm font-medium text-muted-foreground">Purchase Cost</p>
-          <p className="text-xl font-bold">{purchaseCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Sum of all material purchases</p>
+          <p className="text-xl font-bold">{materialPurchaseCost.toFixed(2)} kr</p>
+          <p className="text-xs text-muted-foreground mt-1">Base material costs</p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Transportation Cost</p>
-          <p className="text-xl font-bold">{transportationCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Delivery and shipping costs</p>
+          <p className="text-sm font-medium text-muted-foreground">Supplier Transport</p>
+          <p className="text-xl font-bold">{materialTransportationCost.toFixed(2)} kr</p>
+          <p className="text-xs text-muted-foreground mt-1">Supplier delivery costs</p>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Production Cost</p>
@@ -101,33 +99,49 @@ export function CostSummary({
           </p>
         </div>
         <div>
-          <p className="text-sm font-medium text-muted-foreground">Daily Holding Cost</p>
+          <p className="text-sm font-medium text-muted-foreground">Holding Cost</p>
           <p className="text-xl font-bold">{holdingCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Total inventory value × 25% annual rate ÷ 365 days</p>
+          <p className="text-xs text-muted-foreground mt-1">Inventory value × 25% annual rate ÷ 365 days</p>
         </div>
         <div>
           <p className="text-sm font-medium text-muted-foreground">Overstock Cost</p>
           <p className="text-xl font-bold">{overstockCost.toFixed(2)} kr</p>
-          <p className="text-xs text-muted-foreground mt-1">Inventory value of overstocked materials × 25% annual rate ÷ 365 days</p>
+          <p className="text-xs text-muted-foreground mt-1">Overstocked inventory × 25% annual rate ÷ 365 days</p>
+        </div>
+        <div>
+          <p className="text-sm font-medium text-muted-foreground">Restaurant Transport</p>
+          <p className="text-xl font-bold">{restaurantTransportationCost.toFixed(2)} kr</p>
+          <p className="text-xs text-muted-foreground mt-1">Customer delivery costs</p>
         </div>
       </div>
       <div className="mt-4 border-t pt-4 flex justify-between items-center">
-        <div className="grid grid-cols-3 gap-8 flex-1">
-          <div>
+        <div className="grid grid-cols-3 gap-4 flex-1">
+          <div className="text-center">
             <p className="text-sm font-medium">Total Cost</p>
             <p className="text-xl font-bold text-red-600">{totalCost.toFixed(2)} kr</p>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-sm font-medium">Revenue</p>
             <p className="text-xl font-bold text-green-600">{revenue.toFixed(2)} kr</p>
           </div>
-          <div>
+          <div className="text-center">
             <p className="text-sm font-medium">Profit</p>
             <p className={`text-xl font-bold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
               {profit.toFixed(2)} kr
             </p>
           </div>
         </div>
+
+        {/* Insufficient Funds Warning */}
+        {!fundsCheck.sufficient && (
+          <div className="bg-red-50 border border-red-200 rounded-md p-3 text-center">
+            <p className="text-sm font-medium text-red-800">⚠️ Insufficient Funds</p>
+            <p className="text-xs text-red-600 mt-1">
+              Available: {gameState.cash.toFixed(2)} kr | Needed: {totalCost.toFixed(2)} kr
+            </p>
+          </div>
+        )}
+
         <div>
           <TooltipProvider>
             <Tooltip>

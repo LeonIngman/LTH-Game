@@ -20,9 +20,14 @@ import {
   addInventoryValue,
   removeInventoryValue,
   calculateOverstockCost,
-  getOverstockCostBreakdown
+  getOverstockCostBreakdown,
+  calculateTransportationCost,
+  calculateCustomerTransportationCost,
+  PATTIES_PER_MEAL,
+  CHEESE_PER_MEAL,
+  BUNS_PER_MEAL,
+  POTATOES_PER_MEAL
 } from "@/lib/game/inventory-management"
-import { PATTIES_PER_MEAL, CHEESE_PER_MEAL, BUNS_PER_MEAL, POTATOES_PER_MEAL } from "@/lib/game/inventory-management"
 
 
 /**
@@ -67,6 +72,15 @@ export function validateAffordability(
   totalCost?: number
   holdingCost?: number
   availableCash?: number
+  costBreakdown?: {
+    purchaseCost: number
+    supplierTransportCost: number
+    productionCost: number
+    holdingCost: number
+    overstockCost: number
+    restaurantDeliveryCost: number
+    otherSurcharges: number
+  }
 } {
   // Calculate total purchase cost
   let totalPurchaseCost = 0
@@ -98,11 +112,37 @@ export function validateAffordability(
     }
   }
 
+  // Calculate pure material purchase cost (without transport)
+  let purePurchaseCost = 0
+  for (const order of action.supplierOrders) {
+    const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+    if (!supplier?.materialPrices) continue
+
+    if (order.pattyPurchase > 0) {
+      purePurchaseCost += order.pattyPurchase * supplier.materialPrices.patty
+    }
+    if (order.cheesePurchase > 0) {
+      purePurchaseCost += order.cheesePurchase * supplier.materialPrices.cheese
+    }
+    if (order.bunPurchase > 0) {
+      purePurchaseCost += order.bunPurchase * supplier.materialPrices.bun
+    }
+    if (order.potatoPurchase > 0) {
+      purePurchaseCost += order.potatoPurchase * supplier.materialPrices.potato
+    }
+  }
+
   // Calculate production cost
   const productionCost = action.production * levelConfig.productionCostPerUnit
 
+  // Calculate customer transportation cost (restaurant delivery cost)
+  const customerTransportationCost = calculateCustomerTransportationCost(action, levelConfig)
+
+  // Calculate supplier transport cost (difference between total and pure purchase)
+  const supplierTransportCost = totalPurchaseCost - purePurchaseCost
+
   // Calculate total action cost
-  const totalActionCost = totalPurchaseCost + productionCost
+  const totalActionCost = totalPurchaseCost + productionCost + customerTransportationCost
 
   // Calculate holding cost
   const holdingCost = calculateHoldingCost(gameState)
@@ -110,8 +150,25 @@ export function validateAffordability(
   // Calculate overstock cost
   const overstockCost = calculateOverstockCost(gameState, levelConfig)
 
+  // Calculate restaurant delivery cost (transportation cost from our calculation)
+  const restaurantDeliveryCost = customerTransportationCost
+
+  // Other surcharges (none currently in the system)
+  const otherSurcharges = 0
+
   // Calculate total cost
   const totalCost = totalActionCost + holdingCost + overstockCost
+
+  // Create cost breakdown for debug purposes
+  const costBreakdown = {
+    purchaseCost: Number(purePurchaseCost.toFixed(2)),
+    supplierTransportCost: Number(supplierTransportCost.toFixed(2)),
+    productionCost: Number(productionCost.toFixed(2)),
+    holdingCost: Number(holdingCost.toFixed(2)),
+    overstockCost: Number(overstockCost.toFixed(2)),
+    restaurantDeliveryCost: Number(restaurantDeliveryCost.toFixed(2)),
+    otherSurcharges: Number(otherSurcharges.toFixed(2))
+  }
 
   // Check if player has enough cash
   if (totalCost > gameState.cash) {
@@ -121,14 +178,22 @@ export function validateAffordability(
       totalCost,
       holdingCost,
       availableCash: gameState.cash,
+      costBreakdown
     }
   }
 
-  return { valid: true, totalCost, holdingCost, availableCash: gameState.cash }
+  return {
+    valid: true,
+    totalCost,
+    holdingCost,
+    availableCash: gameState.cash,
+    costBreakdown
+  }
 }
 
 /**
- * Check for missed customer milestones and calculate penalties
+ * Check for missed customer milestones and calculate penalties.
+ * Returns an array of penalties for each missed delivery milestone for all customers.
  */
 function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): LatenessPenalty[] {
   const penalties: LatenessPenalty[] = []
@@ -176,7 +241,7 @@ function checkMissedMilestones(state: GameState, levelConfig: LevelConfig): Late
 }
 
 /**
- * Process production and update cash and inventory value
+ * Process production: updates cash and inventory based on production actions.
  */
 function processProduction(state: GameState, action: GameAction, levelConfig: LevelConfig): void {
   if (action.production <= 0) return
@@ -190,7 +255,7 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
   }
 
   if (targetProduction <= 0) return
-  
+
   // Calculate maximum possible production
   const maxProductionByPatty = Math.floor(state.inventory.patty / PATTIES_PER_MEAL)
   const maxProductionByCheese = Math.floor(state.inventory.cheese / CHEESE_PER_MEAL)
@@ -207,7 +272,7 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
 
   if (maxProduction > 0) {
     // Calculate production cost
-     const productionCost = maxProduction * levelConfig.productionCostPerUnit
+    const productionCost = maxProduction * levelConfig.productionCostPerUnit
 
     // Remove materials and decrease their inventory values
     removeInventoryValue(state, "patty", maxProduction * PATTIES_PER_MEAL)
@@ -224,7 +289,8 @@ function processProduction(state: GameState, action: GameAction, levelConfig: Le
 }
 
 /**
- * Process a single day of gameplay based on player actions
+ * Main game loop: processes a single day of gameplay based on player actions.
+ * Returns the updated game state after all actions and events are processed.
  */
 export function processDay(state: GameState, action: GameAction, levelConfig: LevelConfig): GameState {
   // Create a copy of the current state to modify
@@ -288,7 +354,7 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
   // 12. Check if player is bankrupt (cash <= 0)
   if (newState.cash <= 0 && !canRecoverFromZeroCash(newState)) {
     newState.gameOver = true
-    console.log("GAME OVER: Player is bankrupt with cash:", newState.cash)
+    // Game over: Player is bankrupt with cash: newState.cash
   }
 
   // 13. Advance to next day (only if not game over)
@@ -300,15 +366,15 @@ export function processDay(state: GameState, action: GameAction, levelConfig: Le
 }
 
 /**
- * Check if player can recover from zero cash
- * (they can recover if they have finished goods to sell)
+ * Check if player can recover from zero cash.
+ * Returns true if the player has finished goods to sell, allowing recovery.
  */
 function canRecoverFromZeroCash(state: GameState): boolean {
   return state.inventory.finishedGoods > 0
 }
 
 /**
- * Process any pending orders that are due to arrive
+ * Process any pending supplier orders that are due to arrive today.
  */
 function processPendingSupplierOrders(state: GameState): void {
   const arrivingOrders: MaterialOrder[] = []
@@ -327,13 +393,13 @@ function processPendingSupplierOrders(state: GameState): void {
   }
 
   for (const order of arrivingOrders) {
-      // Add to inventory with value
-      addInventoryValue(
-        state, 
-        order.materialType, 
-        order.quantity, 
-        order.totalCost
-      )
+    // Add to inventory with value
+    addInventoryValue(
+      state,
+      order.materialType,
+      order.quantity,
+      order.totalCost
+    )
   }
 
   state.pendingSupplierOrders = remainingOrders
@@ -437,16 +503,13 @@ function processPurchases(state: GameState, action: GameAction, levelConfig: Lev
         // Deduct cost from cash
         state.cash = Number.parseFloat((state.cash - totalCost).toFixed(2))
 
-        // Add to inventory value
-        state.inventoryValue[material.type] += totalCost
-
         // Always update deliveredSoFar immediately
         if (!state.supplierDeliveries[order.supplierId]) state.supplierDeliveries[order.supplierId] = {}
         state.supplierDeliveries[order.supplierId][material.type] =
           (state.supplierDeliveries[order.supplierId][material.type] || 0) + material.quantity
 
         if (leadTime === 0) {
-          // Add directly to inventory with value
+          // Add directly to inventory with value (handles both quantity and value)
           addInventoryValue(state, material.type, material.quantity, totalCost)
         } else {
           // Add to pending orders with lead time
@@ -613,8 +676,11 @@ function recordDailyResults(
   // Calculate revenue from customer orders
   const customerDeliveries: Record<number, { quantity: number; revenue: number }> = {}
   let revenue = 0
+  let totalTransportCost = 0
+
   for (const customerOrder of action.customerOrders || []) {
     const customer = levelConfig.customers?.find((c) => c.id === customerOrder.customerId)
+
     if (!customer) continue
 
     if (!customerDeliveries[customer.id]) {
@@ -624,21 +690,35 @@ function recordDailyResults(
       }
     }
 
-    // Only count immediate revenue (lead time = 0)
-    if (customer.leadTime === 0) {
-      const orderRevenue =
-        customerOrder.quantity * customer.pricePerUnit - customer.transportCosts[customerOrder.quantity]
-      customerDeliveries[customer.id].quantity += customerOrder.quantity
-      customerDeliveries[customer.id].revenue += orderRevenue
-      revenue += orderRevenue
+    // Skip orders with zero quantity to avoid NaN issues
+    if (customerOrder.quantity <= 0) {
+      continue
     }
+
+    const transportCost = customer.transportCosts[customerOrder.quantity] || 0
+    // Revenue = gross sales value (no costs subtracted)
+    const orderRevenue = customerOrder.quantity * customer.pricePerUnit
+
+    customerDeliveries[customer.id].quantity += customerOrder.quantity
+    customerDeliveries[customer.id].revenue += orderRevenue
+    revenue += orderRevenue
+    totalTransportCost += transportCost
   }
+
+  // Ensure revenue is never NaN - treat as 0 if corrupted
+  if (isNaN(revenue)) {
+    revenue = 0
+  }
+
+  // Calculate proper profit: Revenue - Total Costs  
+  const totalCosts = totalPurchaseCost + totalProductionCost + totalHoldingCost + totalTransportCost
+  const calculatedProfit = revenue - totalCosts
 
   const dailyResult: DailyResult = {
     day: state.day,
     cash: state.cash,
     inventory: { ...state.inventory },
-    inventoryValue: { ...state.inventoryValue},
+    inventoryValue: { ...state.inventoryValue },
     holdingCosts: holdingCosts,
     overstockCosts: overstockCosts,
     pattyPurchased: totalPattyPurchased,
@@ -652,9 +732,10 @@ function recordDailyResults(
       purchases: totalPurchaseCost,
       production: totalProductionCost,
       holding: totalHoldingCost,
-      total: totalPurchaseCost + totalProductionCost + totalHoldingCost,
+      transport: totalTransportCost,
+      total: totalPurchaseCost + totalProductionCost + totalHoldingCost + totalTransportCost,
     },
-    profit: dailyProfit,
+    profit: calculatedProfit,
     cumulativeProfit: state.cumulativeProfit,
     score: state.score,
     customerDeliveries: Object.keys(customerDeliveries).length > 0 ? customerDeliveries : undefined,

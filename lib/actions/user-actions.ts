@@ -74,8 +74,8 @@ export async function createUser(prevState: any, formData: FormData) {
     const id = `user_${Math.random().toString(36).substring(2, 10)}`
 
     const result = await sql`
-      INSERT INTO "User" (id, username, password, visible_password, role, progress, "lastActive", "createdAt", "updatedAt")
-      VALUES (${id}, ${username}, ${hashedPassword}, ${password}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      INSERT INTO "User" (id, username, password, role, progress, "lastActive", "createdAt", "updatedAt")
+      VALUES (${id}, ${username}, ${hashedPassword}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
       RETURNING id
     `
 
@@ -134,8 +134,8 @@ export async function createBatchUsers(prevState: any, formData: FormData) {
       const id = `user_${Math.random().toString(36).substring(2, 10)}`
 
       const result = await sql`
-        INSERT INTO "User" (id, username, password, visible_password, role, progress, "lastActive", "createdAt", "updatedAt")
-        VALUES (${id}, ${username}, ${hashedPassword}, ${currentPassword}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+        INSERT INTO "User" (id, username, password, role, progress, "lastActive", "createdAt", "updatedAt")
+        VALUES (${id}, ${username}, ${hashedPassword}, ${role}, 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
         RETURNING id
       `
       userIds.push(result[0].id)
@@ -204,17 +204,124 @@ export async function deleteUser(prevState: any, formData: FormData) {
 export async function getAllStudents() {
   try {
     const students = await sql`
-      SELECT id, username, visible_password, progress, "lastActive" 
+      SELECT id, username, email, role, progress, "lastActive", "createdAt"
       FROM "User" 
       WHERE role = 'student' 
-      ORDER BY username ASC
+      ORDER BY "lastActive" DESC
+      LIMIT 25
     `
     return students.map((user) => ({
       ...user,
-      lastActive: new Date(user.lastActive).toLocaleDateString(),
+      lastActive: new Date(user.lastActive).toLocaleDateString("sv-SE"),
+      createdAt: new Date(user.createdAt).toLocaleDateString("sv-SE"),
     }))
   } catch (error) {
     console.error("Error getting students:", error)
     return []
   }
+}
+
+export async function getAllTeachers() {
+  try {
+    const teachers = await sql`
+      SELECT id, username, email, role, progress, "lastActive", "createdAt"
+      FROM "User" 
+      WHERE role = 'teacher' 
+      ORDER BY "lastActive" DESC
+      LIMIT 25
+    `
+    return teachers.map((user) => ({
+      ...user,
+      lastActive: new Date(user.lastActive).toLocaleDateString("sv-SE"),
+      createdAt: new Date(user.createdAt).toLocaleDateString("sv-SE"),
+    }))
+  } catch (error) {
+    console.error("Error getting teachers:", error)
+    return []
+  }
+}
+
+export async function createTeacher(prevState: any, formData: FormData) {
+  try {
+    if (!formData || typeof formData.get !== "function") {
+      console.error("Invalid formData:", formData)
+      return { error: "Invalid form submission" }
+    }
+
+    const username = formData.get("username") as string
+    const email = formData.get("email") as string
+    const password = formData.get("password") as string
+
+    if (!username || !email) {
+      return { error: "Username and email are required" }
+    }
+
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    if (!emailRegex.test(email)) {
+      return { error: "Please enter a valid email address" }
+    }
+
+    // Check if username is taken
+    const existingUsernames = await sql`SELECT * FROM "User" WHERE username = ${username}`
+    if (existingUsernames.length > 0) {
+      return { error: "Username is already taken" }
+    }
+
+    // Check if email is taken
+    const existingEmails = await sql`SELECT * FROM "User" WHERE email = ${email}`
+    if (existingEmails.length > 0) {
+      return { error: "Email is already taken" }
+    }
+
+    // Generate secure password if not provided
+    const finalPassword = password || generateSecurePassword()
+    
+    // Hash the password
+    const hashedPassword = await bcryptjs.hash(finalPassword, 10)
+    
+    // Generate a unique ID
+    const id = `user_${Math.random().toString(36).substring(2, 10)}`
+
+    const result = await sql`
+      INSERT INTO "User" (id, username, email, password, role, progress, "lastActive", "createdAt", "updatedAt")
+      VALUES (${id}, ${username}, ${email}, ${hashedPassword}, 'teacher', 0, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+      RETURNING id
+    `
+
+    revalidatePath("/dashboard/teacher")
+    return { 
+      success: true, 
+      userId: result[0].id,
+      generatedPassword: password ? null : finalPassword // Only return if generated
+    }
+  } catch (error) {
+    console.error("Error creating teacher:", error)
+    return { error: "Failed to create teacher" }
+  }
+}
+
+// Function to generate a secure password
+function generateSecurePassword(length = 12): string {
+  const lowercase = "abcdefghijklmnopqrstuvwxyz"
+  const uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+  const numbers = "0123456789"
+  const symbols = "!@#$%^&*()_+-=[]{}|;:,.<>?"
+  
+  const allChars = lowercase + uppercase + numbers + symbols
+  
+  // Ensure at least one character from each category
+  let password = ""
+  password += lowercase[Math.floor(Math.random() * lowercase.length)]
+  password += uppercase[Math.floor(Math.random() * uppercase.length)]
+  password += numbers[Math.floor(Math.random() * numbers.length)]
+  password += symbols[Math.floor(Math.random() * symbols.length)]
+  
+  // Fill the rest randomly
+  for (let i = 4; i < length; i++) {
+    password += allChars[Math.floor(Math.random() * allChars.length)]
+  }
+  
+  // Shuffle the password
+  return password.split('').sort(() => Math.random() - 0.5).join('')
 }

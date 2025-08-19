@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { use } from "react"
 import { ArrowLeft, BarChart3 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -15,20 +16,52 @@ import { getAllStudentsPerformance, getGameLevels, getUserPerformance } from "@/
 export default function TeacherStudentPerformancePage({
   params,
 }: {
-  params: { levelId: string; studentId: string }
+  params: Promise<{ levelId: string; studentId: string }>
 }) {
   const { user, loading } = useAuth()
   const router = useRouter()
-  const [performanceData, setPerformanceData] = useState([])
+
+  // Unwrap params using React.use() for Next.js 15+ compatibility
+  const { levelId: levelIdParam, studentId } = use(params)
+
+  const [performanceData, setPerformanceData] = useState<any[]>([])
   const [levelInfo, setLevelInfo] = useState<any>(null)
-  const [studentsList, setStudentsList] = useState([])
+  const [studentsList, setStudentsList] = useState<any[]>([])
   const [studentInfo, setStudentInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   // Parse the level ID and validate it
-  const levelId = Number.parseInt(params.levelId)
-  const studentId = params.studentId
+  const levelId = Number.parseInt(levelIdParam, 10)
+
+  // Validate levelId and studentId
+  if (isNaN(levelId) || levelId < 0 || !studentId?.trim()) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href="/dashboard/teacher"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold mt-2">Student Performance Analytics</h1>
+        </div>
+
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <BarChart3 className="h-10 w-10 text-amber-400" />
+          <h3 className="mt-4 text-lg font-semibold text-amber-600">Invalid Parameters</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            Level ID "{levelIdParam}" or Student ID "{studentId}" is not valid.
+          </p>
+          <Button onClick={() => router.push("/dashboard/teacher")} className="mt-4">
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   // Check if levelId is valid (0, 1, 2, or 3)
   const isValidLevelId = !isNaN(levelId) && levelId >= 0 && levelId <= 3
@@ -143,7 +176,7 @@ export default function TeacherStudentPerformancePage({
           <p className="text-gray-500">Level: {levelInfo?.name}</p>
         </div>
 
-        <StudentSelector students={studentsList} selectedStudentId={studentId} levelId={levelId} />
+        <StudentSelector initialStudents={studentsList} selectedStudentId={studentId} levelId={levelId} />
       </div>
 
       {performanceData.length > 0 ? (

@@ -2,6 +2,8 @@
 
 # dependencies
 /node_modules
+/.pnp
+.pnp.js
 
 # next.js
 /.next/
@@ -9,6 +11,7 @@
 
 # production
 /build
+/dist
 
 # debug
 npm-debug.log*
@@ -18,6 +21,7 @@ yarn-error.log*
 
 # env files
 .env*
+!.env.example
 
 # vercel
 .vercel
@@ -25,3 +29,81 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# testing
+/coverage
+/.nyc_output
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# logs
+*.log
+logs/
+
+# runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# optional npm cache directory
+.npm
+
+# optional eslint cache
+.eslintcache
+
+# optional stylelint cache
+.stylelintcache
+
+# microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# optional REPL history
+.node_repl_history
+
+# output of 'npm pack'
+*.tgz
+
+# yarn integrity file
+.yarn-integrity
+
+# dotenv environment variables file (keep .env.example)
+.env.development.local
+.env.test.local
+.env.production.local
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# storybook build outputs
+storybook-static
+
+# temporary folders
+tmp/
+temp/
+
+# backup files
+*.backup
+*.bak
