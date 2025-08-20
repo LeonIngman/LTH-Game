@@ -7,7 +7,7 @@ import { PerformanceSummary } from "@/components/performance/performance-summary
 import { StudentSelector } from "@/components/performance/student-selector"
 import { LoadingScreen } from "@/components/ui/loading-screen"
 import { getAllStudents } from "@/lib/actions/user-actions"
-import { getPerformanceData } from "@/lib/actions/performance-actions"
+import { getAllStudentsPerformance } from "@/lib/actions/performance-actions"
 
 export default function TeacherPerformancePage({ params }: { params: Promise<{ levelId: string }> }) {
   const { user, loading } = useAuth()
@@ -33,7 +33,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
             maxProfit: student.maxProfit ?? 0,
           }))
         )
-        const perfData = await getPerformanceData(levelId)
+        const perfData = await getAllStudentsPerformance(levelId)
         setPerformanceData(perfData)
       } catch (error) {
         console.error("Error fetching performance data:", error)
