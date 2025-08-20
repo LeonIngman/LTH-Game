@@ -6,21 +6,11 @@ import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, BarChart3, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { D3Chart } from "@/components/performance/d3-chart"
-import { GameHistorySummary } from "@/components/game-history/game-history-summary"
-import { SessionList } from "@/components/game-history/session-list"
-import { ProgressTimeline } from "@/components/game-history/progress-timeline"
+import { DailyProgress } from "@/components/performance/daily-progress"
 import { useAuth } from "@/lib/auth-context"
-import { getDetailedGameData, getGameLevels } from "@/lib/actions/performance-actions"
-import { getGameHistory, getGameHistoryOverview, getProgressTimeline, exportGameHistoryData } from "@/lib/actions/game-history-actions"
-import { level0Config } from "@/lib/game/level0"
-import { level1Config } from "@/lib/game/level1"
-import { level2Config } from "@/lib/game/level2"
-import { level3Config } from "@/lib/game/level3"
-import type { GameHistoryEntry, GameHistoryOverview } from "@/types/game"
+import { getGameLevels, getCurrentGameSessionData, debugListAllPerformanceRecords, debugListAllDailyData, debugExploreDatabase, getGameSessionData } from "@/lib/actions/performance-actions"
+import type { GameHistoryEntry } from "@/types/game"
 
 export default function StudentGameHistoryPage() {
   const { user, loading } = useAuth()
@@ -29,23 +19,16 @@ export default function StudentGameHistoryPage() {
   const levelId = typeof params === "object" && params && "levelId" in params ? (params as any).levelId : "0"
 
   const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([])
-  const [historyOverview, setHistoryOverview] = useState<GameHistoryOverview[]>([])
-  const [detailedData, setDetailedData] = useState<any[]>([])
-  const [progressData, setProgressData] = useState<any[]>([])
   const [levels, setLevels] = useState<any[]>([])
   const [levelInfo, setLevelInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [chartType, setChartType] = useState("inventory")
 
   // Parse the level ID and validate it
   const parsedLevelId = Number.parseInt(levelId)
 
   // Check if levelId is valid (0, 1, 2, or 3)
   const isValidLevelId = !isNaN(parsedLevelId) && parsedLevelId >= 0 && parsedLevelId <= 3
-
-  const levelConfigs = [level0Config, level1Config, level2Config, level3Config]
-  const levelConfig = levelConfigs[parsedLevelId]
 
   useEffect(() => {
     if (!loading) {
@@ -63,15 +46,20 @@ export default function StudentGameHistoryPage() {
 
       const fetchData = async () => {
         try {
+          console.log("🚀 Starting fetchData for user:", user.id, "levelId:", parsedLevelId)
+
           // Get all levels
           const allLevels = await getGameLevels()
+          console.log("📚 All levels:", allLevels)
           setLevels(allLevels)
 
           // Get current level info
           const currentLevel = allLevels.find((level: any) => level.id === parsedLevelId)
+          console.log("🎯 Current level:", currentLevel)
 
           if (!currentLevel) {
             // If level doesn't exist, use a fallback approach
+            console.log("⚠️ Level not found, using fallback")
             setLevelInfo({
               id: parsedLevelId,
               name: `Level ${parsedLevelId}`,
@@ -82,23 +70,48 @@ export default function StudentGameHistoryPage() {
             setLevelInfo(currentLevel)
           }
 
-          // Get game history data
-          const history = await getGameHistory(user.id, parsedLevelId)
-          setGameHistory(history)
+          // Get current game session data (daily progress)
+          console.log("📊 Calling getCurrentGameSessionData...")
+          const currentSessionData = await getCurrentGameSessionData(user.id, parsedLevelId)
+          console.log("📈 Current session data received:", currentSessionData)
+          console.log("📊 Current session data length:", currentSessionData.length)
 
-          // Get overview data
-          const overview = await getGameHistoryOverview(user.id)
-          setHistoryOverview(overview)
+          // Debug: Also get all performance records for this user
+          console.log("🔍 Debug: Getting all performance records...")
+          const allPerformance = await debugListAllPerformanceRecords(user.id)
+          console.log("📝 All performance records:", allPerformance)
 
-          // Get progress timeline data
-          const progress = await getProgressTimeline(user.id, parsedLevelId)
-          setProgressData(progress)
+          // Comprehensive database exploration
+          console.log("🕵️ Starting comprehensive database exploration...")
+          const dbExploration = await debugExploreDatabase(user.id)
+          console.log("🗄️ Database exploration results:", dbExploration)
 
-          // Get detailed game data for the latest session
-          const detailed = await getDetailedGameData(user.id, parsedLevelId)
-          setDetailedData(detailed || [])
+          // If no data found in Performance/GameDailyData, try GameSession table
+          let finalGameData = currentSessionData
+          if (currentSessionData.length === 0) {
+            console.log("🔄 No data in Performance/GameDailyData, trying GameSession table...")
+            const gameSessionData = await getGameSessionData(user.id, parsedLevelId)
+            console.log("🎲 GameSession data received:", gameSessionData)
+            finalGameData = gameSessionData
+          }
+
+          // If we found performance records but no daily data, investigate further
+          if (allPerformance.length > 0 && finalGameData.length === 0) {
+            console.log("🔍 Found performance records but no daily data, investigating...")
+            const latestPerformance = allPerformance.find(p => p.levelId === parsedLevelId)
+            if (latestPerformance) {
+              console.log("🎯 Latest performance for this level:", latestPerformance)
+              const dailyDataForPerformance = await debugListAllDailyData(latestPerformance.id)
+              console.log("📊 Daily data for this performance:", dailyDataForPerformance)
+            }
+          }
+
+          // Set the current session data as game history (for display in the table)
+          setGameHistory(finalGameData)
+          console.log("✅ Game history state updated with data length:", finalGameData.length)
+
         } catch (error) {
-          console.error("Error fetching game history data:", error)
+          console.error("❌ Error fetching game history data:", error)
           setError("Failed to load game history data. Please try again later.")
         } finally {
           setIsLoading(false)
@@ -115,8 +128,20 @@ export default function StudentGameHistoryPage() {
 
   const handleExportData = async () => {
     try {
-      const exportData = await exportGameHistoryData(user?.id || '', 'json')
-      if (exportData) {
+      // Use the existing gameHistory data for export
+      const exportData = {
+        format: 'json',
+        data: gameHistory.map(entry => ({
+          level: entry.levelName || `Level ${entry.levelId}`,
+          date: entry.createdAt,
+          score: entry.score,
+          profit: entry.cumulativeProfit,
+          cashFlow: entry.cashFlow,
+          decisions: entry.decisions
+        }))
+      }
+
+      if (exportData.data.length > 0) {
         const blob = new Blob([JSON.stringify(exportData.data, null, 2)], { type: 'application/json' })
         const url = URL.createObjectURL(blob)
         const a = document.createElement('a')
@@ -163,12 +188,6 @@ export default function StudentGameHistoryPage() {
     )
   }
 
-  // Get current level overview
-  const currentLevelOverview = historyOverview.find(overview => overview.levelId === parsedLevelId)
-
-  // Check if we have detailed data
-  const hasDetailedData = detailedData && detailedData.length > 0
-
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -180,8 +199,8 @@ export default function StudentGameHistoryPage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>
-          <h1 className="text-2xl font-bold mt-2">Game History</h1>
-          <p className="text-gray-500">Track your progress in {levelInfo?.name}</p>
+          <h1 className="text-2xl font-bold mt-2">Game Progress</h1>
+          <p className="text-gray-500">Track your daily performance in {levelInfo?.name}</p>
         </div>
 
         <div className="flex items-center gap-2">
@@ -204,92 +223,10 @@ export default function StudentGameHistoryPage() {
         </div>
       </div>
 
-      <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="sessions">Sessions</TabsTrigger>
-          <TabsTrigger value="progress">Progress</TabsTrigger>
-          <TabsTrigger value="analysis">Analysis</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="md:col-span-1">
-              {currentLevelOverview ? (
-                <GameHistorySummary overview={currentLevelOverview} />
-              ) : (
-                <Card>
-                  <CardContent className="p-6">
-                    <div className="text-center text-gray-500">
-                      No game history available for this level.
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-            <div className="md:col-span-2">
-              <SessionList 
-                sessions={gameHistory.slice(0, 5)} 
-                isLoading={isLoading}
-              />
-            </div>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="sessions" className="space-y-6">
-          <SessionList 
-            sessions={gameHistory} 
-            isLoading={isLoading}
-          />
-        </TabsContent>
-
-        <TabsContent value="progress" className="space-y-6">
-          <ProgressTimeline data={progressData} levelId={parsedLevelId} />
-        </TabsContent>
-
-        <TabsContent value="analysis" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <CardTitle>Detailed Performance Analysis</CardTitle>
-                  <CardDescription>Analyze your game performance metrics</CardDescription>
-                </div>
-                <Select value={chartType} onValueChange={setChartType}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Select Chart" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="inventory">Inventory Levels</SelectItem>
-                    <SelectItem value="financial">Financial Metrics</SelectItem>
-                    <SelectItem value="production">Production & Sales</SelectItem>
-                    <SelectItem value="costs">Cost Breakdown</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {hasDetailedData ? (
-                <D3Chart
-                  data={detailedData}
-                  chartType={chartType}
-                  width={800}
-                  height={400}
-                  overstock={levelConfig.overstock}
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-                  <BarChart3 className="h-10 w-10 text-gray-400" />
-                  <h3 className="mt-4 text-lg font-semibold">No Detailed Data Available</h3>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Complete a game and save your results to see detailed performance analytics.
-                  </p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <DailyProgress
+        dailyData={gameHistory}
+        isLoading={isLoading}
+      />
     </div>
   )
 }
