@@ -9,6 +9,7 @@ import { AuthErrorType, mapErrorToUserMessage, logAuthError } from "./auth-utils
 type User = {
   id: string
   username: string
+  email?: string
   role: string
   progress: number
 }

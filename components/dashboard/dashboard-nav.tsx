@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Truck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,9 +13,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
+import { BugReportDialog } from "@/components/bug-report-dialog"
 
 export function DashboardNav() {
-  const pathname = usePathname()
   const { user, logout } = useAuth()
 
   if (!user) return null
@@ -32,6 +31,7 @@ export function DashboardNav() {
           <h1 className="text-xl font-bold text-[#003366]">Logistics Game</h1>
         </Link>
         <nav className="ml-auto flex items-center gap-4">
+          <BugReportDialog />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full border border-[#4d94ff]">
@@ -45,7 +45,7 @@ export function DashboardNav() {
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
                   <p className="text-sm font-medium leading-none">{user.username}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  <p className="text-xs leading-none text-muted-foreground">{user.email || user.role}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

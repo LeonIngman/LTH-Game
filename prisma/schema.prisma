@@ -18,4 +18,23 @@ model User {
   lastActive       DateTime @default(now())
   createdAt        DateTime @default(now())
   updatedAt        DateTime
+  bugReports       Bug[]
+}
+
+model Bug {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  email       String
+  title       String
+  description String
+  category    String   @default("Other")
+  status      String   @default("Open")
+  currentPage String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
 }
