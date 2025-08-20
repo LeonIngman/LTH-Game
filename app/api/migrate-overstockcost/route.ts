@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
         ALTER TABLE "GameDailyData" ADD COLUMN "overstockCostDetails" TEXT DEFAULT '{}'
       `;
 
-            console.log("✅ Added overstockCost and overstockCostDetails columns");
+            // Added overstockCost and overstockCostDetails columns
         }
 
         // Check if overstockPenalty column exists and migrate data
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
             }
 
             await sql`ALTER TABLE "GameDailyData" DROP COLUMN "overstockPenalty"`;
-            console.log("✅ Migrated data from overstockPenalty to overstockCost");
+            // Migrated data from overstockPenalty to overstockCost
         }
 
         // Verify existing rows have default value of 0

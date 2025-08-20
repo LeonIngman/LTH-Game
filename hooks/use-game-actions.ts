@@ -128,9 +128,6 @@ export function useGameActions({
       setInsufficientFundsMessage(null) // Clear any previous insufficient funds message
 
       try {
-        console.log("Processing day with action:", JSON.stringify(action))
-        console.log("Current game state:", JSON.stringify(gameState))
-
         const response = await fetch("/api/game/process-day", {
           method: "POST",
           headers: {
@@ -186,8 +183,6 @@ export function useGameActions({
         if (!data.success) {
           throw new Error(data.error || "Failed to process day")
         }
-
-        console.log("New game state:", JSON.stringify(data.gameState))
 
         // Update game state
         setGameState(data.gameState)

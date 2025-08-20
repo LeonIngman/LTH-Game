@@ -15,6 +15,7 @@ This directory contains scripts to help you set up and manage your database for 
 **`master-database-setup.sql`** - The complete database setup solution
 
 This single comprehensive script handles:
+
 - ✅ All required table creation (GameSession, GameDailyData, User, Performance, etc.)
 - ✅ Proper foreign key relationships and constraints
 - ✅ Performance indexes for optimal query speed
@@ -23,6 +24,7 @@ This single comprehensive script handles:
 - ✅ Production-ready configuration for Neon
 
 **How to use:**
+
 1. Copy the contents of `scripts/master-database-setup.sql`
 2. Paste into your Neon database console
 3. Execute the script
@@ -83,12 +85,14 @@ node scripts/run-demo.mjs
 ## Production Database Setup (Neon)
 
 ### Quick Start
+
 1. Open your Neon database console
 2. Copy and paste the entire `master-database-setup.sql` script
 3. Execute it
 4. Check the verification output to confirm all tables were created
 
 ### What the Master Script Creates:
+
 - **Core Game Tables**: GameSession, GameDailyData, GameLevel
 - **User & Auth**: User (with all columns), Session
 - **Performance Tracking**: Performance, TimeStamp
@@ -97,7 +101,9 @@ node scripts/run-demo.mjs
 - **Sample Data**: 4 products, 4 suppliers, 4 game levels
 
 ### Database Schema Summary:
+
 Total Tables: 12+ (depending on existing setup)
+
 - Critical for gameplay: GameSession, GameDailyData, Performance, User
 - Business simulation: Product, Supplier, Order, SupplierProduct
 - Learning features: QuizSubmission, TimeStamp
