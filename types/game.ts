@@ -61,6 +61,69 @@ export interface LatenessPenalty {
   penaltyAmount: number
 }
 
+// Game History Types
+export interface GameSession {
+  id?: string
+  userId: string
+  levelId: number
+  gameState: any
+  isCompleted: boolean
+  startedAt: Date
+  completedAt?: Date
+  updatedAt: Date
+  finalScore?: number
+  finalProfit?: number
+  daysPlayed?: number
+}
+
+export interface GameHistoryEntry {
+  id: number
+  userId: string
+  levelId: number
+  sessionId?: string
+  score: number
+  cumulativeProfit: number
+  cashFlow: number
+  rawMaterialAStock: number
+  rawMaterialBStock: number
+  finishedGoodStock: number
+  decisions: any
+  createdAt: Date
+  session?: GameSession
+  levelName?: string
+}
+
+export interface GameHistoryOverview {
+  userId: string
+  username?: string
+  levelId: number
+  levelName: string
+  totalSessions: number
+  bestScore: number
+  bestProfit: number
+  averageScore: number
+  averageProfit: number
+  firstPlayedAt: Date
+  lastPlayedAt: Date
+  progressTrend: 'improving' | 'stable' | 'declining'
+}
+
+export interface SessionComparison {
+  sessionId1: string
+  sessionId2: string
+  session1: GameHistoryEntry
+  session2: GameHistoryEntry
+  improvements: {
+    score: number
+    profit: number
+    efficiency: number
+  }
+  differences: {
+    decisions: any[]
+    outcomes: any[]
+  }
+}
+
 export interface SupplierOrder {
   supplierId: number
   pattyPurchase: number

@@ -175,7 +175,7 @@ export function GameLevels({
                   >
                     <Button variant="outline" size="sm" className="border-[#4d94ff]">
                       <BarChart3 className="mr-2 h-4 w-4" />
-                      Performance
+                      Game History
                     </Button>
                   </Link>
                   <Button

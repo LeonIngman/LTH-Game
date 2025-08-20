@@ -1,32 +1,37 @@
 "use client"
 
-import React from "react"
 import { useEffect, useState } from "react"
 import Link from "next/link"
 import { useRouter, useParams } from "next/navigation"
-import { ArrowLeft, BarChart3 } from "lucide-react"
+import { ArrowLeft, BarChart3, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { D3Chart } from "@/components/performance/d3-chart"
-import { PerformanceSummary } from "@/components/performance/performance-summary"
+import { GameHistorySummary } from "@/components/game-history/game-history-summary"
+import { SessionList } from "@/components/game-history/session-list"
+import { ProgressTimeline } from "@/components/game-history/progress-timeline"
 import { useAuth } from "@/lib/auth-context"
-import { getDetailedGameData, getGameLevels, getUserPerformance } from "@/lib/actions/performance-actions"
+import { getDetailedGameData, getGameLevels } from "@/lib/actions/performance-actions"
+import { getGameHistory, getGameHistoryOverview, getProgressTimeline, exportGameHistoryData } from "@/lib/actions/game-history-actions"
 import { level0Config } from "@/lib/game/level0"
 import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
 import { level3Config } from "@/lib/game/level3"
+import type { GameHistoryEntry, GameHistoryOverview } from "@/types/game"
 
-export default function StudentPerformancePage() {
+export default function StudentGameHistoryPage() {
   const { user, loading } = useAuth()
   const router = useRouter()
   const params = useParams()
   const levelId = typeof params === "object" && params && "levelId" in params ? (params as any).levelId : "0"
 
-  const [performanceData, setPerformanceData] = useState<any[]>([])
+  const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([])
+  const [historyOverview, setHistoryOverview] = useState<GameHistoryOverview[]>([])
   const [detailedData, setDetailedData] = useState<any[]>([])
+  const [progressData, setProgressData] = useState<any[]>([])
   const [levels, setLevels] = useState<any[]>([])
   const [levelInfo, setLevelInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -77,16 +82,24 @@ export default function StudentPerformancePage() {
             setLevelInfo(currentLevel)
           }
 
-          // Get performance data
-          const performance = await getUserPerformance(user.id, parsedLevelId)
-          setPerformanceData(performance || [])
+          // Get game history data
+          const history = await getGameHistory(user.id, parsedLevelId)
+          setGameHistory(history)
 
-          // Get detailed game data
+          // Get overview data
+          const overview = await getGameHistoryOverview(user.id)
+          setHistoryOverview(overview)
+
+          // Get progress timeline data
+          const progress = await getProgressTimeline(user.id, parsedLevelId)
+          setProgressData(progress)
+
+          // Get detailed game data for the latest session
           const detailed = await getDetailedGameData(user.id, parsedLevelId)
           setDetailedData(detailed || [])
         } catch (error) {
-          console.error("Error fetching performance data:", error)
-          setError("Failed to load performance data. Please try again later.")
+          console.error("Error fetching game history data:", error)
+          setError("Failed to load game history data. Please try again later.")
         } finally {
           setIsLoading(false)
         }
@@ -98,6 +111,25 @@ export default function StudentPerformancePage() {
 
   const handleLevelChange = (newLevelId: string) => {
     router.push(`/dashboard/student/performance/${newLevelId}`)
+  }
+
+  const handleExportData = async () => {
+    try {
+      const exportData = await exportGameHistoryData(user?.id || '', 'json')
+      if (exportData) {
+        const blob = new Blob([JSON.stringify(exportData.data, null, 2)], { type: 'application/json' })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `game-history-level-${parsedLevelId}.json`
+        document.body.appendChild(a)
+        a.click()
+        document.body.removeChild(a)
+        URL.revokeObjectURL(url)
+      }
+    } catch (error) {
+      console.error('Error exporting data:', error)
+    }
   }
 
   if (loading || (isLoading && !error) || !user) {
@@ -116,7 +148,7 @@ export default function StudentPerformancePage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>
-          <h1 className="text-2xl font-bold mt-2">Performance Analytics</h1>
+          <h1 className="text-2xl font-bold mt-2">Game History</h1>
         </div>
 
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
@@ -131,19 +163,11 @@ export default function StudentPerformancePage() {
     )
   }
 
-  // Calculate current score and profit
-  const currentScore = performanceData.length > 0 ? Math.max(...performanceData.map((p: any) => p.score)) : 0
-  const totalProfit = performanceData.length > 0 ? performanceData[performanceData.length - 1]?.cumulativeProfit : 0
+  // Get current level overview
+  const currentLevelOverview = historyOverview.find(overview => overview.levelId === parsedLevelId)
 
   // Check if we have detailed data
   const hasDetailedData = detailedData && detailedData.length > 0
-
-  // Define column widths as percentages for even spacing
-  const colWidths = {
-    day: "16%",
-    col: "16%",
-    // For 6 columns: 16% each (16*6=96%, 4% left for borders/padding)
-  }
 
   return (
     <div className="space-y-6">
@@ -156,11 +180,15 @@ export default function StudentPerformancePage() {
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>
-          <h1 className="text-2xl font-bold mt-2">Performance Analytics</h1>
+          <h1 className="text-2xl font-bold mt-2">Game History</h1>
           <p className="text-gray-500">Track your progress in {levelInfo?.name}</p>
         </div>
 
         <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportData} size="sm">
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
+          </Button>
           <Select value={parsedLevelId.toString()} onValueChange={handleLevelChange}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Level" />
@@ -176,16 +204,50 @@ export default function StudentPerformancePage() {
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-3">
-        <div className="md:col-span-1">
-          <PerformanceSummary
-            levelName={levelInfo?.name}
-            maxScore={levelInfo?.maxScore}
-            currentScore={currentScore}
-            profit={Number(totalProfit)}
+      <Tabs defaultValue="overview" className="w-full">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="progress">Progress</TabsTrigger>
+          <TabsTrigger value="analysis">Analysis</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6">
+          <div className="grid gap-6 md:grid-cols-3">
+            <div className="md:col-span-1">
+              {currentLevelOverview ? (
+                <GameHistorySummary overview={currentLevelOverview} />
+              ) : (
+                <Card>
+                  <CardContent className="p-6">
+                    <div className="text-center text-gray-500">
+                      No game history available for this level.
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+            <div className="md:col-span-2">
+              <SessionList 
+                sessions={gameHistory.slice(0, 5)} 
+                isLoading={isLoading}
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="sessions" className="space-y-6">
+          <SessionList 
+            sessions={gameHistory} 
+            isLoading={isLoading}
           />
-        </div>
-        <div className="md:col-span-2">
+        </TabsContent>
+
+        <TabsContent value="progress" className="space-y-6">
+          <ProgressTimeline data={progressData} levelId={parsedLevelId} />
+        </TabsContent>
+
+        <TabsContent value="analysis" className="space-y-6">
           <Card>
             <CardHeader>
               <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -226,225 +288,8 @@ export default function StudentPerformancePage() {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
-
-      {hasDetailedData && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Performance Data</CardTitle>
-            <CardDescription>Detailed breakdown of your daily game performance</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Tabs defaultValue="inventory" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
-                <TabsTrigger value="inventory">Inventory</TabsTrigger>
-                <TabsTrigger value="financial">Financial</TabsTrigger>
-                <TabsTrigger value="production">Production & Sales</TabsTrigger>
-                <TabsTrigger value="costs">Costs</TabsTrigger>
-              </TabsList>
-
-              {/* Inventory Table */}
-              <TabsContent value="inventory" className="mt-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse table-fixed">
-                    <colgroup>
-                      <col style={{ width: colWidths.day }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                    </colgroup>
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-2 px-4 text-center">Day</th>
-                        <th className="py-2 px-4 text-right font-mono">Patty</th>
-                        <th className="py-2 px-4 text-right font-mono">Bun</th>
-                        <th className="py-2 px-4 text-right font-mono">Cheese</th>
-                        <th className="py-2 px-4 text-right font-mono">Potato</th>
-                        <th className="py-2 px-4 text-right font-mono">Finished Goods</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailedData.map((day: any) => (
-                        <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4 text-center">Day {day.day}</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.pattyInventory}</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.bunInventory}</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.cheeseInventory}</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.potatoInventory}</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.finishedGoodsInventory}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-
-              {/* Financial Table */}
-              <TabsContent value="financial" className="mt-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse table-fixed">
-                    <colgroup>
-                      <col style={{ width: colWidths.day }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                    </colgroup>
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-2 px-4 text-center">Day</th>
-                        <th className="py-2 px-4 text-right font-mono">Cash</th>
-                        <th className="py-2 px-4 text-right font-mono">Revenue</th>
-                        <th className="py-2 px-4 text-right font-mono">Profit</th>
-                        <th className="py-2 px-4 text-right font-mono">Cumulative Profit</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailedData.map((day: any) => (
-                        <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4 text-center">Day {day.day}</td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.cash ?? 0))}
-                          </td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.revenue ?? 0))}
-                          </td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.profit ?? 0))}
-                          </td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.cumulativeProfit ?? 0))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-
-              {/* Production Table */}
-              <TabsContent value="production" className="mt-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse table-fixed">
-                    <colgroup>
-                      <col style={{ width: colWidths.day }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                    </colgroup>
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-2 px-4 text-center">Day</th>
-                        <th className="py-2 px-4 text-right font-mono">Production</th>
-                        <th className="py-2 px-4 text-right font-mono">Sales</th>
-                        <th className="py-2 px-4 text-right font-mono">Efficiency</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailedData.map((day: any) => (
-                        <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4 text-center">Day {day.day}</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.production} units</td>
-                          <td className="py-2 px-4 text-right font-mono">{day.sales} units</td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {day.production > 0 ? `${((day.sales / day.production) * 100).toFixed(1)}%` : "N/A"}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-
-              {/* Costs Table */}
-              <TabsContent value="costs" className="mt-4">
-                <div className="overflow-x-auto">
-                  <table className="w-full border-collapse table-fixed">
-                    <colgroup>
-                      <col style={{ width: colWidths.day }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                      <col style={{ width: colWidths.col }} />
-                    </colgroup>
-                    <thead>
-                      <tr className="border-b">
-                        <th className="py-2 px-4 text-center">Day</th>
-                        <th className="py-2 px-4 text-right font-mono">Purchase Costs</th>
-                        <th className="py-2 px-4 text-right font-mono">Production Costs</th>
-                        <th className="py-2 px-4 text-right font-mono">Holding Costs</th>
-                        <th className="py-2 px-4 text-right font-mono">Total Costs</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {detailedData.map((day: any) => (
-                        <tr key={day.day} className="border-b hover:bg-gray-50">
-                          <td className="py-2 px-4 text-center">Day {day.day}</td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.purchaseCosts ?? 0))}
-                          </td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.productionCosts ?? 0))}
-                          </td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.holdingCosts ?? 0))}
-                          </td>
-                          <td className="py-2 px-4 text-right font-mono">
-                            {new Intl.NumberFormat("sv-SE", {
-                              style: "currency",
-                              currency: "SEK",
-                              minimumFractionDigits: 2,
-                              maximumFractionDigits: 2,
-                            }).format(Number(day.totalCosts ?? 0))}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-        </Card>
-      )}
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }
