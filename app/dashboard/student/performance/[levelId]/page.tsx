@@ -6,10 +6,9 @@ import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, BarChart3, Download } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DailyProgress } from "@/components/performance/daily-progress"
 import { useAuth } from "@/lib/auth-context"
-import { getGameLevels, getCurrentGameSessionData, debugListAllPerformanceRecords, debugListAllDailyData, debugExploreDatabase, getGameSessionData } from "@/lib/actions/performance-actions"
+import { getGameLevels, getCurrentGameSessionData, getGameSessionData } from "@/lib/actions/performance-actions"
 import type { GameHistoryEntry } from "@/types/game"
 
 export default function StudentGameHistoryPage() {
@@ -19,7 +18,6 @@ export default function StudentGameHistoryPage() {
   const levelId = typeof params === "object" && params && "levelId" in params ? (params as any).levelId : "0"
 
   const [gameHistory, setGameHistory] = useState<GameHistoryEntry[]>([])
-  const [levels, setLevels] = useState<any[]>([])
   const [levelInfo, setLevelInfo] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -46,20 +44,14 @@ export default function StudentGameHistoryPage() {
 
       const fetchData = async () => {
         try {
-          console.log("🚀 Starting fetchData for user:", user.id, "levelId:", parsedLevelId)
-
           // Get all levels
           const allLevels = await getGameLevels()
-          console.log("📚 All levels:", allLevels)
-          setLevels(allLevels)
 
           // Get current level info
           const currentLevel = allLevels.find((level: any) => level.id === parsedLevelId)
-          console.log("🎯 Current level:", currentLevel)
 
           if (!currentLevel) {
             // If level doesn't exist, use a fallback approach
-            console.log("⚠️ Level not found, using fallback")
             setLevelInfo({
               id: parsedLevelId,
               name: `Level ${parsedLevelId}`,
@@ -71,47 +63,20 @@ export default function StudentGameHistoryPage() {
           }
 
           // Get current game session data (daily progress)
-          console.log("📊 Calling getCurrentGameSessionData...")
           const currentSessionData = await getCurrentGameSessionData(user.id, parsedLevelId)
-          console.log("📈 Current session data received:", currentSessionData)
-          console.log("📊 Current session data length:", currentSessionData.length)
-
-          // Debug: Also get all performance records for this user
-          console.log("🔍 Debug: Getting all performance records...")
-          const allPerformance = await debugListAllPerformanceRecords(user.id)
-          console.log("📝 All performance records:", allPerformance)
-
-          // Comprehensive database exploration
-          console.log("🕵️ Starting comprehensive database exploration...")
-          const dbExploration = await debugExploreDatabase(user.id)
-          console.log("🗄️ Database exploration results:", dbExploration)
 
           // If no data found in Performance/GameDailyData, try GameSession table
           let finalGameData = currentSessionData
           if (currentSessionData.length === 0) {
-            console.log("🔄 No data in Performance/GameDailyData, trying GameSession table...")
             const gameSessionData = await getGameSessionData(user.id, parsedLevelId)
-            console.log("🎲 GameSession data received:", gameSessionData)
             finalGameData = gameSessionData
-          }
-
-          // If we found performance records but no daily data, investigate further
-          if (allPerformance.length > 0 && finalGameData.length === 0) {
-            console.log("🔍 Found performance records but no daily data, investigating...")
-            const latestPerformance = allPerformance.find(p => p.levelId === parsedLevelId)
-            if (latestPerformance) {
-              console.log("🎯 Latest performance for this level:", latestPerformance)
-              const dailyDataForPerformance = await debugListAllDailyData(latestPerformance.id)
-              console.log("📊 Daily data for this performance:", dailyDataForPerformance)
-            }
           }
 
           // Set the current session data as game history (for display in the table)
           setGameHistory(finalGameData)
-          console.log("✅ Game history state updated with data length:", finalGameData.length)
 
         } catch (error) {
-          console.error("❌ Error fetching game history data:", error)
+          console.error("Error fetching game history data:", error)
           setError("Failed to load game history data. Please try again later.")
         } finally {
           setIsLoading(false)
@@ -121,10 +86,6 @@ export default function StudentGameHistoryPage() {
       fetchData()
     }
   }, [user, loading, router, parsedLevelId, isValidLevelId])
-
-  const handleLevelChange = (newLevelId: string) => {
-    router.push(`/dashboard/student/performance/${newLevelId}`)
-  }
 
   const handleExportData = async () => {
     try {
@@ -208,18 +169,6 @@ export default function StudentGameHistoryPage() {
             <Download className="h-4 w-4 mr-2" />
             Export Data
           </Button>
-          <Select value={parsedLevelId.toString()} onValueChange={handleLevelChange}>
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Select Level" />
-            </SelectTrigger>
-            <SelectContent>
-              {levels.map((level: any) => (
-                <SelectItem key={level.id} value={level.id.toString()}>
-                  {level.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
       </div>
 
