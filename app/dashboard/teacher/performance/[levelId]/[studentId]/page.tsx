@@ -83,7 +83,9 @@ export default function TeacherStudentPerformancePage({
           // Get student performance data
           if (currentStudent) {
             const performance = await getGameSessionData(studentId, levelId)
-            setPerformanceData(performance || [])
+            // Sort by day in descending order (latest day first)
+            const sortedPerformance = (performance || []).sort((a: any, b: any) => (b.day || 0) - (a.day || 0))
+            setPerformanceData(sortedPerformance)
           }
         } catch (error) {
           console.error("Error fetching performance data:", error)

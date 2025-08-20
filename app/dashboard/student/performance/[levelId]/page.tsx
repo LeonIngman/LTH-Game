@@ -73,7 +73,9 @@ export default function StudentGameHistoryPage() {
           }
 
           // Set the current session data as game history (for display in the table)
-          setGameHistory(finalGameData)
+          // Sort by day in descending order (latest day first)
+          const sortedGameData = finalGameData.sort((a, b) => (b.day || 0) - (a.day || 0))
+          setGameHistory(sortedGameData)
 
         } catch (error) {
           console.error("Error fetching game history data:", error)

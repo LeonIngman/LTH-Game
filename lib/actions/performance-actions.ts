@@ -78,7 +78,7 @@ export async function getCurrentGameSessionData(userId: string, levelId: number)
           "cumulativeProfit"
         FROM "GameDailyData" 
         WHERE "performanceId" = ${performanceId}
-        ORDER BY "day" ASC
+        ORDER BY "day" DESC
       `
 
       return dailyData
@@ -111,12 +111,14 @@ export async function getGameSessionData(userId: string, levelId: number) {
 
     // Check if the session has daily data stored in gameState.history
     if (session.gameState?.history && Array.isArray(session.gameState.history)) {
-      return session.gameState.history
+      // Sort by day in descending order
+      return session.gameState.history.sort((a: any, b: any) => (b.day || 0) - (a.day || 0))
     }
 
     // Check if the session has daily data stored at top level
     if (session.dailyData && Array.isArray(session.dailyData)) {
-      return session.dailyData
+      // Sort by day in descending order
+      return session.dailyData.sort((a: any, b: any) => (b.day || 0) - (a.day || 0))
     }
 
     // If no daily data array, try to construct from gameState fields
