@@ -198,83 +198,27 @@ export function useGameCalculations({
     return action.production * (levelConfig.productionCostPerUnit || 4) // Default to 4 if not specified
   }
 
-  /**
-   * Calculate projected holding cost to match the game engine's exact calculation.
-   * 
-   * This function simulates the exact sequence and calculations used by the game engine
-   * to provide accurate preview of holding costs that will be applied when the day is processed.
-   * 
-   * @returns {number} The total projected holding cost in kr
-   * 
-   * ## Purpose:
-   * - Provides real-time preview of holding costs for planning decisions
-   * - Ensures frontend preview matches backend engine calculations exactly
-   * - Calculates holding cost on inventory values after all planned actions are processed
-   * 
-   * ## Engine Sequence Simulation:
-   * 1. Start with current inventory values
-   * 2. Add purchase values using UnitCost (basePrice + shipmentCostPerUnit)
-   * 3. Process production: remove material values using FIFO average cost, add finished goods
-   * 4. Process sales: remove finished goods values using FIFO average cost
-   * 5. Calculate holding cost on resulting inventory values
-   * 
-   * ## Key Features:
-   * - **Transport Cost Inclusion**: Uses calculateUnitCost() which includes shipment costs
-   * - **FIFO Average Costing**: Removes inventory values using weighted average cost
-   * - **Engine Parity**: Matches the exact calculation sequence used in lib/game/engine.ts
-   * - **Real-time Updates**: Recalculates as user changes orders/production
-   * 
-   * ## Formula:
-   * ```
-   * HoldingCost = (0.25 / 365) * ProjectedInventoryValue
-   * 
-   * Where ProjectedInventoryValue = 
-   *   CurrentInventoryValue +
-   *   PurchaseAdditions - 
-   *   ProductionRemovals +
-   *   ProductionAdditions -
-   *   SalesRemovals
-   * ```
-   * 
-   * ## Example Scenario:
-   * ```
-   * Current: 50 patties worth 150kr, 0 finished goods
-   * Planned: Buy 20 patties at 4kr/unit, Produce 30 meals, Sell 0
-   * 
-   * Step 1: Add purchases: 150kr + (20 * 4kr) = 230kr patty value
-   * Step 2: Production removes: 30 patties at avg cost (230kr/70 patties) = 98.57kr
-   * Step 3: Production adds: 30 meals worth (98.57kr materials + 120kr production) = 218.57kr
-   * Step 4: No sales
-   * Result: 131.43kr patty + 218.57kr finished = 350kr total
-   * HoldingCost: (0.25/365) * 350kr = 0.24kr
-   * ```
-   * 
-   * ## Edge Cases Handled:
-   * - **Empty Inventory**: Returns 0 when no inventory exists
-   * - **Insufficient Materials**: Production limited by available materials
-   * - **Zero Division**: Uses Math.max(1, quantity) to prevent division by zero
-   * - **Negative Values**: Uses Math.max(0, value) to prevent negative inventory values
-   * - **No Orders**: Returns holding cost for current inventory when no actions planned
-   * 
-   * ## Dependencies:
-   * - calculateUnitCost() from inventory-management.ts (includes transport costs)
-   * - calculateHoldingCost() from inventory-management.ts (applies 25% annual rate)
-   * - Material consumption constants (PATTIES_PER_MEAL, etc.)
-   * 
-   * ## Maintenance Notes:
-   * - Must stay synchronized with engine calculation logic in lib/game/engine.ts
-   * - Update if material consumption ratios change
-   * - Update if holding cost rate changes from 25% annual
-   * - Test with edge cases when modifying
-   */
-  const getHoldingCost = (): number => {
-    // Start with current inventory values (deep clone to avoid mutation)
-    const projectedInventoryValue = { ...gameState.inventoryValue }
+  // Helper function to process pending supplier orders arriving today
+  const processPendingDeliveries = (projectedInventoryValue: Record<string, number>): void => {
+    if (gameState.pendingSupplierOrders) {
+      for (const pendingOrder of gameState.pendingSupplierOrders) {
+        if (pendingOrder.daysRemaining === 0) {
+          // This order delivers today, add its value to inventory
+          projectedInventoryValue[pendingOrder.materialType] += pendingOrder.totalCost
+        }
+      }
+    }
+  }
 
-    // === STEP 1: ADD PURCHASE VALUES (using UnitCost like engine) ===
+  // Helper function to add immediate purchase values (leadTime = 0 only)
+  const addImmediatePurchases = (projectedInventoryValue: Record<string, number>): void => {
     for (const order of supplierOrders) {
       const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
       if (!supplier) continue
+
+      // Only add purchases that deliver immediately (leadTime = 0)
+      const leadTime = supplier.leadTime || 0
+      if (leadTime > 0) continue // Skip orders with lead time - they won't arrive today
 
       // Add each material purchase using engine's UnitCost calculation
       if (order.pattyPurchase > 0) {
@@ -294,8 +238,10 @@ export function useGameCalculations({
         projectedInventoryValue.potato += order.potatoPurchase * unitCost
       }
     }
+  }
 
-    // === STEP 2: PROCESS PRODUCTION (remove materials, add finished goods) ===
+  // Helper function to process production (remove materials, add finished goods)
+  const processProduction = (projectedInventoryValue: Record<string, number>): void => {
     if (action.production > 0) {
       // Calculate material consumption
       const pattiesUsed = action.production * PATTIES_PER_MEAL
@@ -304,10 +250,22 @@ export function useGameCalculations({
       const potatoesUsed = action.production * POTATOES_PER_MEAL
 
       // Calculate projected inventory quantities after purchases
-      const projectedPattyQuantity = gameState.inventory.patty + supplierOrders.reduce((sum, order) => sum + order.pattyPurchase, 0)
-      const projectedCheeseQuantity = gameState.inventory.cheese + supplierOrders.reduce((sum, order) => sum + order.cheesePurchase, 0)
-      const projectedBunQuantity = gameState.inventory.bun + supplierOrders.reduce((sum, order) => sum + order.bunPurchase, 0)
-      const projectedPotatoQuantity = gameState.inventory.potato + supplierOrders.reduce((sum, order) => sum + order.potatoPurchase, 0)
+      const projectedPattyQuantity = gameState.inventory.patty + supplierOrders.reduce((sum, order) => {
+        const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+        return sum + (supplier && supplier.leadTime === 0 ? order.pattyPurchase : 0)
+      }, 0)
+      const projectedCheeseQuantity = gameState.inventory.cheese + supplierOrders.reduce((sum, order) => {
+        const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+        return sum + (supplier && supplier.leadTime === 0 ? order.cheesePurchase : 0)
+      }, 0)
+      const projectedBunQuantity = gameState.inventory.bun + supplierOrders.reduce((sum, order) => {
+        const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+        return sum + (supplier && supplier.leadTime === 0 ? order.bunPurchase : 0)
+      }, 0)
+      const projectedPotatoQuantity = gameState.inventory.potato + supplierOrders.reduce((sum, order) => {
+        const supplier = levelConfig.suppliers.find((s) => s.id === order.supplierId)
+        return sum + (supplier && supplier.leadTime === 0 ? order.potatoPurchase : 0)
+      }, 0)
 
       // Calculate average cost per unit (FIFO like engine)
       const pattyAvgCost = projectedInventoryValue.patty / Math.max(1, projectedPattyQuantity)
@@ -325,8 +283,10 @@ export function useGameCalculations({
       const productionCost = action.production * (levelConfig.productionCostPerUnit || 4)
       projectedInventoryValue.finishedGoods += productionCost
     }
+  }
 
-    // === STEP 3: PROCESS SALES (remove finished goods values) ===
+  // Helper function to process sales (remove finished goods values)
+  const processSales = (projectedInventoryValue: Record<string, number>): void => {
     if (action.customerOrders) {
       for (const customerOrder of action.customerOrders) {
         if (customerOrder.quantity > 0) {
@@ -342,8 +302,100 @@ export function useGameCalculations({
         }
       }
     }
+  }
 
-    // === STEP 4: CALCULATE HOLDING COST (same as engine) ===
+  /**
+   * Calculate projected holding cost to match the game engine's exact calculation.
+   * 
+   * This function simulates the exact sequence and calculations used by the game engine
+   * to provide accurate preview of holding costs that will be applied when the day is processed.
+   * 
+   * @returns {number} The total projected holding cost in kr
+   * 
+   * ## Purpose:
+   * - Provides real-time preview of holding costs for planning decisions
+   * - Ensures frontend preview matches backend engine calculations exactly
+   * - Calculates holding cost on inventory values after all planned actions are processed
+   * - **LEAD TIME AWARE**: Only includes deliveries that arrive today, not future pending orders
+   * 
+   * ## Engine Sequence Simulation:
+   * 1. Start with current inventory values
+   * 2. Process pending supplier orders that arrive today (daysRemaining = 0)
+   * 3. Add purchase values for orders with 0 lead time only (immediate delivery)
+   * 4. Process production: remove material values using FIFO average cost, add finished goods
+   * 5. Process sales: remove finished goods values using FIFO average cost
+   * 6. Calculate holding cost on resulting inventory values
+   * 
+   * ## Key Features:
+   * - **Lead Time Accuracy**: Orders with lead time > 0 don't affect today's inventory
+   * - **Transport Cost Inclusion**: Uses calculateUnitCost() which includes shipment costs
+   * - **FIFO Average Costing**: Removes inventory values using weighted average cost
+   * - **Engine Parity**: Matches the exact calculation sequence used in lib/game/engine.ts
+   * - **Real-time Updates**: Recalculates as user changes orders/production
+   * 
+   * ## Formula:
+   * ```
+   * HoldingCost = (0.25 / 365) * ProjectedInventoryValue
+   * 
+   * Where ProjectedInventoryValue = 
+   *   CurrentInventoryValue +
+   *   PendingDeliveriesToday +
+   *   ImmediatePurchases - 
+   *   ProductionRemovals +
+   *   ProductionAdditions -
+   *   SalesRemovals
+   * ```
+   * 
+   * ## Example Scenario:
+   * ```
+   * Current: 50 patties worth 150kr, 0 finished goods
+   * Planned: Buy 20 patties from 3-day supplier at 4kr/unit, Produce 30 meals, Sell 0
+   * 
+   * Step 1: No pending deliveries today
+   * Step 2: Skip purchase (3-day lead time, won't arrive today)
+   * Step 3: Production removes: 30 patties at avg cost (150kr/50 patties) = 90kr
+   * Step 4: Production adds: 30 meals worth (90kr materials + 120kr production) = 210kr
+   * Step 5: No sales
+   * Result: 60kr patty + 210kr finished = 270kr total
+   * HoldingCost: (0.25/365) * 270kr = 0.18kr
+   * ```
+   * 
+   * ## Edge Cases Handled:
+   * - **Empty Inventory**: Returns 0 when no inventory exists
+   * - **Insufficient Materials**: Production limited by available materials
+   * - **Zero Division**: Uses Math.max(1, quantity) to prevent division by zero
+   * - **Negative Values**: Uses Math.max(0, value) to prevent negative inventory values
+   * - **No Orders**: Returns holding cost for current inventory when no actions planned
+   * - **Lead Times**: Only immediate deliveries (leadTime = 0) affect today's holding cost
+   * 
+   * ## Dependencies:
+   * - calculateUnitCost() from inventory-management.ts (includes transport costs)
+   * - calculateHoldingCost() from inventory-management.ts (applies 25% annual rate)
+   * - Material consumption constants (PATTIES_PER_MEAL, etc.)
+   * 
+   * ## Maintenance Notes:
+   * - Must stay synchronized with engine calculation logic in lib/game/engine.ts
+   * - Update if material consumption ratios change
+   * - Update if holding cost rate changes from 25% annual
+   * - Test with edge cases when modifying
+   */
+  const getHoldingCost = (): number => {
+    // Start with current inventory values (deep clone to avoid mutation)
+    const projectedInventoryValue = { ...gameState.inventoryValue }
+
+    // === STEP 1: PROCESS PENDING SUPPLIER ORDERS ARRIVING TODAY ===
+    processPendingDeliveries(projectedInventoryValue)
+
+    // === STEP 2: ADD PURCHASE VALUES (ONLY for immediate delivery, leadTime = 0) ===
+    addImmediatePurchases(projectedInventoryValue)
+
+    // === STEP 3: PROCESS PRODUCTION (remove materials, add finished goods) ===
+    processProduction(projectedInventoryValue)
+
+    // === STEP 4: PROCESS SALES (remove finished goods values) ===
+    processSales(projectedInventoryValue)
+
+    // === STEP 5: CALCULATE HOLDING COST (same as engine) ===
     const projectedGameState = {
       ...gameState,
       inventoryValue: projectedInventoryValue
