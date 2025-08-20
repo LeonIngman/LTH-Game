@@ -1,17 +1,16 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { use } from "react"
 import { ArrowLeft, BarChart3 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import { PerformanceCharts } from "@/components/performance/performance-charts"
+import { DailyProgress } from "@/components/performance/daily-progress"
 import { PerformanceSummary } from "@/components/performance/performance-summary"
 import { StudentSelector } from "@/components/performance/student-selector"
 import { useAuth } from "@/lib/auth-context"
-import { getAllStudentsPerformance, getGameLevels, getUserPerformance } from "@/lib/actions/performance-actions"
+import { getAllStudentsPerformance, getGameLevels, getGameSessionData } from "@/lib/actions/performance-actions"
 
 export default function TeacherStudentPerformancePage({
   params,
@@ -34,37 +33,9 @@ export default function TeacherStudentPerformancePage({
   // Parse the level ID and validate it
   const levelId = Number.parseInt(levelIdParam, 10)
 
-  // Validate levelId and studentId
-  if (isNaN(levelId) || levelId < 0 || !studentId?.trim()) {
-    return (
-      <div className="space-y-6">
-        <div>
-          <Link
-            href="/dashboard/teacher"
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Dashboard
-          </Link>
-          <h1 className="text-2xl font-bold mt-2">Student Performance Analytics</h1>
-        </div>
-
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
-          <BarChart3 className="h-10 w-10 text-amber-400" />
-          <h3 className="mt-4 text-lg font-semibold text-amber-600">Invalid Parameters</h3>
-          <p className="mt-2 text-sm text-gray-500">
-            Level ID "{levelIdParam}" or Student ID "{studentId}" is not valid.
-          </p>
-          <Button onClick={() => router.push("/dashboard/teacher")} className="mt-4">
-            Return to Dashboard
-          </Button>
-        </div>
-      </div>
-    )
-  }
-
   // Check if levelId is valid (0, 1, 2, or 3)
   const isValidLevelId = !isNaN(levelId) && levelId >= 0 && levelId <= 3
+  const hasValidParams = isValidLevelId && studentId?.trim()
 
   useEffect(() => {
     if (!loading) {
@@ -76,9 +47,9 @@ export default function TeacherStudentPerformancePage({
         return
       }
 
-      // If invalid level ID, show error
-      if (!isValidLevelId) {
-        setError("Invalid level ID. Please select a valid level.")
+      // If invalid level ID or student ID, show error
+      if (!hasValidParams) {
+        setError("Invalid level ID or student ID. Please select a valid level and student.")
         setIsLoading(false)
         return
       }
@@ -111,7 +82,7 @@ export default function TeacherStudentPerformancePage({
 
           // Get student performance data
           if (currentStudent) {
-            const performance = await getUserPerformance(studentId, levelId)
+            const performance = await getGameSessionData(studentId, levelId)
             setPerformanceData(performance || [])
           }
         } catch (error) {
@@ -124,14 +95,20 @@ export default function TeacherStudentPerformancePage({
 
       fetchData()
     }
-  }, [user, loading, router, levelId, studentId, isValidLevelId])
+  }, [user, loading, router, levelId, studentId, hasValidParams])
+
+  // Calculate current score and profit from GameSession history data
+  const currentScore = performanceData.length > 0 ?
+    (performanceData[performanceData.length - 1]?.score || 0) : 0
+  const totalProfit = performanceData.length > 0 ?
+    (performanceData[performanceData.length - 1]?.cumulativeProfit || 0) : 0
 
   if (loading || (isLoading && !error) || !user) {
     return <div className="flex min-h-screen items-center justify-center">Loading...</div>
   }
 
-  // If there's an error or invalid level ID, show error message
-  if (error || !isValidLevelId) {
+  // Validate levelId and studentId
+  if (!hasValidParams) {
     return (
       <div className="space-y-6">
         <div>
@@ -147,8 +124,10 @@ export default function TeacherStudentPerformancePage({
 
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
           <BarChart3 className="h-10 w-10 text-amber-400" />
-          <h3 className="mt-4 text-lg font-semibold text-amber-600">{error || "Invalid level selected"}</h3>
-          <p className="mt-2 text-sm text-gray-500">Please return to the dashboard and select a valid level.</p>
+          <h3 className="mt-4 text-lg font-semibold text-amber-600">Invalid Parameters</h3>
+          <p className="mt-2 text-sm text-gray-500">
+            Level ID "{levelIdParam}" or Student ID "{studentId}" is not valid.
+          </p>
           <Button onClick={() => router.push("/dashboard/teacher")} className="mt-4">
             Return to Dashboard
           </Button>
@@ -157,9 +136,32 @@ export default function TeacherStudentPerformancePage({
     )
   }
 
-  // Calculate current score and profit
-  const currentScore = performanceData.length > 0 ? Math.max(...performanceData.map((p: any) => p.score)) : 0
-  const totalProfit = performanceData.length > 0 ? performanceData[performanceData.length - 1]?.cumulativeProfit : 0
+  // Handle error state  
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Link
+            href="/dashboard/teacher"
+            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Dashboard
+          </Link>
+          <h1 className="text-2xl font-bold mt-2">Student Performance Analytics</h1>
+        </div>
+
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
+          <BarChart3 className="h-10 w-10 text-amber-400" />
+          <h3 className="mt-4 text-lg font-semibold text-amber-600">{error}</h3>
+          <p className="mt-2 text-sm text-gray-500">Please return to the dashboard and try again.</p>
+          <Button onClick={() => router.push("/dashboard/teacher")} className="mt-4">
+            Return to Dashboard
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
@@ -191,7 +193,7 @@ export default function TeacherStudentPerformancePage({
             />
           </div>
           <div className="md:col-span-2">
-            <PerformanceCharts performanceData={performanceData} levelName={levelInfo?.name} />
+            <DailyProgress dailyData={performanceData} isLoading={false} />
           </div>
         </div>
       ) : (

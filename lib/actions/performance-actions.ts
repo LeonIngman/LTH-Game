@@ -124,7 +124,7 @@ export async function getGameSessionData(userId: string, levelId: number) {
     console.log("✅ Found game session:", session)
 
     // Check if the session has daily data stored in gameState.history
-    if (session.gameState && session.gameState.history && Array.isArray(session.gameState.history)) {
+    if (session.gameState?.history && Array.isArray(session.gameState.history)) {
       console.log("📊 History data found in GameSession.gameState.history:", session.gameState.history)
       return session.gameState.history
     }
@@ -136,7 +136,7 @@ export async function getGameSessionData(userId: string, levelId: number) {
     }
 
     // If no daily data array, try to construct from gameState fields
-    if (session.gameState && session.gameState.day && session.gameState.day > 0) {
+    if (session.gameState?.day && session.gameState.day > 0) {
       console.log("🔧 Constructing daily data from GameSession.gameState fields")
       const dailyData = [{
         day: session.gameState.day,
@@ -268,5 +268,63 @@ export async function debugExploreDatabase(userId: string) {
   } catch (error) {
     console.error("❌ Error exploring database:", error)
     return null
+  }
+}
+
+// Function to get all students performance for a specific level (for teacher view)
+export async function getAllStudentsPerformance(levelId: number) {
+  try {
+    console.log("👥 Getting all students performance for level:", levelId)
+
+    // Get all users who are students and have GameSession data for this level
+    const studentsPerformance = await sql`
+      SELECT 
+        u.id AS "userId",
+        u.username,
+        u.email,
+        gs."levelId",
+        gs."gameState",
+        gs."updatedAt",
+        gs."isCompleted"
+      FROM "User" u
+      LEFT JOIN "GameSession" gs ON u.id = gs."userId" AND gs."levelId" = ${levelId}
+      WHERE u.role = 'student'
+      ORDER BY u.username ASC
+    `
+
+    console.log("👥 Students performance raw data:", studentsPerformance)
+
+    // Process the data to extract performance metrics
+    const processedData = studentsPerformance.map((student: any) => {
+      let maxScore = 0
+      let maxProfit = 0
+      let currentDay = 0
+      let hasPlayedLevel = false
+
+      if (student.gameState && student.levelId === levelId) {
+        hasPlayedLevel = true
+        maxScore = student.gameState.score || 0
+        maxProfit = student.gameState.cumulativeProfit || 0
+        currentDay = student.gameState.day || 0
+      }
+
+      return {
+        userId: student.userId,
+        username: student.username,
+        email: student.email,
+        maxScore,
+        maxProfit,
+        currentDay,
+        hasPlayedLevel,
+        lastPlayed: student.updatedAt,
+        isCompleted: student.isCompleted || false
+      }
+    })
+
+    console.log("👥 Processed students performance:", processedData)
+    return processedData
+  } catch (error) {
+    console.error("❌ Error getting all students performance:", error)
+    return []
   }
 }
