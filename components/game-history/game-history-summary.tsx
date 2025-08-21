@@ -13,7 +13,7 @@ interface GameHistorySummaryProps {
 
 export function GameHistorySummary({ overview, username, userId }: GameHistorySummaryProps) {
   const scorePercentage = overview.bestScore ? Math.min(Math.round((overview.bestScore / 1000) * 100), 100) : 0
-  
+
   const getTrendIcon = () => {
     switch (overview.progressTrend) {
       case 'improving':

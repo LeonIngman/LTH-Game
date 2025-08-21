@@ -4,6 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 
 import "./globals.css"
 import { AuthProvider } from "@/lib/auth-context"
+import { LanguageProvider } from "@/lib/i18n"
 
 // Use the Inter font with only the latin subset to reduce loading issues
 const inter = Inter({
@@ -26,7 +27,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <AuthProvider>{children}</AuthProvider>
+        <LanguageProvider>
+          <AuthProvider>{children}</AuthProvider>
+        </LanguageProvider>
         <Toaster />
       </body>
     </html>

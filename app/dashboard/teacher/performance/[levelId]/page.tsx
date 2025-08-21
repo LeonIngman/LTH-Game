@@ -177,8 +177,8 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
                   <td className="py-2 font-medium">{formatUsernameAsGroup(student.username, student.userId)}</td>
                   <td className="py-2">
                     <span className={`px-2 py-1 rounded-full text-xs ${student.hasPlayedLevel
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-gray-100 text-gray-600'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-600'
                       }`}>
                       {student.hasPlayedLevel ? 'Played' : 'Not Started'}
                     </span>

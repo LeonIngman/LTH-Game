@@ -15,7 +15,7 @@ export function formatUsernameAsGroup(username: string, userId?: string): string
     const groupNumber = username.replace("Group-", "")
     return `Group ${groupNumber}`
   }
-  
+
   // If we have a userId, try to extract a number from it
   if (userId) {
     const regex = /\d+/
@@ -24,7 +24,7 @@ export function formatUsernameAsGroup(username: string, userId?: string): string
       return `Group ${match[0]}`
     }
   }
-  
+
   // Fallback: generate a simple hash-based number from username
   let hash = 0
   for (let i = 0; i < username.length; i++) {
@@ -33,6 +33,6 @@ export function formatUsernameAsGroup(username: string, userId?: string): string
     hash = hash & hash // Convert to 32-bit integer
   }
   const groupNumber = Math.abs(hash % 999) + 1 // Ensure positive number 1-999
-  
+
   return `Group ${groupNumber}`
 }
