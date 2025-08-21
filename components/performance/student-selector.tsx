@@ -9,6 +9,7 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { cn, formatUsernameAsGroup } from "@/lib/utils"
 import { getAllStudents } from "@/lib/actions/user-actions"
+import { useTranslation } from "@/lib/i18n"
 
 interface StudentSelectorProps {
   initialStudents: {
@@ -21,10 +22,10 @@ interface StudentSelectorProps {
   levelId: number
 }
 
-export function StudentSelector({ initialStudents, selectedStudentId, levelId }: StudentSelectorProps) {
+export function StudentSelector({ initialStudents, selectedStudentId, levelId }: Readonly<StudentSelectorProps>) {
+  const { translations } = useTranslation()
   const [open, setOpen] = useState(false)
   const [students, setStudents] = useState(initialStudents)
-  const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
 
   const selectedStudent = students.find((student) => student.userId === selectedStudentId)
@@ -36,7 +37,6 @@ export function StudentSelector({ initialStudents, selectedStudentId, levelId }:
 
   // When setting students, map to correct shape:
   const fetchData = async () => {
-    setIsLoading(true)
     try {
       const allStudents = await getAllStudents()
       setStudents(
@@ -48,9 +48,7 @@ export function StudentSelector({ initialStudents, selectedStudentId, levelId }:
         }))
       )
     } catch (error) {
-      // handle error
-    } finally {
-      setIsLoading(false)
+      console.error('Failed to fetch students:', error)
     }
   }
 
@@ -62,15 +60,15 @@ export function StudentSelector({ initialStudents, selectedStudentId, levelId }:
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button variant="outline" role="combobox" aria-expanded={open} className="w-full justify-between md:w-[250px]">
-          {selectedStudent ? formatUsernameAsGroup(selectedStudent.username, selectedStudent.userId) : "Select group..."}
+          {selectedStudent ? formatUsernameAsGroup(selectedStudent.username, selectedStudent.userId) : translations.performance.selectGroup}
           <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0 md:w-[250px]">
         <Command>
-          <CommandInput placeholder="Search group..." />
+          <CommandInput placeholder={translations.performance.searchGroup} />
           <CommandList>
-            <CommandEmpty>No group found.</CommandEmpty>
+            <CommandEmpty>{translations.performance.noGroupFound}</CommandEmpty>
             <CommandGroup>
               {students.map((student) => (
                 <CommandItem

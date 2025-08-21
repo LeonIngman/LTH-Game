@@ -8,9 +8,11 @@ import { LoadingScreen } from "@/components/ui/loading-screen"
 import { getAllStudents } from "@/lib/actions/user-actions"
 import { getAllStudentsPerformance } from "@/lib/actions/performance-actions"
 import { formatUsernameAsGroup } from "@/lib/utils"
+import { useTranslation } from "@/lib/i18n"
 
 export default function TeacherPerformancePage({ params }: { params: Promise<{ levelId: string }> }) {
   const { user, loading } = useAuth()
+  const { translations } = useTranslation()
   const router = useRouter()
   const [students, setStudents] = useState<any[]>([])
   const [performanceData, setPerformanceData] = useState<any[]>([])
@@ -62,7 +64,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
   }, [user, loading, router, levelId])
 
   if (loading || isLoading || !user) {
-    return <LoadingScreen message="Loading performance data..." description="Analyzing student progress for this level" />
+    return <LoadingScreen message={translations.common.loading} description={translations.performance.analyzingProgress} />
   }
 
   // Calculate aggregate statistics
@@ -85,28 +87,28 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Level {levelId} Overview</h1>
-        <p className="text-gray-500">Aggregate statistics for all groups in Level {levelId}.</p>
+        <h1 className="text-2xl font-bold">{translations.performance.level} {levelId} {translations.performance.levelOverview}</h1>
+        <p className="text-gray-500">{translations.performance.aggregateStatistics} {levelId}.</p>
       </div>
 
       {/* Overall Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-gray-500">Total Groups</h3>
+          <h3 className="text-sm font-medium text-gray-500">{translations.performance.totalGroups}</h3>
           <p className="text-2xl font-bold">{totalStudents}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-gray-500">Groups Who Played</h3>
+          <h3 className="text-sm font-medium text-gray-500">{translations.performance.groupsWhoPlayed}</h3>
           <p className="text-2xl font-bold">{studentsWhoPlayed}</p>
-          <p className="text-sm text-gray-400">{totalStudents > 0 ? Math.round((studentsWhoPlayed / totalStudents) * 100) : 0}% participation</p>
+          <p className="text-sm text-gray-400">{totalStudents > 0 ? Math.round((studentsWhoPlayed / totalStudents) * 100) : 0}% {translations.performance.participation}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-gray-500">Completed Level</h3>
+          <h3 className="text-sm font-medium text-gray-500">{translations.performance.completedLevel}</h3>
           <p className="text-2xl font-bold">{completedStudents}</p>
-          <p className="text-sm text-gray-400">{studentsWhoPlayed > 0 ? Math.round((completedStudents / studentsWhoPlayed) * 100) : 0}% completion rate</p>
+          <p className="text-sm text-gray-400">{studentsWhoPlayed > 0 ? Math.round((completedStudents / studentsWhoPlayed) * 100) : 0}% {translations.performance.completionRate}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border">
-          <h3 className="text-sm font-medium text-gray-500">Average Score</h3>
+          <h3 className="text-sm font-medium text-gray-500">{translations.performance.averageScore}</h3>
           <p className="text-2xl font-bold">{Math.round(avgScore)}</p>
         </div>
       </div>
@@ -114,10 +116,10 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
       {/* Performance Statistics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-4">Profit Statistics</h3>
+          <h3 className="text-lg font-semibold mb-4">{translations.performance.profitStatistics}</h3>
           <div className="space-y-3">
             <div>
-              <span className="text-sm font-medium text-gray-500">Average Profit</span>
+              <span className="text-sm font-medium text-gray-500">{translations.performance.averageProfit}</span>
               <p className="text-xl font-bold">
                 {new Intl.NumberFormat("sv-SE", {
                   style: "currency",
@@ -128,7 +130,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
               </p>
             </div>
             <div>
-              <span className="text-sm font-medium text-gray-500">Best Performance</span>
+              <span className="text-sm font-medium text-gray-500">{translations.performance.bestPerformance}</span>
               <p className="text-xl font-bold">
                 {maxProfitStudent.maxProfit > -Infinity
                   ? new Intl.NumberFormat("sv-SE", {
@@ -139,17 +141,17 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
                   }).format(maxProfitStudent.maxProfit)
                   : "—"}
               </p>
-              <p className="text-sm text-gray-400">by {formatUsernameAsGroup(maxProfitStudent.username, maxProfitStudent.userId)}</p>
+              <p className="text-sm text-gray-400">{translations.performance.by} {formatUsernameAsGroup(maxProfitStudent.username, maxProfitStudent.userId)}</p>
             </div>
           </div>
         </div>
 
         <div className="bg-white p-6 rounded-lg border">
-          <h3 className="text-lg font-semibold mb-4">Group Access</h3>
+          <h3 className="text-lg font-semibold mb-4">{translations.performance.groupAccess}</h3>
           <div className="space-y-3">
             <div>
-              <span className="text-sm font-medium text-gray-500">View Individual Performance</span>
-              <p className="text-sm text-gray-600 mb-3">Select a group to view detailed analytics</p>
+              <span className="text-sm font-medium text-gray-500">{translations.performance.viewIndividualPerformance}</span>
+              <p className="text-sm text-gray-600 mb-3">{translations.performance.selectGroupToView}</p>
               <StudentSelector initialStudents={students} selectedStudentId={""} levelId={levelId} />
             </div>
           </div>
@@ -158,17 +160,17 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
 
       {/* Group List */}
       <div className="bg-white p-6 rounded-lg border">
-        <h3 className="text-lg font-semibold mb-4">Group Performance List</h3>
+        <h3 className="text-lg font-semibold mb-4">{translations.performance.groupPerformanceList}</h3>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b">
-                <th className="text-left py-2">Group</th>
-                <th className="text-left py-2">Status</th>
-                <th className="text-right py-2">Score</th>
-                <th className="text-right py-2">Profit</th>
-                <th className="text-center py-2">Days Played</th>
-                <th className="text-center py-2">Completed</th>
+                <th className="text-left py-2">{translations.performance.group}</th>
+                <th className="text-left py-2">{translations.performance.status}</th>
+                <th className="text-right py-2">{translations.performance.score}</th>
+                <th className="text-right py-2">{translations.performance.profit}</th>
+                <th className="text-center py-2">{translations.performance.daysPlayed}</th>
+                <th className="text-center py-2">{translations.performance.completed}</th>
               </tr>
             </thead>
             <tbody>
@@ -180,7 +182,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
                       ? 'bg-green-100 text-green-800'
                       : 'bg-gray-100 text-gray-600'
                       }`}>
-                      {student.hasPlayedLevel ? 'Played' : 'Not Started'}
+                      {student.hasPlayedLevel ? translations.performance.played : translations.performance.notStarted}
                     </span>
                   </td>
                   <td className="py-2 text-right">{student.hasPlayedLevel ? student.maxScore : '—'}</td>

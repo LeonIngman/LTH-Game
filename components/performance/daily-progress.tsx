@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTranslation } from "@/lib/i18n"
 
 interface DailyProgressProps {
     readonly dailyData: any[]
@@ -6,6 +7,8 @@ interface DailyProgressProps {
 }
 
 export function DailyProgress({ dailyData, isLoading = false }: DailyProgressProps) {
+    const { translations } = useTranslation()
+    
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat("sv-SE", {
             style: "currency",
@@ -19,10 +22,10 @@ export function DailyProgress({ dailyData, isLoading = false }: DailyProgressPro
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Daily Progress</CardTitle>
+                    <CardTitle>{translations.performance.dailyProgress}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">Loading current game progress...</p>
+                    <p className="text-muted-foreground">{translations.common.loading}</p>
                 </CardContent>
             </Card>
         )
@@ -32,10 +35,10 @@ export function DailyProgress({ dailyData, isLoading = false }: DailyProgressPro
         return (
             <Card>
                 <CardHeader>
-                    <CardTitle>Daily Progress</CardTitle>
+                    <CardTitle>{translations.performance.dailyProgress}</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-muted-foreground">No game progress yet. Start playing to see your daily performance.</p>
+                    <p className="text-muted-foreground">{translations.performance.noProgressYet}</p>
                 </CardContent>
             </Card>
         )
@@ -44,22 +47,22 @@ export function DailyProgress({ dailyData, isLoading = false }: DailyProgressPro
     return (
         <Card>
             <CardHeader>
-                <CardTitle>Daily Progress</CardTitle>
-                <p className="text-sm text-muted-foreground">Track your daily performance</p>
+                <CardTitle>{translations.performance.dailyProgress}</CardTitle>
+                <p className="text-sm text-muted-foreground">{translations.performance.trackDailyPerformance}</p>
             </CardHeader>
             <CardContent>
                 <div className="overflow-x-auto">
                     <table className="w-full border-collapse">
                         <thead>
                             <tr className="border-b">
-                                <th className="text-left p-2">Day</th>
-                                <th className="text-right p-2">Cash</th>
-                                <th className="text-right p-2">Revenue</th>
-                                <th className="text-right p-2">Costs</th>
-                                <th className="text-right p-2">Profit</th>
-                                <th className="text-right p-2">Cum. Profit</th>
-                                <th className="text-right p-2">Production</th>
-                                <th className="text-right p-2">Sales</th>
+                                <th className="text-left p-2">{translations.game.day}</th>
+                                <th className="text-right p-2">{translations.game.cash}</th>
+                                <th className="text-right p-2">{translations.game.revenue}</th>
+                                <th className="text-right p-2">{translations.game.costs}</th>
+                                <th className="text-right p-2">{translations.performance.profit}</th>
+                                <th className="text-right p-2">{translations.game.cumulativeProfit}</th>
+                                <th className="text-right p-2">{translations.game.production}</th>
+                                <th className="text-right p-2">{translations.game.sales}</th>
                             </tr>
                         </thead>
                         <tbody>

@@ -172,8 +172,8 @@ export const translations: Translations = {
       sv: 'har inte slutfört något spel för denna nivå än.'
     },
     performanceSummary: {
-      en: "'s Performance Summary",
-      sv: 's Prestationssammanfattning'
+      en: 'Performance Summary',
+      sv: 'Prestationssammanfattning'
     },
     yourPerformanceSummary: {
       en: 'Your Performance Summary',
@@ -186,6 +186,22 @@ export const translations: Translations = {
     completion: {
       en: 'Completion',
       sv: 'Slutförande'
+    },
+    dailyProgress: {
+      en: 'Daily Progress',
+      sv: 'Daglig Framsteg'
+    },
+    noProgressYet: {
+      en: 'No game progress yet. Start playing to see your daily performance.',
+      sv: 'Ingen spelframsteg än. Börja spela för att se din dagliga prestation.'
+    },
+    trackDailyPerformance: {
+      en: 'Track your daily performance',
+      sv: 'Spåra din dagliga prestation'
+    },
+    analyzingProgress: {
+      en: 'Analyzing student progress for this level',
+      sv: 'Analyserar studentframsteg för denna nivå'
     }
   },
   

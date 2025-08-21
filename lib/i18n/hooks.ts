@@ -9,10 +9,30 @@ export function useTranslation() {
     return key[language]
   }
 
-  // Helper function to get nested translation keys
-  const getTranslations = () => translations
+  // Helper to get translated values from the translations object
+  const getTranslatedObject = (obj: any): any => {
+    if (!obj) return obj
+    
+    const result: any = {}
+    for (const [key, value] of Object.entries(obj)) {
+      if (value && typeof value === 'object' && 'en' in value && 'sv' in value) {
+        // This is a translation key
+        result[key] = (value as TranslationKey)[language]
+      } else if (value && typeof value === 'object') {
+        // This is a nested object, recurse
+        result[key] = getTranslatedObject(value)
+      } else {
+        result[key] = value
+      }
+    }
+    return result
+  }
 
-  return { t, translations: getTranslations(), language }
+  return { 
+    t, 
+    translations: getTranslatedObject(translations), 
+    language 
+  }
 }
 
 // Utility function for getting translations without hook (for server-side or non-component usage)

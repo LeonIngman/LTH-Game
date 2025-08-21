@@ -60,6 +60,10 @@ export interface Translations {
     yourPerformanceSummary: TranslationKey
     totalProfit: TranslationKey
     completion: TranslationKey
+    dailyProgress: TranslationKey
+    noProgressYet: TranslationKey
+    trackDailyPerformance: TranslationKey
+    analyzingProgress: TranslationKey
   }
   
   // Game
