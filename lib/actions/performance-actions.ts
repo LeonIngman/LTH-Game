@@ -159,8 +159,7 @@ export async function getAllStudentsPerformance(levelId: number) {
         u.email,
         gs."levelId",
         gs."gameState",
-        gs."updatedAt",
-        gs."isCompleted"
+        gs."updatedAt"
       FROM "User" u
       LEFT JOIN "GameSession" gs ON u.id = gs."userId" AND gs."levelId" = ${levelId}
       WHERE u.role = 'student'
@@ -181,6 +180,11 @@ export async function getAllStudentsPerformance(levelId: number) {
         currentDay = student.gameState.day || 0
       }
 
+      // Determine if level is completed based on game state
+      const isCompleted = student.gameState?.isCompleted ||
+        (student.gameState?.day >= 30) ||
+        false
+
       return {
         userId: student.userId,
         username: student.username,
@@ -190,7 +194,7 @@ export async function getAllStudentsPerformance(levelId: number) {
         currentDay,
         hasPlayedLevel,
         lastPlayed: student.updatedAt,
-        isCompleted: student.isCompleted || false
+        isCompleted
       }
     })
 

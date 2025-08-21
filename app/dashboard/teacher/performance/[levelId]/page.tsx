@@ -23,8 +23,10 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
+      
       try {
         const allStudents = await getAllStudents()
+        
         setStudents(
           allStudents.map((student: any) => ({
             userId: student.id,
@@ -33,7 +35,9 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
             maxProfit: student.maxProfit ?? 0,
           }))
         )
+
         const perfData = await getAllStudentsPerformance(levelId)
+        
         setPerformanceData(perfData)
       } catch (error) {
         console.error("Error fetching performance data:", error)
@@ -74,8 +78,8 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
       <PerformanceSummary
         levelName={selectedPerformance.levelName ?? `Level ${levelId}`}
         maxScore={selectedPerformance.maxScore ?? 0}
-        currentScore={selectedPerformance.score ?? 0}
-        profit={selectedPerformance.profit ?? 0}
+        currentScore={selectedPerformance.maxScore ?? 0}
+        profit={selectedPerformance.maxProfit ?? 0}
         username={selectedPerformance.username}
       />
     </div>
