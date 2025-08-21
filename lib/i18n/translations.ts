@@ -21,31 +21,137 @@ export const translations: Translations = {
         }
     },
 
-    // Dashboard
-    dashboard: {
-        welcome: {
-            en: 'Welcome',
-            sv: 'Välkommen'
-        },
-        student: {
-            en: 'Student',
-            sv: 'Student'
-        },
-        teacher: {
-            en: 'Teacher',
-            sv: 'Lärare'
-        },
-        groups: {
-            en: 'Groups',
-            sv: 'Grupper'
-        },
-        students: {
-            en: 'Students',
-            sv: 'Studenter'
-        }
+  // Dashboard
+  dashboard: {
+    welcome: {
+      en: 'Welcome',
+      sv: 'Välkommen'
     },
-
-    // Performance
+    student: {
+      en: 'Student',
+      sv: 'Student'
+    },
+    teacher: {
+      en: 'Teacher',
+      sv: 'Lärare'
+    },
+    groups: {
+      en: 'Groups',
+      sv: 'Grupper'
+    },
+    students: {
+      en: 'Students',
+      sv: 'Studenter'
+    },
+    studentDashboard: {
+      en: 'Student Dashboard',
+      sv: 'Student Dashboard'
+    },
+    welcomeBack: {
+      en: 'Welcome back',
+      sv: 'Välkommen tillbaka'
+    },
+    continueJourney: {
+      en: 'Continue your logistics journey.',
+      sv: 'Fortsätt din logistikresa.'
+    },
+    gameLevels: {
+      en: 'Game Levels',
+      sv: 'Spelnivåer'
+    },
+    progressLevels: {
+      en: 'Progress through all levels to master logistics concepts',
+      sv: 'Gå igenom alla nivåer för att bemästra logistikbegrepp'
+    },
+    leaderboard: {
+      en: 'Leaderboard',
+      sv: 'Topplista'
+    },
+    studentsRankedProfit: {
+      en: 'Students ranked by profit across all levels',
+      sv: 'Studenter rankade efter vinst över alla nivåer'
+    },
+    studentsRankedLevel: {
+      en: 'Students ranked by profit in Level',
+      sv: 'Studenter rankade efter vinst i Nivå'
+    },
+    allLevels: {
+      en: 'All Levels',
+      sv: 'Alla Nivåer'
+    },
+    level: {
+      en: 'Level',
+      sv: 'Nivå'
+    },
+    rank: {
+      en: 'Rank',
+      sv: 'Plats'
+    },
+    user: {
+      en: 'User',
+      sv: 'Användare'
+    },
+    day: {
+      en: 'Day',
+      sv: 'Dag'
+    },
+    result: {
+      en: 'Result',
+      sv: 'Resultat'
+    },
+    lastActive: {
+      en: 'Last Active',
+      sv: 'Senast Aktiv'
+    },
+    completionDate: {
+      en: 'Completion Date',
+      sv: 'Slutförandedatum'
+    },
+    ongoing: {
+      en: 'Ongoing',
+      sv: 'Pågående'
+    },
+    noDataAvailable: {
+      en: 'No data available for this filter',
+      sv: 'Ingen data tillgänglig för detta filter'
+    },
+    levelLocked: {
+      en: 'Level locked',
+      sv: 'Nivå låst'
+    },
+    completePreviousLevels: {
+      en: 'You need to complete previous levels first',
+      sv: 'Du måste slutföra tidigare nivåer först'
+    },
+    quizLocked: {
+      en: 'Quiz locked',
+      sv: 'Quiz låst'
+    },
+    gameHistory: {
+      en: 'Game History',
+      sv: 'Spelhistorik'
+    },
+    quiz: {
+      en: 'Quiz',
+      sv: 'Quiz'
+    },
+    start: {
+      en: 'Start',
+      sv: 'Starta'
+    },
+    replay: {
+      en: 'Replay',
+      sv: 'Spela om'
+    },
+    checking: {
+      en: 'Checking...',
+      sv: 'Kontrollerar...'
+    },
+    you: {
+      en: 'you',
+      sv: 'du'
+    }
+  },    // Performance
     performance: {
         levelOverview: {
             en: 'Level Overview',
@@ -205,55 +311,69 @@ export const translations: Translations = {
         }
     },
 
-    // Game
-    game: {
-        theFirstSpark: {
-            en: 'The First Spark',
-            sv: 'Den Första Gnistan'
-        },
-        timingIsEverything: {
-            en: 'Timing is Everything',
-            sv: 'Timing är Allt'
-        },
-        forecastTheFuture: {
-            en: 'Forecast the Future',
-            sv: 'Förutspå Framtiden'
-        },
-        uncertaintyUnleashed: {
-            en: 'Uncertainty Unleashed',
-            sv: 'Osäkerhet Släppt Lös'
-        },
-        day: {
-            en: 'Day',
-            sv: 'Dag'
-        },
-        cash: {
-            en: 'Cash',
-            sv: 'Kontanter'
-        },
-        revenue: {
-            en: 'Revenue',
-            sv: 'Intäkter'
-        },
-        costs: {
-            en: 'Costs',
-            sv: 'Kostnader'
-        },
-        cumulativeProfit: {
-            en: 'Cum. Profit',
-            sv: 'Kum. Vinst'
-        },
-        production: {
-            en: 'Production',
-            sv: 'Produktion'
-        },
-        sales: {
-            en: 'Sales',
-            sv: 'Försäljning'
-        }
+  // Game
+  game: {
+    theFirstSpark: {
+      en: 'The First Spark',
+      sv: 'Den Första Gnistan'
     },
-
-    // Common
+    timingIsEverything: {
+      en: 'Timing is Everything',
+      sv: 'Timing är Allt'
+    },
+    forecastTheFuture: {
+      en: 'Forecast the Future',
+      sv: 'Förutspå Framtiden'
+    },
+    uncertaintyUnleashed: {
+      en: 'Uncertainty Unleashed',
+      sv: 'Osäkerhet Släppt Lös'
+    },
+    theFirstSparkDesc: {
+      en: 'Learn the fundamentals of restaurant management',
+      sv: 'Lär dig grunderna i restauranghantering'
+    },
+    timingIsEverythingDesc: {
+      en: 'Manage your burger restaurant supply chain',
+      sv: 'Hantera din hamburgerrestaurangs försörjningskedja'
+    },
+    forecastTheFutureDesc: {
+      en: 'Analyze trends and predict customer demand',
+      sv: 'Analysera trender och förutsäg kundefterfrågan'
+    },
+    uncertaintyUnleashedDesc: {
+      en: 'Navigate complex supply chains with variable market conditions',
+      sv: 'Navigera komplexa försörjningskedjor med varierande marknadsförhållanden'
+    },
+    day: {
+      en: 'Day',
+      sv: 'Dag'
+    },
+    cash: {
+      en: 'Cash',
+      sv: 'Kontanter'
+    },
+    revenue: {
+      en: 'Revenue',
+      sv: 'Intäkter'
+    },
+    costs: {
+      en: 'Costs',
+      sv: 'Kostnader'
+    },
+    cumulativeProfit: {
+      en: 'Cum. Profit',
+      sv: 'Kum. Vinst'
+    },
+    production: {
+      en: 'Production',
+      sv: 'Produktion'
+    },
+    sales: {
+      en: 'Sales',
+      sv: 'Försäljning'
+    }
+  },    // Common
     common: {
         loading: {
             en: 'Loading...',

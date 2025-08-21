@@ -14,16 +14,41 @@ export interface Translations {
         backToDashboard: TranslationKey
     }
 
-    // Dashboard
-    dashboard: {
-        welcome: TranslationKey
-        student: TranslationKey
-        teacher: TranslationKey
-        groups: TranslationKey
-        students: TranslationKey
-    }
-
-    // Performance
+  // Dashboard
+  dashboard: {
+    welcome: TranslationKey
+    student: TranslationKey
+    teacher: TranslationKey
+    groups: TranslationKey
+    students: TranslationKey
+    studentDashboard: TranslationKey
+    welcomeBack: TranslationKey
+    continueJourney: TranslationKey
+    gameLevels: TranslationKey
+    progressLevels: TranslationKey
+    leaderboard: TranslationKey
+    studentsRankedProfit: TranslationKey
+    studentsRankedLevel: TranslationKey
+    allLevels: TranslationKey
+    level: TranslationKey
+    rank: TranslationKey
+    user: TranslationKey
+    day: TranslationKey
+    result: TranslationKey
+    lastActive: TranslationKey
+    completionDate: TranslationKey
+    ongoing: TranslationKey
+    noDataAvailable: TranslationKey
+    levelLocked: TranslationKey
+    completePreviousLevels: TranslationKey
+    quizLocked: TranslationKey
+    gameHistory: TranslationKey
+    quiz: TranslationKey
+    start: TranslationKey
+    replay: TranslationKey
+    checking: TranslationKey
+    you: TranslationKey
+  }    // Performance
     performance: {
         levelOverview: TranslationKey
         aggregateStatistics: TranslationKey
@@ -66,22 +91,24 @@ export interface Translations {
         analyzingProgress: TranslationKey
     }
 
-    // Game
-    game: {
-        theFirstSpark: TranslationKey
-        timingIsEverything: TranslationKey
-        forecastTheFuture: TranslationKey
-        uncertaintyUnleashed: TranslationKey
-        day: TranslationKey
-        cash: TranslationKey
-        revenue: TranslationKey
-        costs: TranslationKey
-        cumulativeProfit: TranslationKey
-        production: TranslationKey
-        sales: TranslationKey
-    }
-
-    // Common
+  // Game
+  game: {
+    theFirstSpark: TranslationKey
+    timingIsEverything: TranslationKey
+    forecastTheFuture: TranslationKey
+    uncertaintyUnleashed: TranslationKey
+    theFirstSparkDesc: TranslationKey
+    timingIsEverythingDesc: TranslationKey
+    forecastTheFutureDesc: TranslationKey
+    uncertaintyUnleashedDesc: TranslationKey
+    day: TranslationKey
+    cash: TranslationKey
+    revenue: TranslationKey
+    costs: TranslationKey
+    cumulativeProfit: TranslationKey
+    production: TranslationKey
+    sales: TranslationKey
+  }    // Common
     common: {
         loading: TranslationKey
         error: TranslationKey

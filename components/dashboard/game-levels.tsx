@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/use-toast"
 import { checkExistingPerformance } from "@/lib/actions/game-actions"
 import { ReplayWarningDialog } from "@/components/game/replay-warning-dialog"
 import Link from "next/link"
+import { useTranslation } from "@/lib/i18n"
 
 interface GameLevelsProps {
   currentLevel?: number
@@ -31,9 +32,9 @@ export function GameLevels({
   levels: propLevels,
   userProgress,
   userId,
-}: GameLevelsProps) {
+}: Readonly<GameLevelsProps>) {
   const { toast } = useToast()
-  const [isLoading, setIsLoading] = useState(false)
+  const { translations } = useTranslation()
   const router = useRouter()
 
   // For backward compatibility
@@ -44,23 +45,23 @@ export function GameLevels({
   const defaultLevels = [
     {
       id: 0,
-      title: "The First Spark",
-      description: "Learn the fundamentals of restaurant management",
+      title: translations.game.theFirstSpark,
+      description: translations.game.theFirstSparkDesc,
     },
     {
       id: 1,
-      title: "Timing is Everything",
-      description: "Manage your burger restaurant supply chain",
+      title: translations.game.timingIsEverything,
+      description: translations.game.timingIsEverythingDesc,
     },
     {
       id: 2,
-      title: "Forecast the Future",
-      description: "Analyze trends and predict customer demand",
+      title: translations.game.forecastTheFuture,
+      description: translations.game.forecastTheFutureDesc,
     },
     {
       id: 3,
-      title: "Uncertainty Unleashed",
-      description: "Navigate complex supply chains with variable market conditions",
+      title: translations.game.uncertaintyUnleashed,
+      description: translations.game.uncertaintyUnleashedDesc,
     },
   ]
 
@@ -77,8 +78,8 @@ export function GameLevels({
   const handleLevelClick = async (levelId: number) => {
     if (levelId > effectiveCurrentLevel + 1 && !isTeacher) {
       toast({
-        title: "Level locked",
-        description: "You need to complete previous levels first",
+        title: translations.dashboard.levelLocked,
+        description: translations.dashboard.completePreviousLevels,
       })
       return
     }
@@ -114,8 +115,8 @@ export function GameLevels({
   const handleQuizClick = (levelId: number) => {
     if (levelId > effectiveCurrentLevel + 1 && !isTeacher) {
       toast({
-        title: "Quiz locked",
-        description: "You need to complete previous levels first",
+        title: translations.dashboard.quizLocked,
+        description: translations.dashboard.completePreviousLevels,
       })
       return
     }
@@ -131,8 +132,8 @@ export function GameLevels({
     <>
       <Card className="border-[#4d94ff] bg-white">
         <CardHeader className="border-b border-[#4d94ff]">
-          <CardTitle>Game Levels</CardTitle>
-          <CardDescription>Progress through all levels to master logistics concepts</CardDescription>
+          <CardTitle>{translations.dashboard.gameLevels}</CardTitle>
+          <CardDescription>{translations.dashboard.progressLevels}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4 p-5">
           {effectiveLevels.map((level) => {
@@ -140,26 +141,31 @@ export function GameLevels({
             const isCompleted = effectiveCurrentLevel > levelId
             const isLocked = levelId > effectiveCurrentLevel + 1 && !isTeacher
 
+            let circleClasses = "bg-blue-100 text-blue-600"
+            if (isCompleted) {
+              circleClasses = "bg-green-100 text-green-600"
+            } else if (isLocked) {
+              circleClasses = "bg-gray-100 text-gray-400"
+            }
+
+            let circleContent
+            if (isCompleted) {
+              circleContent = <CheckCircle className="h-5 w-5" />
+            } else if (isLocked) {
+              circleContent = <Lock className="h-5 w-5" />
+            } else {
+              circleContent = <span className="text-sm font-medium">{levelId}</span>
+            }
+
             return (
               <div
                 key={levelId}
                 className={`flex items-center gap-4 rounded-lg border ${isLocked ? "border-gray-200" : "border-[#4d94ff]"} p-4 ${isLocked ? "opacity-60" : ""}`}
               >
                 <div
-                  className={`flex h-10 w-10 items-center justify-center rounded-full ${isCompleted
-                    ? "bg-green-100 text-green-600"
-                    : isLocked
-                      ? "bg-gray-100 text-gray-400"
-                      : "bg-blue-100 text-blue-600"
-                    }`}
+                  className={`flex h-10 w-10 items-center justify-center rounded-full ${circleClasses}`}
                 >
-                  {isCompleted ? (
-                    <CheckCircle className="h-5 w-5" />
-                  ) : isLocked ? (
-                    <Lock className="h-5 w-5" />
-                  ) : (
-                    <span className="text-sm font-medium">{levelId}</span>
-                  )}
+                  {circleContent}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-medium">{level.title ?? (level as any).name ?? `Level ${levelId}`}</h3>
@@ -175,7 +181,7 @@ export function GameLevels({
                   >
                     <Button variant="outline" size="sm" className="border-[#4d94ff]">
                       <BarChart3 className="mr-2 h-4 w-4" />
-                      Game History
+                      {translations.dashboard.gameHistory}
                     </Button>
                   </Link>
                   <Button
@@ -186,7 +192,7 @@ export function GameLevels({
                     className="border-[#4d94ff]"
                   >
                     <FileText className="mr-2 h-4 w-4" />
-                    Quiz
+                    {translations.dashboard.quiz}
                   </Button>
                   <Button
                     variant={isLocked ? "outline" : "default"}
@@ -196,10 +202,10 @@ export function GameLevels({
                     className={isLocked ? "" : "bg-[#0066cc] hover:bg-[#003366]"}
                   >
                     {checkingLevel === levelId ? (
-                      "Checking..."
+                      translations.dashboard.checking
                     ) : (
                       <>
-                        {isCompleted ? "Replay" : "Start"}
+                        {isCompleted ? translations.dashboard.replay : translations.dashboard.start}
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </>
                     )}
@@ -219,9 +225,15 @@ export function GameLevels({
           levelName={
             (() => {
               const found = effectiveLevels.find((l) => l.id === selectedLevel)
-              return found
-                ? ("name" in found && found.name ? found.name : found.title ?? `Level ${selectedLevel}`)
-                : `Level ${selectedLevel}`
+              if (!found) {
+                return `Level ${selectedLevel}`
+              }
+              
+              if ("name" in found && found.name) {
+                return found.name
+              }
+              
+              return found.title ?? `Level ${selectedLevel}`
             })()
           }
           existingScore={existingScore}

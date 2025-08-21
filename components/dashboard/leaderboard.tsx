@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "@/lib/i18n"
 
 // Define sort types for leaderboard
 type SortColumn = 'username' | 'level' | 'day' | 'profit' | 'lastActive'
@@ -41,7 +42,8 @@ function formatCurrency(amount: number): string {
   return krona.toFixed(2).replace(".", ",") + " kr"
 }
 
-export function Leaderboard({ data, currentUser }: LeaderboardProps) {
+export function Leaderboard({ data, currentUser }: Readonly<LeaderboardProps>) {
+  const { translations } = useTranslation()
   const [selectedLevel, setSelectedLevel] = useState<string>("all")
 
   // Sort state - default to profit descending to maintain current behavior
@@ -176,7 +178,7 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
   const showLevelColumn = selectedLevel === "all"
 
   // Determine the date column header based on selected level
-  const dateColumnHeader = selectedLevel === "all" ? "Last Active" : "Completion Date"
+  const dateColumnHeader = selectedLevel === "all" ? translations.dashboard.lastActive : translations.dashboard.completionDate
 
   return (
     <Card className="border-[#4d94ff] bg-white">
@@ -184,19 +186,19 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="flex items-center gap-2">
             <Trophy className="h-5 w-5 text-yellow-500" />
-            Leaderboard
+            {translations.dashboard.leaderboard}
           </CardTitle>
           <Select value={selectedLevel} onValueChange={setSelectedLevel}>
             <SelectTrigger className="w-[140px]">
               <SelectValue placeholder="Select Level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Levels</SelectItem>
+              <SelectItem value="all">{translations.dashboard.allLevels}</SelectItem>
               {levels
                 .filter((level) => level !== "all")
                 .map((level) => (
                   <SelectItem key={level} value={level}>
-                    Level {level}
+                    {translations.dashboard.level} {level}
                   </SelectItem>
                 ))}
             </SelectContent>
@@ -204,28 +206,28 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
         </div>
         <CardDescription>
           {selectedLevel === "all"
-            ? "Students ranked by profit across all levels"
-            : `Students ranked by profit in Level ${selectedLevel}`}
+            ? translations.dashboard.studentsRankedProfit
+            : `${translations.dashboard.studentsRankedLevel} ${selectedLevel}`}
         </CardDescription>
       </CardHeader>
       <CardContent className="p-0">
         <Table>
           <TableHeader>
             <TableRow className="border-b border-[#4d94ff]">
-              <TableHead className="w-12">Rank</TableHead>
+              <TableHead className="w-12">{translations.dashboard.rank}</TableHead>
               <TableHead className="min-w-[140px]">
-                {renderSortArrows('username', 'Användare')}
+                {renderSortArrows('username', translations.dashboard.user)}
               </TableHead>
               {showLevelColumn && (
                 <TableHead className="min-w-[80px]">
-                  {renderSortArrows('level', 'Nivå')}
+                  {renderSortArrows('level', translations.dashboard.level)}
                 </TableHead>
               )}
               <TableHead className="min-w-[80px]">
-                {renderSortArrows('day', 'Dag')}
+                {renderSortArrows('day', translations.dashboard.day)}
               </TableHead>
               <TableHead className="min-w-[120px]">
-                {renderSortArrows('profit', 'Resultat')}
+                {renderSortArrows('profit', translations.dashboard.result)}
               </TableHead>
               <TableHead className="hidden md:table-cell min-w-[120px]">
                 {renderSortArrows('lastActive', dateColumnHeader)}
@@ -243,7 +245,7 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
                   <TableCell className="font-medium">{index + 1}</TableCell>
                   <TableCell>
                     {user.username}
-                    {isCurrentUser && " (du)"}
+                    {isCurrentUser && ` (${translations.dashboard.you})`}
                   </TableCell>
                   {showLevelColumn && (
                     <TableCell className="font-mono">{user.level}</TableCell>
@@ -253,7 +255,7 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
                     {formatCurrency(user.profit)}
                   </TableCell>
                   <TableCell className="hidden md:table-cell">
-                    {selectedLevel === "all" ? user.lastActive : user.levelCompletedDate || "Pågående"}
+                    {selectedLevel === "all" ? user.lastActive : user.levelCompletedDate || translations.dashboard.ongoing}
                   </TableCell>
                 </TableRow>
               )
@@ -261,7 +263,7 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
             {sortedData.length === 0 && (
               <TableRow>
                 <TableCell colSpan={showLevelColumn ? 6 : 5} className="text-center py-4 text-gray-500">
-                  Ingen data tillgänglig för detta filter
+                  {translations.dashboard.noDataAvailable}
                 </TableCell>
               </TableRow>
             )}

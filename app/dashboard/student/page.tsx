@@ -7,6 +7,7 @@ import { GameLevels } from "@/components/dashboard/game-levels"
 import { Leaderboard } from "@/components/dashboard/leaderboard"
 import { useAuth } from "@/lib/auth-context"
 import { getLeaderboard } from "@/lib/actions/leaderboard-actions"
+import { useTranslation } from "@/lib/i18n"
 
 // Mock leaderboard data for immediate rendering while data is loading
 const initialLeaderboardData = [
@@ -30,6 +31,7 @@ const initialLeaderboardData = [
 
 export default function StudentDashboard() {
 	const { user, loading } = useAuth()
+	const { translations } = useTranslation()
 	const router = useRouter()
 	const [leaderboardData, setLeaderboardData] = useState(initialLeaderboardData)
 	const [isLoading, setIsLoading] = useState(true)
@@ -78,7 +80,7 @@ export default function StudentDashboard() {
 	if (loading || isLoading || !user) {
 		return (
 			<div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-white to-[#e6f0ff]">
-				<div className="text-[#0066cc] text-lg font-medium">Loading...</div>
+				<div className="text-[#0066cc] text-lg font-medium">{translations.common.loading}</div>
 			</div>
 		)
 	}
@@ -87,8 +89,8 @@ export default function StudentDashboard() {
 		<div className="space-y-6">
 			<div className="flex flex-col gap-4 md:flex-row">
 				<div className="flex-1">
-					<h1 className="text-2xl font-bold text-[#003366]">Student Dashboard</h1>
-					<p className="text-gray-500">Welcome back, {user.username}! Continue your logistics journey.</p>
+					<h1 className="text-2xl font-bold text-[#003366]">{translations.dashboard.studentDashboard}</h1>
+					<p className="text-gray-500">{translations.dashboard.welcomeBack}, {user.username}! {translations.dashboard.continueJourney}</p>
 					{error && <p className="text-amber-500 mt-2">{error}</p>}
 				</div>
 			</div>
