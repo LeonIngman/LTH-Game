@@ -21,8 +21,8 @@ export function PerformanceSummary({ levelName, maxScore, currentScore, profit, 
     <Card>
       <CardHeader>
         <CardTitle>
-          {displayName 
-            ? `${displayName}'s ${translations.performance.performanceSummary}` 
+          {displayName
+            ? `${displayName}'s ${translations.performance.performanceSummary}`
             : translations.performance.yourPerformanceSummary
           }
         </CardTitle>

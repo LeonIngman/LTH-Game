@@ -20,7 +20,7 @@ import { useTranslation } from "@/lib/i18n"
 
 export function DashboardNav() {
   const { user, logout } = useAuth()
-  const { t, translations } = useTranslation()
+  const { translations } = useTranslation()
 
   if (!user) return null
 
@@ -32,7 +32,7 @@ export function DashboardNav() {
       <div className="container flex h-16 items-center px-4 sm:px-6 lg:px-8">
         <Link href={dashboardPath} className="flex items-center gap-2">
           <Truck className="h-6 w-6 text-[#0066cc]" />
-          <h1 className="text-xl font-bold text-[#003366]">{t(translations.nav.logisticsGame)}</h1>
+          <h1 className="text-xl font-bold text-[#003366]">{translations.nav.logisticsGame}</h1>
         </Link>
         <nav className="ml-auto flex items-center gap-4">
           <LanguageToggle />
@@ -58,7 +58,7 @@ export function DashboardNav() {
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={logout} className="cursor-pointer">
                 <span className="mr-2">🚪</span>
-                <span>{t(translations.nav.logOut)}</span>
+                <span>{translations.nav.logOut}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

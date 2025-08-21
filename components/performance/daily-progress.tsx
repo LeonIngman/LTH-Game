@@ -8,7 +8,7 @@ interface DailyProgressProps {
 
 export function DailyProgress({ dailyData, isLoading = false }: DailyProgressProps) {
     const { translations } = useTranslation()
-    
+
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat("sv-SE", {
             style: "currency",
