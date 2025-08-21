@@ -11,6 +11,7 @@ import { PerformanceSummary } from "@/components/performance/performance-summary
 import { StudentSelector } from "@/components/performance/student-selector"
 import { useAuth } from "@/lib/auth-context"
 import { getAllStudentsPerformance, getGameLevels, getGameSessionData } from "@/lib/actions/performance-actions"
+import { formatUsernameAsGroup } from "@/lib/utils"
 
 export default function TeacherStudentPerformancePage({
   params,
@@ -176,7 +177,7 @@ export default function TeacherStudentPerformancePage({
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Dashboard
           </Link>
-          <h1 className="text-2xl font-bold mt-2">Student Performance Analytics</h1>
+          <h1 className="text-2xl font-bold mt-2">Group Performance Analytics</h1>
           <p className="text-gray-500">Level: {levelInfo?.name}</p>
         </div>
 
@@ -192,6 +193,7 @@ export default function TeacherStudentPerformancePage({
               currentScore={currentScore}
               profit={Number(totalProfit)}
               username={studentInfo?.username}
+              userId={studentInfo?.userId}
             />
           </div>
           <div className="md:col-span-2">
@@ -202,7 +204,7 @@ export default function TeacherStudentPerformancePage({
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center">
           <h3 className="mt-4 text-lg font-semibold">No Performance Data</h3>
           <p className="mt-2 text-sm text-gray-500">
-            {studentInfo?.username || "This student"} hasn't completed any gameplay for this level yet.
+            {studentInfo?.username ? formatUsernameAsGroup(studentInfo.username, studentInfo.userId) : "This group"} hasn't completed any gameplay for this level yet.
           </p>
         </div>
       )}

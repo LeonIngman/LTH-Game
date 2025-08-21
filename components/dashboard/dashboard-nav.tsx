@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
 import { BugReportDialog } from "@/components/bug-report-dialog"
+import { formatUsernameAsGroup } from "@/lib/utils"
 
 export function DashboardNav() {
   const { user, logout } = useAuth()
@@ -44,7 +45,9 @@ export function DashboardNav() {
             <DropdownMenuContent align="end" className="border-[#4d94ff]">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.username}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {user.role === 'student' ? formatUsernameAsGroup(user.username, user.id) : user.username}
+                  </p>
                   <p className="text-xs leading-none text-muted-foreground">{user.email || user.role}</p>
                 </div>
               </DropdownMenuLabel>
