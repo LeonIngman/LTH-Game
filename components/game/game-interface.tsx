@@ -11,6 +11,7 @@ import { level1Config } from "@/lib/game/level1"
 import { level2Config } from "@/lib/game/level2"
 import { level3Config } from "@/lib/game/level3"
 import { useAuth } from "@/lib/auth-context"
+import { useTranslation } from "@/lib/i18n"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 
@@ -42,9 +43,10 @@ import { useSupplierOrders } from "@/hooks/use-supplier-orders"
 import { useCustomerOrders } from "@/hooks/use-customer-orders"
 
 
-export function GameInterface({ levelId }: GameInterfaceProps) {
+export function GameInterface({ levelId }: Readonly<GameInterfaceProps>) {
   const { toast } = useToast()
   const { user } = useAuth()
+  const { translations } = useTranslation()
 
   // Get level configuration based on levelId
   const levelConfig = useMemo<LevelConfig>(() => {
@@ -488,10 +490,10 @@ export function GameInterface({ levelId }: GameInterfaceProps) {
         <div className="md:col-span-6">
           <Card>
             <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle>Supply Chain Map</CardTitle>
+              <CardTitle>{translations.game.supplyChainMap}</CardTitle>
               <div className="flex items-center gap-2">
                 <div className="text-sm text-muted-foreground">
-                  Click on suppliers, factory, or restaurants to interact
+                  {translations.game.clickSuppliersFactoryRestaurants}
                 </div>
               </div>
             </CardHeader>

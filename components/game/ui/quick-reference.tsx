@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Calculator } from "lucide-react"
+import { useTranslation } from "@/lib/i18n"
 import type { Supplier, MaterialType } from "@/types/game"
 import type { QuickReferenceProps } from "@/types/components"
 
@@ -19,8 +20,9 @@ export function QuickReference({
   gameState,
   onEnablePlanningMode,
   planningMode = false,
-}: QuickReferenceProps) {
+}: Readonly<QuickReferenceProps>) {
   const [activeTab, setActiveTab] = useState("suppliers")
+  const { translations } = useTranslation()
 
   const getSupplierMaterials = (supplier: Supplier) => {
     if (Array.isArray(supplier.materials) && supplier.materials.length > 0) {
@@ -33,8 +35,7 @@ export function QuickReference({
   const supplierDeliveries = gameState?.supplierDeliveries || {}
 
   const calculateRemainingCapacity = (supplier: Supplier, material: MaterialType) => {
-    const lifetimeCapacity =
-      (supplier.capacityPerGame && supplier.capacityPerGame[material]) ?? 0
+    const lifetimeCapacity = supplier.capacityPerGame?.[material] ?? 0
 
     // Defensive: fallback to 0 if undefined
     const deliveredSoFar = supplierDeliveries[supplier.id]?.[material] || 0
@@ -52,15 +53,30 @@ export function QuickReference({
     return supplier.capacityPerGame || 0
   }
 
+  const getMaterialName = (material: MaterialType) => {
+    switch (material) {
+      case 'patty':
+        return translations.game.patty
+      case 'cheese':
+        return translations.game.cheese
+      case 'bun':
+        return translations.game.bun
+      case 'potato':
+        return translations.game.potato
+      default:
+        return material
+    }
+  }
+
   return (
     <Card className="h-full" data-tutorial="quick-actions">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
-          <CardTitle>Quick Reference</CardTitle>
+          <CardTitle>{translations.game.quickReference}</CardTitle>
           {onEnablePlanningMode && (
             <Button size="sm" variant="outline" onClick={onEnablePlanningMode} disabled={planningMode}>
               <Calculator className="h-4 w-4 mr-1" />
-              Plan
+              {translations.game.plan}
             </Button>
           )}
         </div>
@@ -68,8 +84,8 @@ export function QuickReference({
       <CardContent>
         <Tabs defaultValue="suppliers" value={activeTab} onValueChange={setActiveTab}>
           <TabsList className="grid grid-cols-2 mb-4">
-            <TabsTrigger value="suppliers">Suppliers</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
+            <TabsTrigger value="suppliers">{translations.game.suppliers}</TabsTrigger>
+            <TabsTrigger value="customers">{translations.game.customers}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="suppliers" className="space-y-4">
@@ -78,20 +94,20 @@ export function QuickReference({
                 <div key={supplier.id} className="border rounded-md p-2">
                   <div className="font-medium text-sm mb-1">{supplier.name}</div>
                   <div className="grid grid-cols-3 gap-1 text-xs">
-                    <div className="font-semibold">Material</div>
-                    <div className="font-semibold text-right">Remaining</div>
-                    <div className="font-semibold text-right">Price</div>
+                    <div className="font-semibold">{translations.game.material}</div>
+                    <div className="font-semibold text-right">{translations.game.remaining}</div>
+                    <div className="font-semibold text-right">{translations.game.price}</div>
                     {getSupplierMaterials(supplier).map((material: MaterialType) => {
                       const remaining = calculateRemainingCapacity(supplier, material)
                       if (remaining === 0) return null // Hide materials with 0 remaining
                       return (
                         <React.Fragment key={material}>
-                          <div className="capitalize">{material}</div>
+                          <div>{getMaterialName(material)}</div>
                           <div className="text-right">
-                            {remaining} units
+                            {remaining} {translations.game.units}
                             {remaining < (getMaterialCapacity(supplier, material) / 4) && (
                               <Badge variant="destructive" className="ml-1">
-                                Low
+                                {translations.game.low}
                               </Badge>
                             )}
                           </div>
@@ -103,9 +119,9 @@ export function QuickReference({
                     })}
                   </div>
                   <div className="grid grid-cols-2 gap-1 text-xs mt-2">
-                    <div>Lead Time:</div>
+                    <div>{translations.game.leadTime}:</div>
                     <div className="text-right">
-                      {supplier.leadTime} day{supplier.leadTime !== 1 ? "s" : ""}
+                      {supplier.leadTime} {supplier.leadTime !== 1 ? translations.game.days : translations.game.day}
                     </div>
                   </div>
                 </div>
@@ -120,76 +136,47 @@ export function QuickReference({
                   <div key={customer.id} className="border rounded-md p-2">
                     <div className="font-medium text-sm mb-1">{customer.name}</div>
                     <div className="grid grid-cols-2 gap-1 text-xs">
-                      {customer.totalRequirement && (
+                      {!!customer.totalRequirement && (
                         <>
-                          <div>Total Requirement:</div>
-                          <div className="text-right">{customer.totalRequirement} units</div>
+                          <div>{translations.game.totalRequirement}:</div>
+                          <div className="text-right">{customer.totalRequirement} {translations.game.units}</div>
                         </>
                       )}
 
-                      {/* {customer.dailyRequirement && (
+                      {!!customer.pricePerUnit && (
                         <>
-                          <div>Daily Requirement:</div>
-                          <div className="text-right">{customer.dailyRequirement} units</div>
-                        </>
-                      )} */}
-
-                      {customer.demand && typeof customer.demand === "function" && (
-                        <>
-                          <div>Current Demand:</div>
-                          <div className="text-right">{customer.demand(currentDay)} units</div>
-                        </>
-                      )}
-
-                      {customer.transportCost && (
-                        <>
-                          <div>Transport Cost:</div>
-                          <div className="text-right">{customer.transportCost.toFixed(2)} kr</div>
-                        </>
-                      )}
-
-                      {customer.pricePerUnit && (
-                        <>
-                          <div>Price Per Unit:</div>
+                          <div>{translations.game.pricePerUnit}:</div>
                           <div className="text-right">{customer.pricePerUnit.toFixed(2)} kr</div>
                         </>
                       )}
 
-                      {customer.orderQuantities && (
-                        <>
-                          <div>Order Quantities:</div>
-                          <div className="text-right">{customer.orderQuantities.join(", ")} units</div>
-                        </>
-                      )}
-
-                      <div>Delivered:</div>
+                      <div>{translations.game.delivered}:</div>
                       <div className="text-right">
-                        {gameState.customerDeliveries?.[customer.id] || 0} units
+                        {gameState.customerDeliveries?.[customer.id] || 0} {translations.game.units}
                       </div>
-                      <div>Lead Time:</div>
+                      <div>{translations.game.leadTime}:</div>
                       <div className="text-right">
-                        {customer.leadTime} day{customer.leadTime !== 1 ? "s" : ""}
+                        {customer.leadTime} {customer.leadTime !== 1 ? translations.game.days : translations.game.day}
                         {customer.randomLeadTime && customer.leadTimeRange && (
                           <Badge variant="outline" className="ml-1 text-xs">
-                            Random: {customer.leadTimeRange.join("-")} days
+                            {translations.game.random}: {customer.leadTimeRange.join("-")} {translations.game.days}
                           </Badge>
                         )}
                       </div>
                       {customer.allowedShipmentSizes && (
                         <>
-                          <div>Allowed Shipments:</div>
-                          <div className="text-right">{customer.allowedShipmentSizes.join(", ")} units</div>
+                          <div>{translations.game.allowedShipments}:</div>
+                          <div className="text-right">{customer.allowedShipmentSizes.join(", ")} {translations.game.units}</div>
                         </>
                       )}
                       {/* Add delivery schedule section if it exists */}
                       {customer.deliverySchedule && customer.deliverySchedule.length > 0 && (
                         <div className="mt-2 pt-2 border-t">
-                          <div className="font-medium text-xs mb-1 text-blue-700">Delivery Schedule:</div>
+                          <div className="font-medium text-xs mb-1 text-blue-700">{translations.game.deliverySchedule}:</div>
                           <div className="space-y-1">
                             {customer.deliverySchedule.map((milestone, index) => {
                               const isPast = milestone.day < currentDay
                               const isCurrent = milestone.day === currentDay
-                              const isFuture = milestone.day > currentDay
 
                               if (isCurrent) {
                                 // Calculate cumulative required amount up to current day
@@ -208,28 +195,28 @@ export function QuickReference({
                                   <div
                                     key={`current-${milestone.day}`}
                                     className={`${isOnTrack
-                                        ? "bg-green-50 border border-green-200"
-                                        : "bg-orange-50 border border-orange-200"
+                                      ? "bg-green-50 border border-green-200"
+                                      : "bg-orange-50 border border-orange-200"
                                       } rounded-md p-2 text-xs`}
                                   >
                                     <div className="flex items-center gap-1 mb-1">
                                       <Badge
                                         variant="outline"
                                         className={`text-xs ${isOnTrack
-                                            ? "bg-green-100 text-green-700 border-green-300"
-                                            : "bg-orange-100 text-orange-700 border-orange-300"
+                                          ? "bg-green-100 text-green-700 border-green-300"
+                                          : "bg-orange-100 text-orange-700 border-orange-300"
                                           }`}
                                       >
-                                        {isOnTrack ? "On track" : "Due Today"}
+                                        {isOnTrack ? translations.game.onTrack : translations.game.dueToday}
                                       </Badge>
                                     </div>
                                     <div className={`font-medium ${isOnTrack ? "text-green-800" : "text-orange-800"
                                       }`}>
-                                      Day {milestone.day}: {milestone.requiredAmount} units
+                                      {translations.game.day} {milestone.day}: {milestone.requiredAmount} {translations.game.units}
                                     </div>
                                     {isOnTrack && (
                                       <div className="text-green-700 text-xs mt-1">
-                                        Delivered: {totalDelivered} / {cumulativeRequired} units
+                                        {translations.game.delivered}: {totalDelivered} / {cumulativeRequired} {translations.game.units}
                                       </div>
                                     )}
                                   </div>
@@ -242,8 +229,8 @@ export function QuickReference({
                                   className={`flex justify-between items-center text-xs ${isPast ? "text-gray-500" : "text-gray-700"
                                     }`}
                                 >
-                                  <span>Day {milestone.day}:</span>
-                                  <span>{milestone.requiredAmount} units</span>
+                                  <span>{translations.game.day} {milestone.day}:</span>
+                                  <span>{milestone.requiredAmount} {translations.game.units}</span>
                                 </div>
                               )
                             })}
@@ -255,7 +242,7 @@ export function QuickReference({
                 ))}
               </div>
             ) : (
-              <div className="text-sm text-muted-foreground">No customer information available for this level.</div>
+              <div className="text-sm text-muted-foreground">{translations.game.noCustomerInfo}</div>
             )}
           </TabsContent>
         </Tabs>

@@ -101,13 +101,70 @@ export interface Translations {
         timingIsEverythingDesc: TranslationKey
         forecastTheFutureDesc: TranslationKey
         uncertaintyUnleashedDesc: TranslationKey
+        burgerRestaurantGame: TranslationKey
+        learnBasicsSupplyDemand: TranslationKey
+        manageBurgerSupplyChain: TranslationKey
+        analyzePredict: TranslationKey
+        navigateComplexSupply: TranslationKey
+        testRestaurantSkills: TranslationKey
+        exitGame: TranslationKey
+        exitGameConfirm: TranslationKey
+        exitGameWarning: TranslationKey
+        resetLevel: TranslationKey
+        viewTutorial: TranslationKey
+        objectives: TranslationKey
+        quickReference: TranslationKey
+        plan: TranslationKey
+        suppliers: TranslationKey
+        customers: TranslationKey
+        material: TranslationKey
+        remaining: TranslationKey
+        price: TranslationKey
+        units: TranslationKey
+        low: TranslationKey
+        leadTime: TranslationKey
         day: TranslationKey
+        days: TranslationKey
+        totalRequirement: TranslationKey
+        currentDemand: TranslationKey
+        transportCost: TranslationKey
+        pricePerUnit: TranslationKey
+        orderQuantities: TranslationKey
+        delivered: TranslationKey
+        random: TranslationKey
+        allowedShipments: TranslationKey
+        deliverySchedule: TranslationKey
+        onTrack: TranslationKey
+        dueToday: TranslationKey
+        noCustomerInfo: TranslationKey
         cash: TranslationKey
         revenue: TranslationKey
         costs: TranslationKey
         cumulativeProfit: TranslationKey
         production: TranslationKey
         sales: TranslationKey
+        patty: TranslationKey
+        cheese: TranslationKey
+        bun: TranslationKey
+        potato: TranslationKey
+        supplyChainMap: TranslationKey
+        clickSuppliersFactoryRestaurants: TranslationKey
+        currentOrders: TranslationKey
+        allPendingTransactions: TranslationKey
+        noPendingOrders: TranslationKey
+        buy: TranslationKey
+        sell: TranslationKey
+        quantity: TranslationKey
+        daysLeft: TranslationKey
+        dayLeft: TranslationKey
+        finishedMeals: TranslationKey
+        customer: TranslationKey
+        burgerPatties: TranslationKey
+        burgerBuns: TranslationKey
+        cheeseSlices: TranslationKey
+        potatoes: TranslationKey
+        profit: TranslationKey
+        score: TranslationKey
     }    // Common
     common: {
         loading: TranslationKey

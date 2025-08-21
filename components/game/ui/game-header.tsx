@@ -17,11 +17,13 @@ import {
 import { SaveStatus } from "./save-status"
 import { ManualSaveStatus } from "./manual-save-status"
 import { ResetLevelDialog } from "./reset-level-dialog"
-import type { LevelConfig } from "@/types/game"
+import { LanguageToggle } from "@/components/ui/language-toggle"
+import { useTranslation } from "@/lib/i18n"
 import type { GameHeaderProps } from "@/types/components"
 
-export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutorial, saveStatus, onSave, onResetLevel }: GameHeaderProps) {
+export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutorial, saveStatus, onSave, onResetLevel }: Readonly<GameHeaderProps>) {
   const router = useRouter()
+  const { translations } = useTranslation()
   const [showExitConfirmation, setShowExitConfirmation] = useState(false)
   const [showResetConfirmation, setShowResetConfirmation] = useState(false)
   const [isResetting, setIsResetting] = useState(false)
@@ -30,30 +32,30 @@ export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutor
   const getLevelTitle = () => {
     switch (levelId) {
       case 0:
-        return "The First Spark"
+        return translations.game.theFirstSpark
       case 1:
-        return "Timing is Everything"
+        return translations.game.timingIsEverything
       case 2:
-        return "Forecast the Future"
+        return translations.game.forecastTheFuture
       case 3:
-        return "Uncertainty Unleashed"
+        return translations.game.uncertaintyUnleashed
       default:
-        return "Burger Restaurant Game"
+        return translations.game.burgerRestaurantGame
     }
   }
 
   const getLevelDescription = () => {
     switch (levelId) {
       case 0:
-        return "Learn the basics of supply and demand in a simple restaurant environment."
+        return translations.game.learnBasicsSupplyDemand
       case 1:
-        return "Manage your burger restaurant supply chain with a fixed 2-day delivery time."
+        return translations.game.manageBurgerSupplyChain
       case 2:
-        return "Analyze trends and predict customer demand."
+        return translations.game.analyzePredict
       case 3:
-        return "Navigate complex supply chains with variable market conditions."
+        return translations.game.navigateComplexSupply
       default:
-        return "Test your restaurant management skills."
+        return translations.game.testRestaurantSkills
     }
   }
 
@@ -109,8 +111,9 @@ export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutor
           </div>
 
           <div className="flex items-center gap-2">
+            <LanguageToggle />
             <Button variant="outline" size="sm" onClick={handleExitClick}>
-              Exit Game
+              {translations.game.exitGame}
             </Button>
             {onResetLevel && (
               <Button
@@ -120,18 +123,18 @@ export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutor
                 className="text-red-600 hover:text-red-700 hover:border-red-300 dark:text-red-400 dark:hover:text-red-300"
               >
                 <RotateCcw className="mr-2 h-4 w-4" />
-                Reset Level
+                {translations.game.resetLevel}
               </Button>
             )}
             {levelId === 0 && (
               <Button variant="outline" size="sm" onClick={onShowTutorial}>
                 <BookOpen className="mr-2 h-4 w-4" />
-                View Tutorial
+                {translations.game.viewTutorial}
               </Button>
             )}
             <Button variant="outline" size="sm" onClick={onShowObjectives}>
               <Target className="mr-2 h-4 w-4" />
-              Objectives
+              {translations.game.objectives}
             </Button>
           </div>
         </div>
@@ -141,15 +144,15 @@ export function GameHeader({ levelId, levelConfig, onShowObjectives, onShowTutor
       <AlertDialog open={showExitConfirmation} onOpenChange={setShowExitConfirmation}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Exit Game?</AlertDialogTitle>
+            <AlertDialogTitle>{translations.game.exitGameConfirm}</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to exit the game? All unsaved progress will be lost.
+              {translations.game.exitGameWarning}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleCancelExit}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={handleCancelExit}>{translations.common.cancel}</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmExit} className="bg-red-600 hover:bg-red-700">
-              Exit Game
+              {translations.game.exitGame}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

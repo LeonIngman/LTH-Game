@@ -345,9 +345,149 @@ export const translations: Translations = {
             en: 'Navigate complex supply chains with variable market conditions',
             sv: 'Navigera komplexa försörjningskedjor med varierande marknadsförhållanden'
         },
+        burgerRestaurantGame: {
+            en: 'Burger Restaurant Game',
+            sv: 'Hamburgerrestaurangspel'
+        },
+        learnBasicsSupplyDemand: {
+            en: 'Learn the basics of supply and demand in a simple restaurant environment.',
+            sv: 'Lär dig grunderna inom utbud och efterfrågan i en enkel restaurangmiljö.'
+        },
+        manageBurgerSupplyChain: {
+            en: 'Manage your burger restaurant supply chain with a fixed 2-day delivery time.',
+            sv: 'Hantera din hamburgerrestaurangs försörjningskedja med en fast 2-dagars leveranstid.'
+        },
+        analyzePredict: {
+            en: 'Analyze trends and predict customer demand.',
+            sv: 'Analysera trender och förutsäg kundefterfrågan.'
+        },
+        navigateComplexSupply: {
+            en: 'Navigate complex supply chains with variable market conditions.',
+            sv: 'Navigera komplexa försörjningskedjor med varierande marknadsförhållanden.'
+        },
+        testRestaurantSkills: {
+            en: 'Test your restaurant management skills.',
+            sv: 'Testa dina färdigheter inom restaurangledning.'
+        },
+        exitGame: {
+            en: 'Exit Game',
+            sv: 'Avsluta Spel'
+        },
+        exitGameConfirm: {
+            en: 'Exit Game?',
+            sv: 'Avsluta Spel?'
+        },
+        exitGameWarning: {
+            en: 'Are you sure you want to exit the game? All unsaved progress will be lost.',
+            sv: 'Är du säker på att du vill avsluta spelet? All osparad framsteg kommer att förloras.'
+        },
+        resetLevel: {
+            en: 'Reset Level',
+            sv: 'Återställ Nivå'
+        },
+        viewTutorial: {
+            en: 'View Tutorial',
+            sv: 'Visa Tutorial'
+        },
+        objectives: {
+            en: 'Objectives',
+            sv: 'Mål'
+        },
+        quickReference: {
+            en: 'Quick Reference',
+            sv: 'Snabbreferens'
+        },
+        plan: {
+            en: 'Plan',
+            sv: 'Planera'
+        },
+        suppliers: {
+            en: 'Suppliers',
+            sv: 'Leverantörer'
+        },
+        customers: {
+            en: 'Customers',
+            sv: 'Kunder'
+        },
+        material: {
+            en: 'Material',
+            sv: 'Material'
+        },
+        remaining: {
+            en: 'Remaining',
+            sv: 'Återstående'
+        },
+        price: {
+            en: 'Price',
+            sv: 'Pris'
+        },
+        units: {
+            en: 'units',
+            sv: 'enheter'
+        },
+        low: {
+            en: 'Low',
+            sv: 'Låg'
+        },
+        leadTime: {
+            en: 'Lead Time',
+            sv: 'Leveranstid'
+        },
         day: {
             en: 'Day',
             sv: 'Dag'
+        },
+        days: {
+            en: 'days',
+            sv: 'dagar'
+        },
+        totalRequirement: {
+            en: 'Total Requirement',
+            sv: 'Total Behov'
+        },
+        currentDemand: {
+            en: 'Current Demand',
+            sv: 'Nuvarande Efterfrågan'
+        },
+        transportCost: {
+            en: 'Transport Cost',
+            sv: 'Transportkostnad'
+        },
+        pricePerUnit: {
+            en: 'Price Per Unit',
+            sv: 'Pris Per Enhet'
+        },
+        orderQuantities: {
+            en: 'Order Quantities',
+            sv: 'Beställningskvantiteter'
+        },
+        delivered: {
+            en: 'Delivered',
+            sv: 'Levererat'
+        },
+        random: {
+            en: 'Random',
+            sv: 'Slumpmässig'
+        },
+        allowedShipments: {
+            en: 'Allowed Shipments',
+            sv: 'Tillåtna Leveranser'
+        },
+        deliverySchedule: {
+            en: 'Delivery Schedule',
+            sv: 'Leveransschema'
+        },
+        onTrack: {
+            en: 'On track',
+            sv: 'På rätt spår'
+        },
+        dueToday: {
+            en: 'Due Today',
+            sv: 'Förfaller Idag'
+        },
+        noCustomerInfo: {
+            en: 'No customer information available for this level.',
+            sv: 'Ingen kundinformation tillgänglig för denna nivå.'
         },
         cash: {
             en: 'Cash',
@@ -372,6 +512,94 @@ export const translations: Translations = {
         sales: {
             en: 'Sales',
             sv: 'Försäljning'
+        },
+        patty: {
+            en: 'Patty',
+            sv: 'Biff'
+        },
+        cheese: {
+            en: 'Cheese',
+            sv: 'Ost'
+        },
+        bun: {
+            en: 'Bun',
+            sv: 'Bröd'
+        },
+        potato: {
+            en: 'Potato',
+            sv: 'Potatis'
+        },
+        supplyChainMap: {
+            en: 'Supply Chain Map',
+            sv: 'Försörjningskedjekarta'
+        },
+        clickSuppliersFactoryRestaurants: {
+            en: 'Click on suppliers, factory, or restaurants to interact',
+            sv: 'Klicka på leverantörer, fabrik eller restauranger för att interagera'
+        },
+        currentOrders: {
+            en: 'Current Orders',
+            sv: 'Aktuella Beställningar'
+        },
+        allPendingTransactions: {
+            en: 'All pending transactions',
+            sv: 'Alla väntande transaktioner'
+        },
+        noPendingOrders: {
+            en: 'No pending orders',
+            sv: 'Inga väntande beställningar'
+        },
+        buy: {
+            en: 'Buy',
+            sv: 'Köp'
+        },
+        sell: {
+            en: 'Sell',
+            sv: 'Sälj'
+        },
+        quantity: {
+            en: 'Quantity',
+            sv: 'Kvantitet'
+        },
+        daysLeft: {
+            en: 'days left',
+            sv: 'dagar kvar'
+        },
+        dayLeft: {
+            en: 'day left',
+            sv: 'dag kvar'
+        },
+        finishedMeals: {
+            en: 'Finished Meals',
+            sv: 'Färdiga Måltider'
+        },
+        customer: {
+            en: 'Customer',
+            sv: 'Kund'
+        },
+        burgerPatties: {
+            en: 'Burger Patties',
+            sv: 'Hamburgerbiffar'
+        },
+        burgerBuns: {
+            en: 'Burger Buns',
+            sv: 'Hamburgerbröd'
+        },
+        cheeseSlices: {
+            en: 'Cheese Slices',
+            sv: 'Ostskivor'
+        },
+        potatoes: {
+            en: 'Potatoes',
+            sv: 'Potatisar'
+        },
+        profit: {
+            en: 'Profit',
+            sv: 'Vinst'
+        },
+        score: {
+            en: 'Score',
+            sv: 'Poäng'
         }
     },    // Common
     common: {
