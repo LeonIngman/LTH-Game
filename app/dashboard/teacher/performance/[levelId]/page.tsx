@@ -23,10 +23,10 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true)
-      
+
       try {
         const allStudents = await getAllStudents()
-        
+
         setStudents(
           allStudents.map((student: any) => ({
             userId: student.id,
@@ -37,7 +37,7 @@ export default function TeacherPerformancePage({ params }: { params: Promise<{ l
         )
 
         const perfData = await getAllStudentsPerformance(levelId)
-        
+
         setPerformanceData(perfData)
       } catch (error) {
         console.error("Error fetching performance data:", error)
