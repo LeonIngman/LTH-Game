@@ -228,11 +228,11 @@ export function GameLevels({
               if (!found) {
                 return `Level ${selectedLevel}`
               }
-              
+
               if ("name" in found && found.name) {
                 return found.name
               }
-              
+
               return found.title ?? `Level ${selectedLevel}`
             })()
           }
