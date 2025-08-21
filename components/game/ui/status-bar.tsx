@@ -5,7 +5,7 @@ import type { StatusBarProps } from "@/types/components"
 
 export function StatusBar({ gameState, levelConfig }: Readonly<StatusBarProps>) {
   const { translations } = useTranslation()
-  
+
   // Add safety checks for all gameState properties
   const currentGameDay = gameState?.day || 0
   const cash = typeof gameState?.cash === "number" ? gameState.cash : 0
@@ -17,26 +17,26 @@ export function StatusBar({ gameState, levelConfig }: Readonly<StatusBarProps>) 
 
   return (
     <div className="bg-gray-50 p-4 rounded-lg border game-status-bar" data-tutorial="status-bar">
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{translations.game.day}</p>
-          <p className="text-xl font-bold">
-            {currentGameDay} <span className="text-sm text-muted-foreground">/ {daysToComplete}</span>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 lg:gap-4 text-center">
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{translations.game.day}</p>
+          <p className="text-lg sm:text-xl font-bold">
+            {currentGameDay} <span className="text-xs sm:text-sm text-muted-foreground">/ {daysToComplete}</span>
           </p>
         </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{translations.game.cash}</p>
-          <p className="text-xl font-bold">{cash.toFixed(2)} kr</p>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{translations.game.cash}</p>
+          <p className="text-lg sm:text-xl font-bold truncate">{cash.toFixed(2)} kr</p>
         </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{translations.game.profit}</p>
-          <p className={`text-xl font-bold ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{translations.game.profit}</p>
+          <p className={`text-lg sm:text-xl font-bold truncate ${profit >= 0 ? "text-green-600" : "text-red-600"}`}>
             {profit.toFixed(2)} kr
           </p>
         </div>
-        <div>
-          <p className="text-sm font-medium text-muted-foreground">{translations.game.score}</p>
-          <p className="text-xl font-bold">{score}</p>
+        <div className="min-w-0">
+          <p className="text-xs sm:text-sm font-medium text-muted-foreground truncate">{translations.game.score}</p>
+          <p className="text-lg sm:text-xl font-bold">{score}</p>
         </div>
       </div>
     </div>

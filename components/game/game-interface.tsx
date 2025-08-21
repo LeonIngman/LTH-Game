@@ -476,8 +476,8 @@ export function GameInterface({ levelId }: Readonly<GameInterfaceProps>) {
         </div>
       )}
 
-      <div className="grid gap-6 md:grid-cols-12">
-        <div className="md:col-span-3">
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-3">
           <QuickReference
             levelConfig={levelConfig}
             getMaterialPriceForSupplier={getMaterialPriceForSupplier as (supplierId: number, materialType: string) => number}
@@ -487,18 +487,18 @@ export function GameInterface({ levelId }: Readonly<GameInterfaceProps>) {
           />
         </div>
 
-        <div className="md:col-span-6">
+        <div className="lg:col-span-6">
           <Card>
-            <CardHeader className="pb-2 flex flex-row items-center justify-between">
-              <CardTitle>{translations.game.supplyChainMap}</CardTitle>
-              <div className="flex items-center gap-2">
-                <div className="text-sm text-muted-foreground">
+            <CardHeader className="pb-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <CardTitle className="text-lg sm:text-xl">{translations.game.supplyChainMap}</CardTitle>
+                <div className="text-xs sm:text-sm text-muted-foreground">
                   {translations.game.clickSuppliersFactoryRestaurants}
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="w-full h-[500px]">
+              <div className="w-full h-[400px] sm:h-[500px]">
                 <SupplyChainMap
                   pendingOrders={gameState.pendingSupplierOrders}
                   pendingCustomerOrders={gameState.pendingCustomerOrders}
@@ -514,7 +514,7 @@ export function GameInterface({ levelId }: Readonly<GameInterfaceProps>) {
           </Card>
         </div>
 
-        <div className="md:col-span-3">
+        <div className="lg:col-span-3">
           <CurrentOrders
             levelConfig={levelConfig}
             pendingOrders={gameState.pendingSupplierOrders}
@@ -537,8 +537,8 @@ export function GameInterface({ levelId }: Readonly<GameInterfaceProps>) {
       />
 
 
-      <div className="grid gap-6 md:grid-cols-12">
-        <div className="md:col-span-4">
+      <div className="grid gap-4 lg:gap-6 lg:grid-cols-12">
+        <div className="lg:col-span-4">
           <InventoryChart
             data={gameState.history}
             currentInventory={gameState.inventory}
@@ -546,7 +546,7 @@ export function GameInterface({ levelId }: Readonly<GameInterfaceProps>) {
             safetystock={levelConfig.safetystock}
           />
         </div>
-        <div className="md:col-span-8">
+        <div className="lg:col-span-8">
           <CashflowChart
             data={gameState.history}
             height={300}
