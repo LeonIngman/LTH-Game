@@ -3,13 +3,15 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { TrendingUp, TrendingDown, Minus, Calendar, Trophy } from "lucide-react"
 import type { GameHistoryOverview } from "@/types/game"
+import { formatUsernameAsGroup } from "@/lib/utils"
 
 interface GameHistorySummaryProps {
   readonly overview: GameHistoryOverview
   readonly username?: string
+  readonly userId?: string
 }
 
-export function GameHistorySummary({ overview, username }: GameHistorySummaryProps) {
+export function GameHistorySummary({ overview, username, userId }: GameHistorySummaryProps) {
   const scorePercentage = overview.bestScore ? Math.min(Math.round((overview.bestScore / 1000) * 100), 100) : 0
   
   const getTrendIcon = () => {
@@ -56,7 +58,7 @@ export function GameHistorySummary({ overview, username }: GameHistorySummaryPro
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Trophy className="h-5 w-5" />
-          {username ? `${username}'s Game History` : "Your Game History"}
+          {username ? `${formatUsernameAsGroup(username, userId)}'s Game History` : "Your Game History"}
         </CardTitle>
         <CardDescription>Level: {overview.levelName}</CardDescription>
       </CardHeader>

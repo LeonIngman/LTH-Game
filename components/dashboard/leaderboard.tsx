@@ -19,7 +19,7 @@ interface SortState {
 
 interface LeaderboardData {
   id: string
-  userId?: string  // Original user ID for currentUser comparison
+  userId?: string  // Original group ID for currentUser comparison
   username: string
   progress: number
   profit: number
@@ -214,7 +214,7 @@ export function Leaderboard({ data, currentUser }: LeaderboardProps) {
             <TableRow className="border-b border-[#4d94ff]">
               <TableHead className="w-12">Rank</TableHead>
               <TableHead className="min-w-[140px]">
-                {renderSortArrows('username', 'Användare')}
+                {renderSortArrows('username', 'Grupp')}
               </TableHead>
               {showLevelColumn && (
                 <TableHead className="min-w-[80px]">

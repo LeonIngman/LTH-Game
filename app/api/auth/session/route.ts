@@ -27,6 +27,7 @@ export async function GET() {
         s."userId"   AS "userId",
         u."id"       AS "id",
         u."username" AS "username",
+        u."email"    AS "email",
         u."role"     AS "role",
         u."progress" AS "progress"
       FROM "Session" AS s
@@ -47,6 +48,7 @@ export async function GET() {
       user: {
         id: row.id,
         username: row.username,
+        email: row.email,
         role: row.role,
         progress: row.progress,
       },

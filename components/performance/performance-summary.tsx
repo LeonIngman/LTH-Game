@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { formatUsernameAsGroup } from "@/lib/utils"
 
 interface PerformanceSummaryProps {
   levelName: string
@@ -7,15 +8,17 @@ interface PerformanceSummaryProps {
   currentScore: number
   profit: number
   username?: string
+  userId?: string
 }
 
-export function PerformanceSummary({ levelName, maxScore, currentScore, profit, username }: PerformanceSummaryProps) {
+export function PerformanceSummary({ levelName, maxScore, currentScore, profit, username, userId }: PerformanceSummaryProps) {
   const scorePercentage = Math.min(Math.round((currentScore / maxScore) * 100), 100)
+  const displayName = username ? formatUsernameAsGroup(username, userId) : null
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{username ? `${username}'s Performance Summary` : "Your Performance Summary"}</CardTitle>
+        <CardTitle>{displayName ? `${displayName}'s Performance Summary` : "Your Performance Summary"}</CardTitle>
         <CardDescription>Level: {levelName}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -35,11 +38,11 @@ export function PerformanceSummary({ levelName, maxScore, currentScore, profit, 
             <div className="text-2xl font-bold">
               {typeof profit === "number" && !isNaN(profit)
                 ? new Intl.NumberFormat("sv-SE", {
-                    style: "currency",
-                    currency: "SEK",
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  }).format(profit)
+                  style: "currency",
+                  currency: "SEK",
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 2,
+                }).format(profit)
                 : "—"}
             </div>
           </div>

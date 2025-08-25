@@ -41,8 +41,6 @@ export async function getGameLevels() {
 // Function to get current game session daily data for a user and level
 export async function getCurrentGameSessionData(userId: string, levelId: number) {
   try {
-    console.log("🔍 getCurrentGameSessionData called with:", { userId, levelId })
-
     // First, get the most recent Performance record for this user and level
     const performanceResult = await sql`
       SELECT id, score, "cumulativeProfit"
@@ -52,15 +50,11 @@ export async function getCurrentGameSessionData(userId: string, levelId: number)
       LIMIT 1
     `
 
-    console.log("📊 Performance query result:", performanceResult)
-
     if (performanceResult.length === 0) {
-      console.log("❌ No performance records found for user:", userId, "level:", levelId)
       return []
     }
 
     const performanceId = performanceResult[0].id
-    console.log("✅ Found performance record with ID:", performanceId)
 
     // Try to get the daily data for this performance record
     try {
@@ -84,18 +78,16 @@ export async function getCurrentGameSessionData(userId: string, levelId: number)
           "cumulativeProfit"
         FROM "GameDailyData" 
         WHERE "performanceId" = ${performanceId}
-        ORDER BY "day" ASC
+        ORDER BY "day" DESC
       `
 
-      console.log("📈 Daily data query result:", dailyData)
-      console.log("📈 Daily data length:", dailyData.length)
       return dailyData
     } catch (error) {
-      console.log("⚠️ GameDailyData table does not exist, returning empty array:", error)
+      // GameDailyData table may not exist
       return []
     }
   } catch (error) {
-    console.error("❌ Error getting current game session data:", error)
+    console.error("Error getting current game session data:", error)
     return []
   }
 }
@@ -103,8 +95,6 @@ export async function getCurrentGameSessionData(userId: string, levelId: number)
 // Alternative function to get game data from GameSession table
 export async function getGameSessionData(userId: string, levelId: number) {
   try {
-    console.log("🎮 Getting game session data from GameSession table for user:", userId, "level:", levelId)
-
     // Get the most recent GameSession for this user and level
     const gameSession = await sql`
       SELECT * FROM "GameSession" 
@@ -113,31 +103,26 @@ export async function getGameSessionData(userId: string, levelId: number) {
       LIMIT 1
     `
 
-    console.log("🎲 GameSession result:", gameSession)
-
     if (gameSession.length === 0) {
-      console.log("❌ No game session found for user:", userId, "level:", levelId)
       return []
     }
 
     const session = gameSession[0]
-    console.log("✅ Found game session:", session)
 
     // Check if the session has daily data stored in gameState.history
     if (session.gameState?.history && Array.isArray(session.gameState.history)) {
-      console.log("📊 History data found in GameSession.gameState.history:", session.gameState.history)
-      return session.gameState.history
+      // Sort by day in descending order
+      return session.gameState.history.sort((a: any, b: any) => (b.day || 0) - (a.day || 0))
     }
 
     // Check if the session has daily data stored at top level
     if (session.dailyData && Array.isArray(session.dailyData)) {
-      console.log("📊 Daily data found in GameSession:", session.dailyData)
-      return session.dailyData
+      // Sort by day in descending order
+      return session.dailyData.sort((a: any, b: any) => (b.day || 0) - (a.day || 0))
     }
 
     // If no daily data array, try to construct from gameState fields
     if (session.gameState?.day && session.gameState.day > 0) {
-      console.log("🔧 Constructing daily data from GameSession.gameState fields")
       const dailyData = [{
         day: session.gameState.day,
         cash: session.gameState.cash || 0,
@@ -153,129 +138,19 @@ export async function getGameSessionData(userId: string, levelId: number) {
         potatoInventory: session.gameState.inventory?.potato || 0,
         finishedGoodsInventory: session.gameState.inventory?.finishedGoods || 0
       }]
-      console.log("🏗️ Constructed daily data from gameState:", dailyData)
       return dailyData
     }
 
-    console.log("❌ No usable data found in GameSession")
     return []
   } catch (error) {
-    console.error("❌ Error getting game session data:", error)
+    console.error("Error getting game session data:", error)
     return []
-  }
-}
-
-// Debug function to list all Performance records for a user
-export async function debugListAllPerformanceRecords(userId: string) {
-  try {
-    console.log("🔎 Debug: Getting all Performance records for user:", userId)
-
-    const allPerformance = await sql`
-      SELECT id, "userId", "levelId", score, "cumulativeProfit"
-      FROM "Performance" 
-      WHERE "userId" = ${userId}
-      ORDER BY id DESC
-    `
-
-    console.log("🗃️ All Performance records:", allPerformance)
-    return allPerformance
-  } catch (error) {
-    console.error("❌ Error getting all performance records:", error)
-    return []
-  }
-}
-
-// Debug function to list all GameDailyData records for a performance ID
-export async function debugListAllDailyData(performanceId: number) {
-  try {
-    console.log("🔎 Debug: Getting all GameDailyData records for performanceId:", performanceId)
-
-    const allDailyData = await sql`
-      SELECT *
-      FROM "GameDailyData" 
-      WHERE "performanceId" = ${performanceId}
-      ORDER BY "day" ASC
-    `
-
-    console.log("📊 All GameDailyData records:", allDailyData)
-    return allDailyData
-  } catch (error) {
-    console.error("❌ Error getting all daily data records:", error)
-    return []
-  }
-}
-
-// Debug function to explore all game-related tables
-export async function debugExploreDatabase(userId: string) {
-  try {
-    console.log("🔍 DEBUG: Exploring database for user:", userId)
-
-    // Check Performance table
-    const performance = await sql`SELECT * FROM "Performance" WHERE "userId" = ${userId} ORDER BY id DESC LIMIT 5`
-    console.log("📊 Performance table:", performance)
-
-    // Check GameSession table (using updatedAt instead of createdAt)
-    const gameSessions = await sql`SELECT * FROM "GameSession" WHERE "userId" = ${userId} ORDER BY "updatedAt" DESC LIMIT 5`
-    console.log("🎮 GameSession table:", gameSessions)
-
-    // Check if there are any GameDailyData records (with error handling)
-    let allDailyData = []
-    let orphanedDailyData = []
-    try {
-      allDailyData = await sql`
-        SELECT gdd.*, p."userId", p."levelId" 
-        FROM "GameDailyData" gdd 
-        LEFT JOIN "Performance" p ON gdd."performanceId" = p.id 
-        WHERE p."userId" = ${userId} OR gdd."performanceId" IS NULL
-        ORDER BY gdd.id DESC LIMIT 10
-      `
-      console.log("📈 GameDailyData table:", allDailyData)
-
-      // Also check GameDailyData records that might not be linked to Performance
-      orphanedDailyData = await sql`
-        SELECT * FROM "GameDailyData" 
-        WHERE "performanceId" IS NULL OR "performanceId" NOT IN (SELECT id FROM "Performance")
-        ORDER BY id DESC LIMIT 10
-      `
-      console.log("🔗 Orphaned GameDailyData records:", orphanedDailyData)
-    } catch (error: any) {
-      console.log("⚠️ GameDailyData table does not exist:", error.message)
-      allDailyData = []
-      orphanedDailyData = []
-    }
-
-    // Check User table
-    const user = await sql`SELECT id, username, email, role FROM "User" WHERE id = ${userId}`
-    console.log("👤 User table:", user)
-
-    // Check GameLevel table
-    const gameLevels = await sql`SELECT * FROM "GameLevel" ORDER BY id ASC`
-    console.log("🎯 GameLevel table:", gameLevels)
-
-    // Check all GameSession records to see if they contain daily data
-    const allGameSessions = await sql`SELECT * FROM "GameSession" WHERE "userId" = ${userId} ORDER BY "updatedAt" DESC`
-    console.log("🎲 All GameSession records:", allGameSessions)
-
-    return {
-      performance,
-      gameSessions,
-      allDailyData,
-      orphanedDailyData,
-      user,
-      gameLevels,
-      allGameSessions
-    }
-  } catch (error) {
-    console.error("❌ Error exploring database:", error)
-    return null
   }
 }
 
 // Function to get all students performance for a specific level (for teacher view)
 export async function getAllStudentsPerformance(levelId: number) {
   try {
-    console.log("👥 Getting all students performance for level:", levelId)
-
     // Get all users who are students and have GameSession data for this level
     const studentsPerformance = await sql`
       SELECT 
@@ -284,15 +159,12 @@ export async function getAllStudentsPerformance(levelId: number) {
         u.email,
         gs."levelId",
         gs."gameState",
-        gs."updatedAt",
-        gs."isCompleted"
+        gs."updatedAt"
       FROM "User" u
       LEFT JOIN "GameSession" gs ON u.id = gs."userId" AND gs."levelId" = ${levelId}
       WHERE u.role = 'student'
       ORDER BY u.username ASC
     `
-
-    console.log("👥 Students performance raw data:", studentsPerformance)
 
     // Process the data to extract performance metrics
     const processedData = studentsPerformance.map((student: any) => {
@@ -308,6 +180,11 @@ export async function getAllStudentsPerformance(levelId: number) {
         currentDay = student.gameState.day || 0
       }
 
+      // Determine if level is completed based on game state
+      const isCompleted = student.gameState?.isCompleted ||
+        (student.gameState?.day >= 30) ||
+        false
+
       return {
         userId: student.userId,
         username: student.username,
@@ -317,14 +194,13 @@ export async function getAllStudentsPerformance(levelId: number) {
         currentDay,
         hasPlayedLevel,
         lastPlayed: student.updatedAt,
-        isCompleted: student.isCompleted || false
+        isCompleted
       }
     })
 
-    console.log("👥 Processed students performance:", processedData)
     return processedData
   } catch (error) {
-    console.error("❌ Error getting all students performance:", error)
+    console.error("Error getting all students performance:", error)
     return []
   }
 }

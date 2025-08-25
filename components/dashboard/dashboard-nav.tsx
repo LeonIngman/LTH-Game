@@ -1,7 +1,6 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
 import { Truck } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
@@ -14,9 +13,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
+import { FeedbackDialog } from "@/components/feedback-dialog"
+import { formatUsernameAsGroup } from "@/lib/utils"
 
 export function DashboardNav() {
-  const pathname = usePathname()
   const { user, logout } = useAuth()
 
   if (!user) return null
@@ -32,10 +32,11 @@ export function DashboardNav() {
           <h1 className="text-xl font-bold text-[#003366]">Logistics Game</h1>
         </Link>
         <nav className="ml-auto flex items-center gap-4">
+          <FeedbackDialog />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full border border-[#4d94ff]">
-                <span className="sr-only">User menu</span>
+                <span className="sr-only">Group menu</span>
                 <div className="flex h-full w-full items-center justify-center">
                   <span className="text-sm">👤</span>
                 </div>
@@ -44,8 +45,10 @@ export function DashboardNav() {
             <DropdownMenuContent align="end" className="border-[#4d94ff]">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none">{user.username}</p>
-                  <p className="text-xs leading-none text-muted-foreground">{user.email}</p>
+                  <p className="text-sm font-medium leading-none">
+                    {user.role === 'student' ? formatUsernameAsGroup(user.username, user.id) : user.username}
+                  </p>
+                  <p className="text-xs leading-none text-muted-foreground">{user.email || user.role}</p>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />

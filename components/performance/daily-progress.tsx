@@ -6,9 +6,6 @@ interface DailyProgressProps {
 }
 
 export function DailyProgress({ dailyData, isLoading = false }: DailyProgressProps) {
-    console.log("🎨 DailyProgress component received:", { dailyData, isLoading })
-    console.log("🎨 DailyProgress dailyData length:", dailyData?.length)
-
     const formatCurrency = (value: number) => {
         return new Intl.NumberFormat("sv-SE", {
             style: "currency",
@@ -19,7 +16,6 @@ export function DailyProgress({ dailyData, isLoading = false }: DailyProgressPro
     }
 
     if (isLoading) {
-        console.log("🔄 DailyProgress: showing loading state")
         return (
             <Card>
                 <CardHeader>
@@ -33,7 +29,6 @@ export function DailyProgress({ dailyData, isLoading = false }: DailyProgressPro
     }
 
     if (!dailyData || dailyData.length === 0) {
-        console.log("📭 DailyProgress: showing empty state")
         return (
             <Card>
                 <CardHeader>
@@ -45,8 +40,6 @@ export function DailyProgress({ dailyData, isLoading = false }: DailyProgressPro
             </Card>
         )
     }
-
-    console.log("📊 DailyProgress: rendering table with data:", dailyData)
 
     return (
         <Card>

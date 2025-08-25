@@ -1,13 +1,36 @@
 # Database Scripts
 
-This directory contains scripts to help you set up and manage your database for the Supply Chain Game.
+This directory contains scripts to help you set up and manage your database for the LTH Game.
 
 ## Prerequisites
 
 1. PostgreSQL installed locally (for local development)
 2. Node.js installed
+3. Access to Neon database console (for production)
 
-## Available Scripts
+## Master Database Setup
+
+### 🚀 Single Production Setup Script
+
+**`master-database-setup.sql`** - The complete database setup solution
+
+This single comprehensive script handles:
+
+- ✅ All required table creation (GameSession, GameDailyData, User, Performance, etc.)
+- ✅ Proper foreign key relationships and constraints
+- ✅ Performance indexes for optimal query speed
+- ✅ Sample data insertion (products, suppliers, game levels)
+- ✅ Compatibility with existing databases (uses IF NOT EXISTS)
+- ✅ Production-ready configuration for Neon
+
+**How to use:**
+
+1. Copy the contents of `scripts/master-database-setup.sql`
+2. Paste into your Neon database console
+3. Execute the script
+4. Verify completion with the built-in status checks
+
+## Local Development Scripts
 
 ### 1. Setup Local Database
 
@@ -17,12 +40,6 @@ Creates the local database and all required tables:
 node scripts/setup-local-database.mjs
 \`\`\`
 
-This script will:
-
-- Create a new PostgreSQL database called `supply_chain_game`
-- Create all necessary tables based on the schema
-- Set up the development environment
-
 ### 2. Create Super User
 
 Creates a teacher/admin user:
@@ -31,8 +48,6 @@ Creates a teacher/admin user:
 node scripts/create-super-user.mjs
 \`\`\`
 
-Creates an admin user with teacher privileges for local development.
-
 ### 3. Create Test User
 
 Creates a test user for local development:
@@ -40,8 +55,6 @@ Creates a test user for local development:
 \`\`\`bash
 node scripts/create-test-user.mjs
 \`\`\`
-
-This script will prompt you for user details and create a student account.
 
 ### 4. Reset Database
 
@@ -61,8 +74,6 @@ Tests connectivity to your database:
 node scripts/test-db-connection.mjs
 \`\`\`
 
-Verifies that your database connection is working properly.
-
 ### 6. Run Demo
 
 Starts a demo session:
@@ -71,21 +82,32 @@ Starts a demo session:
 node scripts/run-demo.mjs
 \`\`\`
 
-## Neon Database Setup
+## Production Database Setup (Neon)
 
-For production deployment to Neon:
+### Quick Start
 
-1. Copy the contents of `sql/neon-complete-setup.sql`
-2. Paste into the Neon SQL editor
-3. Run the script to create all tables and seed data
+1. Open your Neon database console
+2. Copy and paste the entire `master-database-setup.sql` script
+3. Execute it
+4. Check the verification output to confirm all tables were created
 
-This single script handles:
+### What the Master Script Creates:
 
-- Complete table creation with proper camelCase columns
-- Game levels (0-2) matching the local database
-- 90 TimeStamp records with realistic market data
-- Demo users with bcrypt hashed passwords
-- All necessary indexes and constraints
+- **Core Game Tables**: GameSession, GameDailyData, GameLevel
+- **User & Auth**: User (with all columns), Session
+- **Performance Tracking**: Performance, TimeStamp
+- **Business Logic**: Order, Product, Supplier, SupplierProduct
+- **Features**: Bug (reporting system), QuizSubmission
+- **Sample Data**: 4 products, 4 suppliers, 4 game levels
+
+### Database Schema Summary:
+
+Total Tables: 12+ (depending on existing setup)
+
+- Critical for gameplay: GameSession, GameDailyData, Performance, User
+- Business simulation: Product, Supplier, Order, SupplierProduct
+- Learning features: QuizSubmission, TimeStamp
+- System features: Bug, Session
 
 ## Environment Setup
 
