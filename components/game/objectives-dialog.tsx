@@ -32,7 +32,7 @@ export function ObjectivesDialog({ isOpen, onClose, levelId }: ObjectivesDialogP
   const getLevelBackground = () => {
     switch (levelId) {
       case 0:
-        return "You've just founded your startup, a bold new venture in the frozen burger business. No fancy factory. No complex logistics. Just you, a recipe, and a blank canvas.\n\nFor now, everything is perfect: suppliers deliver instantly, customers get their orders at once, and there is no risk in sight. It's not the real world, but it's the best place to learn the ropes. This is your training ground. Explore freely, make bold choices, and master the fundamentals of supply chain before things get real. Let's build your legacy, one burger at a time."
+        return "You've just founded your startup, a bold new venture in the frozen burger business. No fancy factory. No complex logistics. Just you, a recipe, and a blank canvas. For now, everything is perfect: suppliers deliver instantly, customers get their orders at once , and there's no risk in sight. It's not the real world, but it's the best place to learn the ropes. This is your training ground. Explore freely, make bold choices, and master the fundamentals of supply chains before things get real. Let's build your legacy,  one burger at a time"
       case 1:
         return "Your business has launched, and suddenly, the real world kicks in. Ingredients take days to arrive. Customers don't wait forever. You're no longer in a sandbox. This is the first test of your planning instincts.\n\nLead times are now part of your daily life. Can you think ahead and keep your customers satisfied? Or will delays catch you off guard? Welcome to the rhythm of real supply chains. Let's see if you can dance to the beat."
       case 2:
@@ -47,13 +47,13 @@ export function ObjectivesDialog({ isOpen, onClose, levelId }: ObjectivesDialogP
   const getLevelObjectives = () => {
     switch (levelId) {
       case 0:
-        return ["Get to the Profit Threshold: 3800 kr"]
+        return ["Get to the Profit Threshold: 1500 kr"]
       case 1:
-        return ["Get to the Profit Threshold: 3800 kr"]
+        return ["Get to the Profit Threshold: 1500 kr"]
       case 2:
-        return ["Get to the Profit Threshold: 3800 kr"]
+        return ["Get to the Profit Threshold: 1500 kr"]
       case 3:
-        return ["Get to the Profit Threshold: 3800 kr"]
+        return ["Get to the Profit Threshold: 1500 kr"]
       default:
         return ["Complete the level with a positive cash balance"]
     }
