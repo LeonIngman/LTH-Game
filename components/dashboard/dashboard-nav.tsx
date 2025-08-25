@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/lib/auth-context"
-import { BugReportDialog } from "@/components/bug-report-dialog"
+import { FeedbackDialog } from "@/components/feedback-dialog"
 import { formatUsernameAsGroup } from "@/lib/utils"
 
 export function DashboardNav() {
@@ -32,7 +32,7 @@ export function DashboardNav() {
           <h1 className="text-xl font-bold text-[#003366]">Logistics Game</h1>
         </Link>
         <nav className="ml-auto flex items-center gap-4">
-          <BugReportDialog />
+          <FeedbackDialog />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full border border-[#4d94ff]">
