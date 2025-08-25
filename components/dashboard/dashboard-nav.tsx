@@ -36,7 +36,7 @@ export function DashboardNav() {
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-8 w-8 rounded-full border border-[#4d94ff]">
-                <span className="sr-only">User menu</span>
+                <span className="sr-only">Group menu</span>
                 <div className="flex h-full w-full items-center justify-center">
                   <span className="text-sm">👤</span>
                 </div>
