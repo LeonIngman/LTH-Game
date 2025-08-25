@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useCallback, useEffect } from "react"
 import { useToast } from "@/components/ui/use-toast"
+import { useTranslation } from "@/lib/i18n"
 
 interface ManualSaveStatusProps {
     isSaving: boolean
@@ -24,15 +25,17 @@ export function ManualSaveStatus({
     className
 }: ManualSaveStatusProps) {
     const { toast } = useToast()
+    const { translations } = useTranslation()
 
     const formatLastSaved = (date: Date) => {
         const now = new Date()
         const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000)
 
         if (diffInSeconds < 60) {
-            return "just now"
+            return translations.game.savedJustNow
         } else if (diffInSeconds < 3600) {
-            return `${Math.floor(diffInSeconds / 60)}m ago`
+            const minutes = Math.floor(diffInSeconds / 60)
+            return translations.game.savedTimeAgo.replace('{time}', `${minutes}m`)
         } else {
             return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
@@ -77,7 +80,7 @@ export function ManualSaveStatus({
         if (isLoadingState) {
             return {
                 icon: <Loader2 className="h-4 w-4 animate-spin" />,
-                text: "Loading progress...",
+                text: translations.common.loading,
                 className: "text-muted-foreground"
             }
         }
@@ -85,7 +88,7 @@ export function ManualSaveStatus({
         if (isSaving) {
             return {
                 icon: <Loader2 className="h-4 w-4 animate-spin" />,
-                text: "Saving...",
+                text: translations.game.saving,
                 className: "text-blue-600 dark:text-blue-400"
             }
         }
@@ -93,7 +96,7 @@ export function ManualSaveStatus({
         if (isDirty) {
             return {
                 icon: <CloudOff className="h-4 w-4" />,
-                text: "Not saved",
+                text: "Not saved", // Keep English for now - could add translation
                 className: "text-amber-600 dark:text-amber-400"
             }
         }
@@ -101,14 +104,14 @@ export function ManualSaveStatus({
         if (lastSaved) {
             return {
                 icon: <CheckCircle className="h-4 w-4" />,
-                text: `Saved ${formatLastSaved(lastSaved)}`,
+                text: formatLastSaved(lastSaved),
                 className: "text-green-600 dark:text-green-400"
             }
         }
 
         return {
             icon: <CloudOff className="h-4 w-4" />,
-            text: "Not saved",
+            text: "Not saved", // Keep English for now - could add translation
             className: "text-amber-600 dark:text-amber-400"
         }
     }
@@ -142,7 +145,7 @@ export function ManualSaveStatus({
                 title={`Save progress (${navigator.platform.includes('Mac') ? '⌘' : 'Ctrl'}+S)`}
             >
                 <Save className="h-4 w-4 mr-1" />
-                Save
+                {translations.game.save}
             </Button>
         </div>
     )

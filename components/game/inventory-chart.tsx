@@ -5,19 +5,21 @@ import * as d3 from "d3"
 import type { Inventory } from "@/types/game"
 import type { InventoryChartProps } from "@/types/components"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { useTranslation } from "@/lib/i18n"
 
 
 export function InventoryChart({ data, width = 900, height = 400, currentInventory, overstock, safetystock }: InventoryChartProps) {
   const svgRef = useRef<SVGSVGElement>(null)
+  const { translations } = useTranslation()
 
   // Define inventory types and colors - moved outside useEffect for reuse
   const inventoryTypes = ["patty", "cheese", "bun", "potato", "finishedGoods"]
   const inventoryLabels = {
-    patty: "Patties",
-    cheese: "Cheese",
-    bun: "Buns",
-    potato: "Potatoes",
-    finishedGoods: "Burger Meals",
+    patty: translations.game.patties,
+    cheese: translations.game.cheese,
+    bun: translations.game.buns,
+    potato: translations.game.potatoes,
+    finishedGoods: translations.game.burgerMeals,
   }
   const colors = {
     patty: "#ef4444", // red-500
@@ -247,7 +249,7 @@ export function InventoryChart({ data, width = 900, height = 400, currentInvento
         const isOverstock = threshold && Number.parseInt(value) > threshold
 
         const tooltipContent = `
-          <div style="font-weight: bold; margin-bottom: 5px;">Inventory</div>
+          <div style="font-weight: bold; margin-bottom: 5px;">${translations.game.inventory}</div>
           <table style="border-collapse: collapse; width: 100%;">
             <tr>
               <td style="padding: 2px 8px 2px 0;">
@@ -257,7 +259,7 @@ export function InventoryChart({ data, width = 900, height = 400, currentInvento
               <td style="padding: 2px 0; text-align: right; font-weight: 500;">
                 ${value} units
                 ${isOverstock
-            ? `<span style="color: #ef4444; margin-left: 5px;">(Over threshold: ${threshold})</span>`
+            ? `<span style="color: #ef4444; margin-left: 5px;">(${translations.game.overstock}: ${threshold})</span>`
             : ""
           }
               </td>
@@ -293,10 +295,10 @@ export function InventoryChart({ data, width = 900, height = 400, currentInvento
   return (
     <Card className="w-full" data-tutorial="inventory-chart">
       <CardHeader className="pb-3">
-        <CardTitle>Current Inventory</CardTitle>
+        <CardTitle>{translations.game.currentInventory}</CardTitle>
         <CardDescription className="text-sm leading-tight">
-          Dashed black lines represent overstock thresholds. Keeping inventory below these levels helps minimize holding
-          costs. Dashed blue lines represent safetystock thresholds.
+          Dashed black lines represent {translations.game.overstock} thresholds. Keeping inventory below these levels helps minimize holding
+          costs. Dashed blue lines represent {translations.game.safetyStock} thresholds.
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-0">

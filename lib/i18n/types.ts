@@ -165,6 +165,30 @@ export interface Translations {
         potatoes: TranslationKey
         profit: TranslationKey
         score: TranslationKey
+        supplyChainLegend: TranslationKey
+        save: TranslationKey
+        saved: TranslationKey
+        savedJustNow: TranslationKey
+        savedTimeAgo: TranslationKey
+        saving: TranslationKey
+        currentInventory: TranslationKey
+        inventory: TranslationKey
+        safetyStock: TranslationKey
+        overstock: TranslationKey
+        cashflow: TranslationKey
+        cashflowChart: TranslationKey
+        gameHistory: TranslationKey
+        dayHistory: TranslationKey
+        revenueHistory: TranslationKey
+        costsHistory: TranslationKey
+        profitHistory: TranslationKey
+        inventoryHistory: TranslationKey
+        productionHistory: TranslationKey
+        salesHistory: TranslationKey
+        preview: TranslationKey
+        patties: TranslationKey
+        buns: TranslationKey
+        burgerMeals: TranslationKey
     }    // Common
     common: {
         loading: TranslationKey

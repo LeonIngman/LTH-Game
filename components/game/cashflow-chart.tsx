@@ -5,6 +5,7 @@ import * as d3 from "d3"
 import type { CashflowChartProps } from "@/types/components"
 import type { DailyResult } from "@/types/game"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
+import { useTranslation } from "@/lib/i18n"
 
 export function CashflowChart({
   data,
@@ -16,6 +17,7 @@ export function CashflowChart({
   const svgRef = useRef<SVGSVGElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(800)
+  const { translations } = useTranslation()
 
   // Monitor container size changes
   useEffect(() => {
@@ -403,10 +405,10 @@ export function CashflowChart({
           .style("opacity", 1)
           .html(
             `<div>
-              <div><strong>Day:</strong> ${dailyData.day}</div>
-              <div><strong>Cost:</strong> ${formatCurrency(dailyData.costs?.total || 0)}</div>
-              <div><strong>Revenue:</strong> ${formatCurrency(dailyData.revenue || 0)}</div>
-              <div><strong>Profit:</strong> ${formatCurrency(dailyData.profit || 0)}${dailyData.profit < 0 ? " (Loss)" : ""}</div>
+              <div><strong>${translations.game.dayHistory}:</strong> ${dailyData.day}</div>
+              <div><strong>${translations.game.costsHistory}:</strong> ${formatCurrency(dailyData.costs?.total || 0)}</div>
+              <div><strong>${translations.game.revenueHistory}:</strong> ${formatCurrency(dailyData.revenue || 0)}</div>
+              <div><strong>${translations.game.profitHistory}:</strong> ${formatCurrency(dailyData.profit || 0)}${dailyData.profit < 0 ? " (Loss)" : ""}</div>
             </div>`,
           )
           .style("left", `${event.pageX + 10}px`)
@@ -429,7 +431,7 @@ export function CashflowChart({
   return (
     <Card data-tutorial="cashflow-chart">
       <CardHeader className="pb-2">
-        <CardTitle>Cashflow Chart</CardTitle>
+        <CardTitle>{translations.game.cashflowChart}</CardTitle>
         <CardDescription>Financial Performance Overview</CardDescription>
       </CardHeader>
       <CardContent>

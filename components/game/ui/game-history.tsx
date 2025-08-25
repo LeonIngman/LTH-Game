@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import type { GameHistoryProps } from "@/types/components"
 import type { DailyResult } from "@/types/game"
+import { useTranslation } from "@/lib/i18n"
 
 // Define sort types
 type SortColumn = 'day' | 'cash' | 'revenue' | 'costs' | 'profit' | 'cumulativeProfit' | 'score'
@@ -64,6 +65,8 @@ function safeFormatNumber(value: number | null | undefined): string {
 }
 
 export function GameHistory({ history }: GameHistoryProps) {
+  const { translations } = useTranslation()
+
   // Sort state
   const [sortState, setSortState] = useState<SortState>({
     column: null,
@@ -174,7 +177,7 @@ export function GameHistory({ history }: GameHistoryProps) {
     return (
       <Card data-tutorial="game-history">
         <CardHeader>
-          <CardTitle>Game History</CardTitle>
+          <CardTitle>{translations.game.gameHistory}</CardTitle>
           <CardDescription>No history yet. Complete your first day to see results.</CardDescription>
         </CardHeader>
       </Card>
@@ -184,7 +187,7 @@ export function GameHistory({ history }: GameHistoryProps) {
   return (
     <Card data-tutorial="game-history">
       <CardHeader>
-        <CardTitle>Game History</CardTitle>
+        <CardTitle>{translations.game.gameHistory}</CardTitle>
         <CardDescription>Track your daily performance</CardDescription>
       </CardHeader>
       <CardContent>
@@ -193,25 +196,25 @@ export function GameHistory({ history }: GameHistoryProps) {
             <TableHeader>
               <TableRow>
                 <TableHead className="min-w-[120px]">
-                  {renderSortArrows('day', 'Day')}
+                  {renderSortArrows('day', translations.game.dayHistory)}
                 </TableHead>
                 <TableHead className="min-w-[120px]">
-                  {renderSortArrows('cash', 'Cash')}
+                  {renderSortArrows('cash', translations.game.cash)}
                 </TableHead>
                 <TableHead className="min-w-[120px]">
-                  {renderSortArrows('revenue', 'Revenue')}
+                  {renderSortArrows('revenue', translations.game.revenueHistory)}
                 </TableHead>
                 <TableHead className="min-w-[120px]">
-                  {renderSortArrows('costs', 'Costs')}
+                  {renderSortArrows('costs', translations.game.costsHistory)}
                 </TableHead>
                 <TableHead className="min-w-[120px]">
-                  {renderSortArrows('profit', 'Profit')}
+                  {renderSortArrows('profit', translations.game.profitHistory)}
                 </TableHead>
                 <TableHead className="min-w-[140px]">
                   {renderSortArrows('cumulativeProfit', 'Cum. Profit')}
                 </TableHead>
                 <TableHead className="min-w-[100px]">
-                  {renderSortArrows('score', 'Score')}
+                  {renderSortArrows('score', translations.game.score)}
                 </TableHead>
               </TableRow>
             </TableHeader>

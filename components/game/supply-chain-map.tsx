@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslation } from "@/lib/i18n"
 import type { SupplyChainMapProps } from "@/types/components"
 import { MapPositions } from "@/types/game"
 
@@ -28,6 +29,7 @@ export function SupplyChainMap({
   onCustomerClick,
   level = 0, // Default to level 0
 }: SupplyChainMapProps) {
+  const { translations } = useTranslation()
   const [activeSuppliers, setActiveSuppliers] = useState<Record<number, boolean>>({
     1: false, // Pink Pantry
     2: false, // Brown Sauce
@@ -468,7 +470,7 @@ export function SupplyChainMap({
 
         {/* Legend - Moved to bottom-right */}
         <div className="absolute bottom-4 right-4 bg-white/80 p-3 rounded-lg shadow-sm border border-gray-200">
-          <h3 className="text-sm font-bold mb-2">Supply Chain Legend</h3>
+          <h3 className="text-sm font-bold mb-2">{translations.game.supplyChainLegend}</h3>
           <div className="grid grid-cols-1 gap-y-1 text-xs">
             <div className="flex items-center">
               <div className="w-3 h-3 rounded-full bg-[#E75A7C] mr-2 border border-gray-300"></div>

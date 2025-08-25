@@ -600,6 +600,102 @@ export const translations: Translations = {
         score: {
             en: 'Score',
             sv: 'Poäng'
+        },
+        supplyChainLegend: {
+            en: 'Supply Chain Legend',
+            sv: 'Försörjningskedjelexikon'
+        },
+        save: {
+            en: 'Save',
+            sv: 'Spara'
+        },
+        saved: {
+            en: 'Saved',
+            sv: 'Sparad'
+        },
+        savedJustNow: {
+            en: 'Saved just now',
+            sv: 'Sparad just nu'
+        },
+        savedTimeAgo: {
+            en: 'Saved {time} ago',
+            sv: 'Sparad {time} sedan'
+        },
+        saving: {
+            en: 'Saving...',
+            sv: 'Sparar...'
+        },
+        currentInventory: {
+            en: 'Current Inventory',
+            sv: 'Nuvarande Lager'
+        },
+        inventory: {
+            en: 'Inventory',
+            sv: 'Lager'
+        },
+        safetyStock: {
+            en: 'Safety Stock',
+            sv: 'Säkerhetslager'
+        },
+        overstock: {
+            en: 'Overstock',
+            sv: 'Överlager'
+        },
+        cashflow: {
+            en: 'Cashflow',
+            sv: 'Kassaflöde'
+        },
+        cashflowChart: {
+            en: 'Cashflow Chart',
+            sv: 'Kassaflödesdiagram'
+        },
+        gameHistory: {
+            en: 'Game History',
+            sv: 'Spelhistorik'
+        },
+        dayHistory: {
+            en: 'Day',
+            sv: 'Dag'
+        },
+        revenueHistory: {
+            en: 'Revenue',
+            sv: 'Intäkter'
+        },
+        costsHistory: {
+            en: 'Costs',
+            sv: 'Kostnader'
+        },
+        profitHistory: {
+            en: 'Profit',
+            sv: 'Vinst'
+        },
+        inventoryHistory: {
+            en: 'Inventory',
+            sv: 'Lager'
+        },
+        productionHistory: {
+            en: 'Production',
+            sv: 'Produktion'
+        },
+        salesHistory: {
+            en: 'Sales',
+            sv: 'Försäljning'
+        },
+        preview: {
+            en: 'Preview',
+            sv: 'Förhandsvisning'
+        },
+        patties: {
+            en: 'Patties',
+            sv: 'Biffar'
+        },
+        buns: {
+            en: 'Buns',
+            sv: 'Hamburgerbröd'
+        },
+        burgerMeals: {
+            en: 'Burger Meals',
+            sv: 'Hamburgermåltider'
         }
     },    // Common
     common: {
